@@ -68,6 +68,7 @@ set background=dark
 set backspace=indent,eol,start
 set backupdir=C:\\temp,C:\\RTN,.
 set cmdheight=2
+set completeopt=menu,preview,longest
 set cscopeprg=C:\\cygwin64\\bin\\cscope.exe
 set directory=C:\\temp,C:\\RTN,.
 set expandtab
@@ -105,7 +106,7 @@ endif
 set shortmess=aoO
 argglobal
 %argdel
-$argadd src\ReplicatedStorage\Util.lua
+$argadd src\StarterGui\PlayerCamera.client.lua
 edit C:\Data\Roblox\Places\PetShopPanic\default.project.json
 set splitbelow splitright
 wincmd _ | wincmd |
@@ -253,10 +254,10 @@ if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
 27
-normal! 023|
+normal! 0
 wincmd w
 argglobal
-if bufexists("C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Util.lua") | buffer C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Util.lua | else | edit C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Util.lua | endif
+if bufexists("C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\FactoryManager.server.lua") | buffer C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\FactoryManager.server.lua | else | edit C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\FactoryManager.server.lua | endif
 let s:cpo_save=&cpo
 set cpo&vim
 imap <buffer> <F1> :call xolox#lua#help()
@@ -399,18 +400,21 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 34 - ((33 * winheight(0) + 29) / 58)
+let s:l = 10 - ((9 * winheight(0) + 29) / 58)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-34
-normal! 0
+10
+normal! 03|
 wincmd w
 exe 'vert 1resize ' . ((&columns * 135 + 134) / 269)
 exe 'vert 2resize ' . ((&columns * 133 + 134) / 269)
 tabnext 1
-badd +1 C:\Data\Roblox\Places\PetShopPanic\default.project.json
-badd +0 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Util.lua
+badd +27 C:\Data\Roblox\Places\PetShopPanic\default.project.json
+badd +34 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Util.lua
+badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\FactoryManager.server.lua
+badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\InitializePlayer.server.lua
+badd +1 C:\Data\Roblox\Places\PetShopPanic\src\StarterGui\PlayerCamera.client.lua
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0
   silent exe 'bwipe ' . s:wipebuf
 endif
