@@ -1,0 +1,6 @@
+[submodule "submodules/Promise"]
+	path = submodules/Promise
+	url = https://github.com/evaera/roblox-lua-promise.git
+[submodule "submodules/DataStore2"]
+	path = submodules/DataStore2
+	url = https://github.com/Kampfkarren/Roblox.git
