@@ -25,20 +25,20 @@ local Humanoid = character:WaitForChild("Humanoid");
 
 -- Disable jumping
 Humanoid.Changed:Connect(function()
-	Humanoid.Jump = false
+  Humanoid.Jump = false
 end)
 
 
 -- Called every time the screen refreshes
 local function onRenderStep()
-	-- Check if the player's character has spawned
-	if character then
-		local playerPosition = character.HumanoidRootPart.Position
-		local cameraPosition = playerPosition + CAMERA_OFFSET
+  -- Check if the player's character has spawned
+  if character then
+    local playerPosition = character.HumanoidRootPart.Position
+    local cameraPosition = playerPosition + CAMERA_OFFSET
 
-		-- make the camera follow the player
-		camera.CoordinateFrame = CFrame.new(cameraPosition, playerPosition)
-	end
+    -- make the camera follow the player
+    camera.CoordinateFrame = CFrame.new(cameraPosition, playerPosition)
+  end
 end
 
 RunService:BindToRenderStep("Camera", Enum.RenderPriority.Camera.Value, onRenderStep)
