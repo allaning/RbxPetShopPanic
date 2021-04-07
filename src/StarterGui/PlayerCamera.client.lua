@@ -1,7 +1,7 @@
---Creates a top-down camera for each player. Should be used as a     LocalScript
+-- Creates a top-down camera for each player. Should be used as a LocalScript
 -- https://education.roblox.com/en-us/resources/arcade-game-top-down-camera
 
---Get service needed for events used in this script
+-- Get service needed for events used in this script
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -12,9 +12,10 @@ local camera = Workspace.CurrentCamera
 local player = Players.LocalPlayer
 
 -- Constant variable used to set the camera's offset from the player
-local X_ANGLE = -22
+local X_ANGLE = 0
 local Y_HEIGHT = 24
-local CAMERA_OFFSET = Vector3.new(X_ANGLE, Y_HEIGHT, 0)
+local Z_ANGLE = 20
+local CAMERA_OFFSET = Vector3.new(X_ANGLE, Y_HEIGHT, Z_ANGLE)
 
 -- Enables the camera to do what this script says
 camera.CameraType = Enum.CameraType.Scriptable
