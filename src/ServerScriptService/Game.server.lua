@@ -11,18 +11,21 @@ local serverConsumersFolder = assetsFolder:WaitForChild("Consumers")
 local serverFactoriesFolder = assetsFolder:WaitForChild("Factories")
 local serverTransformersFolder = assetsFolder:WaitForChild("Transformers")
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local factoryFactory = require(ReplicatedStorage.Factories.FactoryFactory)
+local factory = require(ReplicatedStorage.Factories.Factory)
+local boneFactory = require(ReplicatedStorage.Factories.BoneFactory)
+local carrotSeedFactory = require(ReplicatedStorage.Factories.CarrotSeedFactory)
+--local carrotSeedFactory = require(ReplicatedStorage.Factories.CarrotSeedFactory)
 
 local MAX_SEARCH_FOR_PLOTS = 1000
 
-
--- Find the source of an item
-local function findSource(name)
-  -- aing
-end
+-- List of factory instances
+local factories = {}
 
 
 -- Find random available plot on map
-local function getAvailablePlot(map, inputStr)
+local function getAvailablePlot(map)
   local rand = Random.new()
   local mapObjects = map:GetChildren()
   while #mapObjects > 0 do
@@ -67,7 +70,7 @@ local function onGameStart()
       for _, transformer in pairs(serverTransformersFolder:GetChildren()) do
         if transformer.Name == inputStr then
           -- Find available plot on map
-          local plot = getAvailablePlot(map, inputStr)
+          local plot = getAvailablePlot(map)
           if plot then
             plot:SetAttribute("AssetName", inputStr)
 
@@ -91,13 +94,17 @@ local function onGameStart()
           print("   Factory: ".. factory.Name.. "; parts=".. tostring(partCount))
 
           -- Find available plot on map
-          local plot = getAvailablePlot(map, inputStr)
+          local plot = getAvailablePlot(map)
           if plot then
             plot:SetAttribute("AssetName", inputStr)
             -- Copy to workspace
             local clone = factory:Clone()
             clone.PrimaryPart.Position = plot.Position
             clone.Parent = wsFactoriesFolder
+            -- Create object instance and add to Factory list
+            local factoryInstance = factoryFactory.GetFactory(inputStr)
+            factoryInstance:SetModel(clone)
+            table.insert(factories, factoryInstance)
 
             isDone = true
             break
