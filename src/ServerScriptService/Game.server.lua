@@ -29,6 +29,9 @@ local MAX_SEARCH_FOR_PLOTS = 1000
 -- List of factory instances
 local factories = {}
 
+-- List of product instances
+local products = {}
+
 
 -- Find random available plot on map
 local function getAvailablePlot(map)
@@ -51,33 +54,48 @@ end
 
 -- Detect when prompt is triggered
 local function onPromptTriggered(promptObject, player)
-  print("onPromptTriggered: ".. promptObject.Name)
-  local product = promptObject.Parent.Parent
-  local character = Util:GetCharacterFromPlayer(player)
+  local product = promptObject.Parent.Parent.Parent -- Get the product Model
+  if product and product:IsA("Model") then
+    local primaryPart = product.PrimaryPart
 
-  -- Weld product to character
-  local hand = Util:GetRightHandFromPlayer(player)
-  if hand then
-    product.CFrame = hand.CFrame
-    Util:WeldModelToPart(product, hand)
+    -- TODO
+    -- If player already holding product, then swap
+
+    -- Weld product to character
+    local hand = Util:GetRightHandFromPlayer(player)
+    if hand then
+      if primaryPart then
+        product:SetPrimaryPartCFrame(hand.CFrame)
+        -- Rotate model so it's upright in hand
+        product:SetPrimaryPartCFrame(hand.CFrame * CFrame.Angles(math.rad(-90), 0, 0))
+      else
+        -- Just use another part
+        primaryPart = product:FindFirstChildWhichIsA("BasePart")
+        primaryPart.CFrame = hand.CFrame
+        warn(script.Name.. " could not find PrimaryPart for ".. product.Name)
+      end
+      Util:WeldModelToPart(product, hand)
+    else
+      error("Unable to find hand for ".. player.Name)
+    end
+
+    -- Reparent the product to the player
+    local character = Util:GetCharacterFromPlayer(player)
+    local productsFolder = character:WaitForChild("Products", 2)
+    if not productsFolder then
+      productsFolder = Instance.new("Folder", character)
+      productsFolder.Name = "Products"
+    end
+    product.Parent = productsFolder
+
+    -- Destroy the proximity prompt
+    local promptAttachment = primaryPart:WaitForChild("PromptAttachment")
+    if promptAttachment then
+      promptAttachment:Destroy()
+    end
   else
-    error("Unable to find hand for ".. player.Name)
+    error("Game.onPromptTriggered() Could not find Model for ".. promptObject.Parent.Parent.Name)
   end
-
-  -- Reparent the product to the player
-  local productsFolder = character:WaitForChild("Products", 2)
-  if not productsFolder then
-    productsFolder = Instance.new("Folder", character)
-    productsFolder.Name = "Products"
-  end
-  product.Parent = productsFolder
-
-  -- Destroy the proximity prompt
-  local promptAttachment = product:WaitForChild("PromptAttachment")
-  if promptAttachment then
-    promptAttachment:Destroy()
-  end
-
 end
 
 -- Connect prompt events to handling functions
@@ -132,7 +150,7 @@ local function onGameStart()
       for _, factoryModel in pairs(serverFactoriesFolder:GetChildren()) do
         if factoryModel.Name == inputStr then
           local partCount = #factoryModel:GetChildren()
-          print("   Factory: ".. factoryModel.Name.. "; parts=".. tostring(partCount))
+          --print("   Factory: ".. factoryModel.Name.. "; parts=".. tostring(partCount))
 
           -- Find available plot on map
           local plot = getAvailablePlot(map)
@@ -152,6 +170,7 @@ local function onGameStart()
             factoryInstance:SetProduct(productInstance)
             factoryInstance:Run()
             table.insert(factories, factoryInstance)
+            table.insert(products, productInstance)
 
             -- Copy factory to workspace
             factoryClone:SetPrimaryPartCFrame(plot.CFrame) -- Set PrimaryPart CFrame so whole model moves with it

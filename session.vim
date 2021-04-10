@@ -106,7 +106,7 @@ endif
 set shortmess=aoO
 argglobal
 %argdel
-$argadd src\StarterGui\PlayerCamera.client.lua
+$argadd src\ReplicatedStorage\Factories\Factory.lua
 edit C:\Data\Roblox\Places\PetShopPanic\default.project.json
 set splitbelow splitright
 wincmd _ | wincmd |
@@ -120,8 +120,8 @@ set winminheight=0
 set winheight=1
 set winminwidth=0
 set winwidth=1
-exe 'vert 1resize ' . ((&columns * 135 + 134) / 269)
-exe 'vert 2resize ' . ((&columns * 133 + 134) / 269)
+exe 'vert 1resize ' . ((&columns * 134 + 134) / 269)
+exe 'vert 2resize ' . ((&columns * 134 + 134) / 269)
 argglobal
 setlocal keymap=
 setlocal noarabic
@@ -249,15 +249,15 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 27 - ((26 * winheight(0) + 29) / 58)
+let s:l = 17 - ((16 * winheight(0) + 29) / 58)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-27
+17
 normal! 0
 wincmd w
 argglobal
-if bufexists("C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\FactoryManager.server.lua") | buffer C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\FactoryManager.server.lua | else | edit C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\FactoryManager.server.lua | endif
+if bufexists("C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Util.lua") | buffer C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Util.lua | else | edit C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Util.lua | endif
 let s:cpo_save=&cpo
 set cpo&vim
 imap <buffer> <F1> :call xolox#lua#help()
@@ -309,7 +309,7 @@ setlocal dictionary=
 setlocal nodiff
 setlocal equalprg=
 setlocal errorformat=
-setlocal noexpandtab
+setlocal expandtab
 if &filetype != 'lua'
 setlocal filetype=lua
 endif
@@ -334,9 +334,9 @@ setlocal imsearch=-1
 setlocal include=\\v<((do|load)file|require)[^'\"]*['\"]\\zs[^'\"]+
 setlocal includeexpr=xolox#lua#includeexpr(v:fname)
 setlocal indentexpr=GetLuaIndent()
-setlocal indentkeys=0{,0},0),0],:,0#,!^F,o,O,e,0=end,0=until
+setlocal indentkeys=0{,0},0),0],:,0#,!^F,o,O,e,0=end,0=until,0=elseif,0=else
 setlocal noinfercase
-setlocal iskeyword=@,48-57,_,192-255,:
+setlocal iskeyword=@,48-57,_,192-255
 setlocal keywordprg=
 setlocal nolinebreak
 setlocal nolisp
@@ -368,7 +368,7 @@ setlocal noshortname
 setlocal showbreak=
 setlocal sidescrolloff=-1
 setlocal signcolumn=auto
-setlocal smartindent
+setlocal nosmartindent
 setlocal softtabstop=2
 setlocal nospell
 setlocal spellcapcheck=[.?!]\\_[\\])'\"\	\ ]\\+
@@ -400,21 +400,22 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 10 - ((9 * winheight(0) + 29) / 58)
+let s:l = 288 - ((3 * winheight(0) + 29) / 58)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-10
-normal! 03|
+288
+normal! 010|
 wincmd w
-exe 'vert 1resize ' . ((&columns * 135 + 134) / 269)
-exe 'vert 2resize ' . ((&columns * 133 + 134) / 269)
+exe 'vert 1resize ' . ((&columns * 134 + 134) / 269)
+exe 'vert 2resize ' . ((&columns * 134 + 134) / 269)
 tabnext 1
-badd +27 C:\Data\Roblox\Places\PetShopPanic\default.project.json
-badd +34 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Util.lua
-badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\FactoryManager.server.lua
-badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\InitializePlayer.server.lua
-badd +1 C:\Data\Roblox\Places\PetShopPanic\src\StarterGui\PlayerCamera.client.lua
+badd +17 C:\Data\Roblox\Places\PetShopPanic\default.project.json
+badd +79 C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\Game.server.lua
+badd +72 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Factories\Factory.lua
+badd +18 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Products\ProductFactory.lua
+badd +46 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Products\Product.lua
+badd +0 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Util.lua
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0
   silent exe 'bwipe ' . s:wipebuf
 endif
