@@ -11,6 +11,11 @@
     "ReplicatedStorage": {
       "$className": "ReplicatedStorage",
       "$path": "src/ReplicatedStorage",
+      "Assets": {
+        "$className": "Folder",
+        "$path": "shared",
+        "$ignoreUnknownInstances": true
+      },
       "Vendor": {
         "$className": "Folder",
         "Promise": {

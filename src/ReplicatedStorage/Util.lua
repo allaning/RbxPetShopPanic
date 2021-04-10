@@ -190,8 +190,16 @@ function Util:GetTorsoFromPlayer(player)
       end
     end
   end
-
   return human
+end
+
+
+function Util:GetRightHandFromPlayer(player)
+  local hand = nil
+  if player then
+    hand = Util:GetCharacterFromPlayer(player):WaitForChild("RightHand", 2)
+  end
+  return hand
 end
 
 
@@ -279,7 +287,7 @@ end
 
 function Weld(x, y)
   local W = Instance.new("Weld")
-  W.Name = "AdornTryoutWeld"
+  W.Name = "Weld"
   W.Part0 = x
   W.Part1 = y
   local CJ = CFrame.new(x.Position)

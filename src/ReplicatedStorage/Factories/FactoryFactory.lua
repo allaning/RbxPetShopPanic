@@ -1,21 +1,26 @@
 -- This is a Factory factory
 
 local Factory = require(script.Parent.Factory)
-local BoneFactory = require(script.Parent.BoneFactory)
-local CarrotSeedFactory = require(script.Parent.CarrotSeedFactory)
+local DefaultFactory = require(script.Parent.DefaultFactory)
 
 
 local FactoryFactory = {}
 
 
--- TODO: Add each factory here
-function FactoryFactory.GetFactory(factoryName)
-  if factoryName == "Bone" then
-    return BoneFactory.new()
-  elseif factoryName == "CarrotSeed" then
-    return CarrotSeedFactory.new()
+function FactoryFactory.GetFactory(factoryName, spawnDelaySec)
+  print("Creating Factory: ".. factoryName.. ", spawnDelaySec=".. tostring(spawnDelaySec))
+  local newFactory = nil
+
+  -- If a custom class is needed, then check for it and create it here
+  if true then  -- Replace "true" with if-condition when custom classes are needed
+    newFactory = DefaultFactory.new()
   end
-  error(script.Name..": Invalid Factory name: ".. factoryName)
+
+  if spawnDelaySec then
+    newFactory:SetSpawnTimeSec(spawnDelaySec)
+  end
+
+  return newFactory
 end
 
 

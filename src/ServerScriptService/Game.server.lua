@@ -1,5 +1,6 @@
 local Workspace = game:GetService("Workspace")
 local ServerStorage = game:GetService("ServerStorage")
+local ProximityPromptService = game:GetService("ProximityPromptService")
 
 local wsMapsFolder = Workspace:WaitForChild("Maps")
 local wsFactoriesFolder = Workspace:WaitForChild("Factories")
@@ -9,16 +10,21 @@ local assetsFolder = ServerStorage:WaitForChild("Assets")
 local serverMapsFolder = assetsFolder:WaitForChild("Maps")
 local serverConsumersFolder = assetsFolder:WaitForChild("Consumers")
 local serverFactoriesFolder = assetsFolder:WaitForChild("Factories")
+local serverProductsFolder = assetsFolder:WaitForChild("Products")
 local serverTransformersFolder = assetsFolder:WaitForChild("Transformers")
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Util = require(ReplicatedStorage.Util)
+
+local productFactory = require(ReplicatedStorage.Products.ProductFactory)
+local product = require(ReplicatedStorage.Products.Product)
+
 local factoryFactory = require(ReplicatedStorage.Factories.FactoryFactory)
 local factory = require(ReplicatedStorage.Factories.Factory)
-local boneFactory = require(ReplicatedStorage.Factories.BoneFactory)
-local carrotSeedFactory = require(ReplicatedStorage.Factories.CarrotSeedFactory)
---local carrotSeedFactory = require(ReplicatedStorage.Factories.CarrotSeedFactory)
+
 
 local MAX_SEARCH_FOR_PLOTS = 1000
+
 
 -- List of factory instances
 local factories = {}
@@ -41,6 +47,41 @@ local function getAvailablePlot(map)
     table.remove(mapObjects, randNum)
   end
 end
+
+
+-- Detect when prompt is triggered
+local function onPromptTriggered(promptObject, player)
+  print("onPromptTriggered: ".. promptObject.Name)
+  local product = promptObject.Parent.Parent
+  local character = Util:GetCharacterFromPlayer(player)
+
+  -- Weld product to character
+  local hand = Util:GetRightHandFromPlayer(player)
+  if hand then
+    product.CFrame = hand.CFrame
+    Util:WeldModelToPart(product, hand)
+  else
+    error("Unable to find hand for ".. player.Name)
+  end
+
+  -- Reparent the product to the player
+  local productsFolder = character:WaitForChild("Products", 2)
+  if not productsFolder then
+    productsFolder = Instance.new("Folder", character)
+    productsFolder.Name = "Products"
+  end
+  product.Parent = productsFolder
+
+  -- Destroy the proximity prompt
+  local promptAttachment = product:WaitForChild("PromptAttachment")
+  if promptAttachment then
+    promptAttachment:Destroy()
+  end
+
+end
+
+-- Connect prompt events to handling functions
+ProximityPromptService.PromptTriggered:Connect(onPromptTriggered)
 
 
 local function onGameStart()
@@ -67,44 +108,54 @@ local function onGameStart()
     local isDone = false
     local count = 0
     while not isDone do
-      for _, transformer in pairs(serverTransformersFolder:GetChildren()) do
-        if transformer.Name == inputStr then
+      for _, transformerModel in pairs(serverTransformersFolder:GetChildren()) do
+        if transformerModel.Name == inputStr then
           -- Find available plot on map
           local plot = getAvailablePlot(map)
           if plot then
             plot:SetAttribute("AssetName", inputStr)
 
             -- Get its input and update the inputStr to follow the chain all the way back to the factory
-            local transformerInputStr = transformer:GetAttribute("Input")
+            local transformerInputStr = transformerModel:GetAttribute("Input")
             if transformerInputStr then
               inputStr = transformerInputStr
             end
 
             -- Copy to workspace
-            local clone = transformer:Clone()
-            clone.PrimaryPart.Position = plot.Position
-            clone.Parent = wsTransformersFolder
+            local transformerClone = transformerModel:Clone()
+            transformerClone.PrimaryPart.Position = plot.Position
+            transformerClone.Parent = wsTransformersFolder
             break
           end
         end
       end
-      for _, factory in pairs(serverFactoriesFolder:GetChildren()) do
-        if factory.Name == inputStr then
-          local partCount = #factory:GetChildren()
-          print("   Factory: ".. factory.Name.. "; parts=".. tostring(partCount))
+      for _, factoryModel in pairs(serverFactoriesFolder:GetChildren()) do
+        if factoryModel.Name == inputStr then
+          local partCount = #factoryModel:GetChildren()
+          print("   Factory: ".. factoryModel.Name.. "; parts=".. tostring(partCount))
 
           -- Find available plot on map
           local plot = getAvailablePlot(map)
           if plot then
             plot:SetAttribute("AssetName", inputStr)
-            -- Copy to workspace
-            local clone = factory:Clone()
-            clone.PrimaryPart.Position = plot.Position
-            clone.Parent = wsFactoriesFolder
-            -- Create object instance and add to Factory list
-            local factoryInstance = factoryFactory.GetFactory(inputStr)
-            factoryInstance:SetModel(clone)
+            -- Get a copy of the factory model and check stats
+            local factoryClone = factoryModel:Clone()
+            local spawnDelaySec = factoryClone:GetAttribute("SpawnDelaySec")
+
+            -- Create product
+            local productModel = serverProductsFolder:FindFirstChild(inputStr)
+            local productInstance = productFactory.GetProduct(inputStr, productModel)
+
+            -- Create object instances
+            local factoryInstance = factoryFactory.GetFactory(inputStr, spawnDelaySec)
+            factoryInstance:SetModel(factoryClone)
+            factoryInstance:SetProduct(productInstance)
+            factoryInstance:Run()
             table.insert(factories, factoryInstance)
+
+            -- Copy factory to workspace
+            factoryClone:SetPrimaryPartCFrame(plot.CFrame) -- Set PrimaryPart CFrame so whole model moves with it
+            factoryClone.Parent = wsFactoriesFolder
 
             isDone = true
             break
