@@ -3,6 +3,7 @@ local ServerStorage = game:GetService("ServerStorage")
 local ProximityPromptService = game:GetService("ProximityPromptService")
 
 local wsMapsFolder = Workspace:WaitForChild("Maps")
+local wsConsumersFolder = Workspace:WaitForChild("Consumers")
 local wsFactoriesFolder = Workspace:WaitForChild("Factories")
 local wsTransformersFolder = Workspace:WaitForChild("Transformers")
 
@@ -15,6 +16,8 @@ local serverTransformersFolder = assetsFolder:WaitForChild("Transformers")
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Util = require(ReplicatedStorage.Util)
+
+local consumer = require(ReplicatedStorage.Consumers.Consumer)
 
 local productFactory = require(ReplicatedStorage.Products.ProductFactory)
 local product = require(ReplicatedStorage.Products.Product)
@@ -34,16 +37,16 @@ local products = {}
 
 
 -- Find random available plot on map
-local function getAvailablePlot(map)
+local function getAvailablePlot(map, plotType)
   local rand = Random.new()
   local mapObjects = map:GetChildren()
   while #mapObjects > 0 do
     local randNum = rand:NextInteger(1, #mapObjects)
     local obj = mapObjects[randNum]
-    if obj.Name == "ProducerPlot" then
+    if obj.Name == plotType then
       local assetName = obj:GetAttribute("AssetName")
       if assetName == "" then
-        --print("       Found available plot")
+        --print("       Found available plot: ".. plotType)
         return obj
       end
     end
@@ -51,10 +54,21 @@ local function getAvailablePlot(map)
   end
 end
 
+local function getAvailableConsumerPlot(map)
+  return getAvailablePlot(map, "ConsumerPlot")
+end
 
--- Detect when prompt is triggered
-local function onPromptTriggered(promptObject, player)
-  local product = promptObject.Parent.Parent.Parent -- Get the product Model
+local function getAvailableProducerPlot(map)
+  return getAvailablePlot(map, "ProducerPlot")
+end
+
+local function handleConsumerPrompt(consumer, player)
+  if consumer and consumer:IsA("Model") then
+    print("CONSUMER")
+  end
+end
+
+local function handleProductPrompt(product, player)
   if product and product:IsA("Model") then
     local primaryPart = product.PrimaryPart
 
@@ -93,6 +107,26 @@ local function onPromptTriggered(promptObject, player)
     if promptAttachment then
       promptAttachment:Destroy()
     end
+  end
+end
+
+-- Detect when prompt is triggered
+local function onPromptTriggered(promptObject, player)
+  local promptModel = promptObject.Parent.Parent.Parent -- Get the product Model
+  if promptModel then
+    -- Get the type of object as a string, e.g. "Product", "Consumer", etc.
+    local promptModelFolder = promptModel:FindFirstAncestorWhichIsA("Folder")
+    if promptModelFolder then
+      local promptModelTypeName = promptModelFolder.Name
+      print("onPromptTriggered: Folder=".. promptModelTypeName)
+
+      -- Invoke the appropriate handler
+      if promptModelTypeName == "Products" then
+        handleProductPrompt(promptModel, player)
+      elseif promptModelTypeName == "Consumers" then
+        handleConsumerPrompt(promptModel, player)
+      end
+    end
   else
     error("Game.onPromptTriggered() Could not find Model for ".. promptObject.Parent.Parent.Name)
   end
@@ -105,7 +139,7 @@ ProximityPromptService.PromptTriggered:Connect(onPromptTriggered)
 local function onGameStart()
   -- Select a map
   -- aing Hardcoded for now
-  local map = serverMapsFolder:WaitForChild("Level1_1")
+  local map = serverMapsFolder:WaitForChild("Level1"):WaitForChild("1.1")
   -- Make plots transparent
   for _, obj in pairs(map:GetDescendants()) do
     if obj.Name == "ConsumerPlot" or obj.Name == "ProducerPlot" then
@@ -115,11 +149,24 @@ local function onGameStart()
   map.Parent = wsMapsFolder
 
   -- Look for the consumers and find their producers
-  for _, consumer in pairs(serverConsumersFolder:GetChildren()) do
-    local partCount = #consumer:GetChildren()
-    print("Consumer: ".. consumer.Name)
-    local inputStr = consumer:GetAttribute("Input")
-    print("  Input=".. inputStr)
+  for _, consumerModel in pairs(serverConsumersFolder:GetChildren()) do
+    local partCount = #consumerModel:GetChildren()
+    local inputStr = consumerModel:GetAttribute("Input")
+    print("Consumer: ".. consumerModel.Name.. "; Input=".. inputStr)
+
+    -- Create consumer
+    local consumerInstance = consumer.new()
+    local consumerClone = consumerModel:Clone()
+    consumerInstance:SetModel(consumerClone)
+    local consumerPlot = getAvailableConsumerPlot(map)
+    if consumerPlot then
+      consumerPlot:SetAttribute("AssetName", consumerInstance:GetName())
+      consumerClone:SetPrimaryPartCFrame(consumerPlot.CFrame) -- Set PrimaryPart CFrame so whole model moves with it
+      consumerClone.PrimaryPart.CFrame = CFrame.new(consumerPlot.Position, map.PrimaryPart.Position)
+      -- consumerClone.PrimaryPart.CFrame = consumerPlot.CFrame -- This will work if model is welded
+      consumerClone.Parent = wsConsumersFolder
+      consumerInstance:Run()
+    end
 
     -- Find the producers of the input (the names should match)
     -- Everything should start from a Factory (versus Transformer or Aggregator)
@@ -129,7 +176,7 @@ local function onGameStart()
       for _, transformerModel in pairs(serverTransformersFolder:GetChildren()) do
         if transformerModel.Name == inputStr then
           -- Find available plot on map
-          local plot = getAvailablePlot(map)
+          local plot = getAvailableProducerPlot(map)
           if plot then
             plot:SetAttribute("AssetName", inputStr)
 
@@ -153,7 +200,7 @@ local function onGameStart()
           --print("   Factory: ".. factoryModel.Name.. "; parts=".. tostring(partCount))
 
           -- Find available plot on map
-          local plot = getAvailablePlot(map)
+          local plot = getAvailableProducerPlot(map)
           if plot then
             plot:SetAttribute("AssetName", inputStr)
             -- Get a copy of the factory model and check stats

@@ -2,7 +2,7 @@
 
 -- Product rules:
 --   - Should be in ServerStorage/Assets/Products
---   - Top level must be a model with PrimaryPart
+--   - Top level must be a Model with PrimaryPart
 --   - Optional: Add an Attachment named "PromptAttachment" to PrimaryPart
 
 

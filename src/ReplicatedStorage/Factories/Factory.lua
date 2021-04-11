@@ -2,7 +2,7 @@
 
 -- Factory rules:
 --   - Should be in ServerStorage/Assets/Factories
---   - Top level must be a model with PrimaryPart and Spawner part
+--   - Top level must be a Model with PrimaryPart and Spawner part
 
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -86,7 +86,7 @@ end
 
 function Factory:Run()
   -- Run in new thread
-  --aing Promise.try(function()
+  Promise.try(function()
     print("Run: ".. self:GetProductName())
 
     -- Create folder to hold product model
@@ -102,7 +102,7 @@ function Factory:Run()
     end)
 
     self:GenerateProduct()
-  --aing end)
+  end)
 end
 
 

@@ -13,8 +13,8 @@ local player = Players.LocalPlayer
 
 -- Constant variable used to set the camera's offset from the player
 local X_ANGLE = 0
-local Y_HEIGHT = 24
-local Z_ANGLE = 20
+local Y_HEIGHT = 20
+local Z_ANGLE = 18
 local CAMERA_OFFSET = Vector3.new(X_ANGLE, Y_HEIGHT, Z_ANGLE)
 
 -- Enables the camera to do what this script says
