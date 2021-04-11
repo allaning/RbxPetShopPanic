@@ -5,8 +5,6 @@ DefaultFactory.__index = DefaultFactory
 function DefaultFactory.new(model)
   local self = setmetatable(Factory.new(), DefaultFactory)
 
-  self.spawnTimeSec = 5.0
-
   self.itsModel = model
 
   return self

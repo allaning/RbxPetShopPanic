@@ -3,6 +3,7 @@
 --[[
 Factory rules:
   - Should be in ServerStorage/Assets/Factories
+  - Name must match name of product output
   - Top level must be a Model with PrimaryPart and Spawner part
   - Optional: Add an Attribute named SpawnDelaySec to specify non-default spawn delay time
 ]]--

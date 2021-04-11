@@ -28,12 +28,18 @@ local productClass = require(ReplicatedStorage.Products.Product)
 local factoryFactory = require(ReplicatedStorage.Factories.FactoryFactory)
 local factoryClass = require(ReplicatedStorage.Factories.Factory)
 
+local transformerFactory = require(ReplicatedStorage.Transformers.TransformerFactory)
+local transformerClass = require(ReplicatedStorage.Transformers.Transformer)
+
 
 local MAX_SEARCH_FOR_PLOTS = 1000
 
 
 -- List of factory instances
 local factories = {}
+
+-- List of transformer instances
+local transformers = {}
 
 -- List of product instances
 local products = {}
@@ -191,6 +197,8 @@ local function onPromptTriggered(promptObject, player)
         handleProductPrompt(promptModel, player)
       elseif promptModelTypeName == "Consumers" then
         handleConsumerPrompt(promptModel, player)
+      elseif promptModelTypeName == "Transformers" then
+        print("TRANSFORMER")
       end
     end
   else
@@ -216,7 +224,6 @@ local function onGameStart()
 
   -- Look for the consumers and find their producers
   for _, consumerModel in pairs(serverConsumersFolder:GetChildren()) do
-    local partCount = #consumerModel:GetChildren()
     local inputStr = consumerModel:GetAttribute("Input")
     print("Consumer: ".. consumerModel.Name.. "; Input=".. inputStr)
 
@@ -245,6 +252,7 @@ local function onGameStart()
           local plot = getAvailableProducerPlot(map)
           if plot then
             plot:SetAttribute("AssetName", inputStr)
+            local transformerClone = transformerModel:Clone()
 
             -- Get its input and update the inputStr to follow the chain all the way back to the factory
             local transformerInputStr = transformerModel:GetAttribute("Input")
@@ -252,9 +260,14 @@ local function onGameStart()
               inputStr = transformerInputStr
             end
 
+            -- Create object instances
+            local transformerInstance = transformerFactory.GetTransformer(transformerModel.Name)
+            transformerInstance:SetModel(transformerClone)
+            transformerInstance:Run()
+            table.insert(transformers, transformerInstance)
+
             -- Copy to workspace
-            local transformerClone = transformerModel:Clone()
-            transformerClone.PrimaryPart.Position = plot.Position
+            transformerClone :SetPrimaryPartCFrame(plot.CFrame) -- Set PrimaryPart CFrame so whole model moves with it
             transformerClone.Parent = wsTransformersFolder
             break
           end
@@ -262,9 +275,6 @@ local function onGameStart()
       end
       for _, factoryModel in pairs(serverFactoriesFolder:GetChildren()) do
         if factoryModel.Name == inputStr then
-          local partCount = #factoryModel:GetChildren()
-          --print("   Factory: ".. factoryModel.Name.. "; parts=".. tostring(partCount))
-
           -- Find available plot on map
           local plot = getAvailableProducerPlot(map)
           if plot then

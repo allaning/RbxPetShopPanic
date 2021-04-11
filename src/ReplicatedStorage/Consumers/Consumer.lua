@@ -5,6 +5,8 @@ Consumer rules:
   - Should be in ServerStorage/Assets/Consumers
   - Top level must be a Model with PrimaryPart
   - Must have Attribute named Input, which is a string matching name of input object
+  - Recommended: Add a descendant Attachment named PromptAttachment where the ProximityPrompt will be located
+  - Recommended: Add a descendant Part named ProductAttachmentPart where the Product received will be welded
   - Optional: Add an Attribute named ConsumeTimeSec to specify non-default time it takes to consume product
 ]]--
 
