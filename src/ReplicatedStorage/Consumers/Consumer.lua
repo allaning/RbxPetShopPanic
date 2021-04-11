@@ -137,5 +137,10 @@ function Consumer:Run()
   end)
 end
 
+function Consumer:Cleanup()
+  self.itsModel:Destroy()
+  self.itsModel = nil
+end
+
 
 return Consumer

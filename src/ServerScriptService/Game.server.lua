@@ -33,6 +33,7 @@ local transformerClass = require(ReplicatedStorage.Transformers.Transformer)
 
 
 local MAX_SEARCH_FOR_PLOTS = 1000
+local PRODUCT_PLAYER_WELD_NAME = "ProductPlayerWeld"
 
 
 -- List of factory instances
@@ -89,7 +90,7 @@ local function handleConsumerPrompt(consumerModel, player)
             -- Break welds between product and player
             local hand = Util:GetRightHandFromPlayer(player)
             for __, descendant in ipairs(hand:GetChildren()) do
-              if descendant.Name == "ProductPlayerWeld" then
+              if descendant.Name == consumerInputStr..PRODUCT_PLAYER_WELD_NAME then
                 descendant:Destroy()
               end
             end
@@ -104,11 +105,13 @@ local function handleConsumerPrompt(consumerModel, player)
             end
             if not attachmentPart then
               -- Create a default attachment Part
+              -- NOTE: This isn't working right...
               if primaryPart then
                 attachmentPart = Instance.new("Part", primaryPart)
                 attachmentPart.Name = "ProductAttachmentPart"
-                attachmentPart.Position = Vector3.new(0, 3, 0)
-                attachmentPart.Size = Vector3.new(0.1, 0.1, 0.1)
+                attachmentPart.Position = primaryPart.Position + Vector3.new(0, 6, 0)
+                attachmentPart.Size = Vector3.new(0.5, 0.5, 0.5)
+                Util:WeldModelToPart(attachmentPart, primaryPart, "ProductAttachmentPartWeld")
                 attachmentPart.Transparency = 1.0
                 attachmentPart.CastShadow = false
               end
@@ -159,7 +162,7 @@ local function handleProductPrompt(productModel, player)
         primaryPart.CFrame = hand.CFrame
         warn(script.Name.. " could not find PrimaryPart for ".. productModel.Name)
       end
-      Util:WeldModelToPart(productModel, hand, "ProductPlayerWeld")
+      Util:WeldModelToPart(productModel, hand, productModel.Name..PRODUCT_PLAYER_WELD_NAME)
       SoundModule.PlaySwitch3(hand)
     else
       error("Unable to find hand for ".. player.Name)
@@ -182,6 +185,70 @@ local function handleProductPrompt(productModel, player)
   end
 end
 
+local function handleTransformerPrompt(transformerModel, player)
+  if transformerModel and transformerModel:IsA("Model") then
+    local transformerInputStr = transformerModel:GetAttribute("Input")
+    print("Transformer: ".. transformerModel.Name.. "; Input=".. transformerInputStr)
+    local primaryPart = transformerModel.PrimaryPart
+
+    -- Check if player is holding the right input
+    local character = Util:GetCharacterFromPlayer(player)
+    if character then
+      local characterProductsFolder = character:WaitForChild("Products", 2)
+      if characterProductsFolder then
+        for _, currentProduct in pairs(characterProductsFolder:GetChildren()) do
+          if currentProduct.Name == transformerInputStr then
+            SoundModule.PlaySwitch3(character)
+
+            -- Break welds between product and player
+            local hand = Util:GetRightHandFromPlayer(player)
+            for __, descendant in ipairs(hand:GetChildren()) do
+              if descendant.Name == transformerInputStr..PRODUCT_PLAYER_WELD_NAME then
+                descendant:Destroy()
+              end
+            end
+
+            -- Check if model already has an attachment Part for the product
+            local attachmentPart = nil
+            for ___, currentTransformerModelPart in pairs(transformerModel:GetDescendants()) do
+              if currentTransformerModelPart.Name == "ProductAttachmentPart" then
+                attachmentPart = currentTransformerModelPart
+                break
+              end
+            end
+            if not attachmentPart then
+              -- Create a default attachment Part
+              if primaryPart then
+                attachmentPart = Instance.new("Part", primaryPart)
+                attachmentPart.Name = "ProductAttachmentPart"
+                attachmentPart.Position = Vector3.new(0, 6, 0)
+                attachmentPart.Size = Vector3.new(0.1, 0.1, 0.1)
+                attachmentPart.Transparency = 1.0
+                attachmentPart.CanCollide = false
+                attachmentPart.CastShadow = false
+              end
+            end
+            currentProduct:SetPrimaryPartCFrame(attachmentPart.CFrame)
+            Util:WeldModelToPart(currentProduct, attachmentPart, "ProductTransformerWeld")
+
+            -- Reparent product to transformer
+            local transformerProductsFolder = transformerModel:WaitForChild("Products", 2)
+            if not transformerProductsFolder then
+              transformerProductsFolder = Instance.new("Folder", transformerModel)
+              transformerProductsFolder.Name = "Products"
+            end
+            currentProduct.Parent = transformerProductsFolder
+
+            break
+          end
+        end
+      else
+        error("Could not find player Products folder for ".. player.Name)
+      end
+    end
+  end
+end
+
 -- Detect when prompt is triggered
 local function onPromptTriggered(promptObject, player)
   local promptModel = promptObject.Parent.Parent.Parent -- Get the product Model
@@ -198,7 +265,7 @@ local function onPromptTriggered(promptObject, player)
       elseif promptModelTypeName == "Consumers" then
         handleConsumerPrompt(promptModel, player)
       elseif promptModelTypeName == "Transformers" then
-        print("TRANSFORMER")
+        handleTransformerPrompt(promptModel, player)
       end
     end
   else
@@ -247,12 +314,21 @@ local function onGameStart()
     local count = 0
     while not isDone do
       for _, transformerModel in pairs(serverTransformersFolder:GetChildren()) do
+        -- Note that for Transformers, the Transformer name is the name of the output product
         if transformerModel.Name == inputStr then
+          -- Found Transformer that outputs product named inputStr
+
           -- Find available plot on map
           local plot = getAvailableProducerPlot(map)
           if plot then
             plot:SetAttribute("AssetName", inputStr)
             local transformerClone = transformerModel:Clone()
+            local transformTimeSec = transformerClone:GetAttribute("TransformTimeSec")
+            local transformerName = transformerClone:GetAttribute("TransformerName")
+
+            -- Create product
+            local productModel = serverProductsFolder:FindFirstChild(inputStr)
+            local productInstance = productFactory.GetProduct(inputStr, productModel)
 
             -- Get its input and update the inputStr to follow the chain all the way back to the factory
             local transformerInputStr = transformerModel:GetAttribute("Input")
@@ -261,13 +337,15 @@ local function onGameStart()
             end
 
             -- Create object instances
-            local transformerInstance = transformerFactory.GetTransformer(transformerModel.Name)
+            local transformerInstance = transformerFactory.GetTransformer(transformerName, transformerInputStr, transformTimeSec)
             transformerInstance:SetModel(transformerClone)
+            transformerInstance:SetProduct(productInstance)
             transformerInstance:Run()
             table.insert(transformers, transformerInstance)
+            table.insert(products, productInstance)
 
             -- Copy to workspace
-            transformerClone :SetPrimaryPartCFrame(plot.CFrame) -- Set PrimaryPart CFrame so whole model moves with it
+            transformerClone:SetPrimaryPartCFrame(plot.CFrame) -- Set PrimaryPart CFrame so whole model moves with it
             transformerClone.Parent = wsTransformersFolder
             break
           end

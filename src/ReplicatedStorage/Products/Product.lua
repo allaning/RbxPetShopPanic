@@ -20,19 +20,19 @@ function Product.new()
   local self = {}
   setmetatable(self, Product)
 
-  self.Model = nil
+  self.itsModel = nil
 
   return self
 end
 
 function Product:GetName()
-  if self.Model then
-    return self.Model.Name
+  if self.itsModel then
+    return self.itsModel.Name
   end
 end
 
 function Product:GetModel()
-  return self.Model
+  return self.itsModel
 end
 
 function Product:SetProximityPrompt(model)
@@ -66,7 +66,7 @@ function Product:GetModelClone()
 end
 
 function Product:SetModel(model)
-  self.Model = model
+  self.itsModel = model
 end
 
 function Product:GetModelPrimaryPart()
@@ -76,6 +76,11 @@ function Product:GetModelPrimaryPart()
   else
     warn("Product:GetModelPrimaryPart() could not find PrimaryPart for ".. self:GetName())
   end
+end
+
+function Product:Cleanup()
+  self.itsModel:Destroy()
+  self.itsModel = nil
 end
 
 

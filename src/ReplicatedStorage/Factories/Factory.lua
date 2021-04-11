@@ -109,5 +109,12 @@ function Factory:Run()
   end)
 end
 
+function Factory:Cleanup()
+  self.itsProduct:Destroy()
+  self.itsProduct = nil
+  self.itsModel:Destroy()
+  self.itsModel = nil
+end
+
 
 return Factory
