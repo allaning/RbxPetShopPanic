@@ -1,8 +1,11 @@
 -- This is the abstract root Factory class 
 
--- Factory rules:
---   - Should be in ServerStorage/Assets/Factories
---   - Top level must be a Model with PrimaryPart and Spawner part
+--[[
+Factory rules:
+  - Should be in ServerStorage/Assets/Factories
+  - Top level must be a Model with PrimaryPart and Spawner part
+  - Optional: Add an Attribute named SpawnDelaySec to specify non-default spawn delay time
+]]--
 
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")

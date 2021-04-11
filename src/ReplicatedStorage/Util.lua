@@ -285,9 +285,10 @@ end
 
 
 
-function Weld(x, y)
+function Weld(x, y, weldName)
+  local weldName = weldName or "Weld"
   local W = Instance.new("Weld")
-  W.Name = "Weld"
+  W.Name = weldName
   W.Part0 = x
   W.Part1 = y
   local CJ = CFrame.new(x.Position)
@@ -297,22 +298,23 @@ function Weld(x, y)
   W.C1 = C1
   W.Parent = x
 end
-function Set(A, top)
+function Set(A, top, weldName)
   if A ~= top then
-    if A.className == "Part" or A.className == "MeshPart" or A.className == "WedgePart" then
-      Weld(top, A)
+    if A.className == "BasePart" or A.className == "MeshPart" or A.className == "WedgePart" then
+      Weld(top, A, weldName)
       A.Anchored = false
     else
       local C = A:GetChildren()
       for i=1, #C do
-        Set(C[i], top)
+        Set(C[i], top, weldName)
       end
     end
   end
 end
 
-function Util:WeldModelToPart(aModel, aPart)
-  Set(aModel, aPart)
+-- Weld a Model to a Part; The Weld instances will be under the Part
+function Util:WeldModelToPart(aModel, aPart, weldName)
+  Set(aModel, aPart, weldName)
 end
 
 

@@ -1,9 +1,11 @@
 -- This is the abstract root Product class 
 
--- Product rules:
---   - Should be in ServerStorage/Assets/Products
---   - Top level must be a Model with PrimaryPart
---   - Optional: Add an Attachment named "PromptAttachment" to PrimaryPart
+--[[
+Product rules:
+  - Should be in ServerStorage/Assets/Products
+  - Top level must be a Model with PrimaryPart
+  - Optional: Add an Attachment named "PromptAttachment" to PrimaryPart
+]]--
 
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")

@@ -16,14 +16,17 @@ local serverTransformersFolder = assetsFolder:WaitForChild("Transformers")
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Util = require(ReplicatedStorage.Util)
+local SoundModule = require(ReplicatedStorage.SoundModule)
+local Promise = require(ReplicatedStorage.Vendor.Promise)
 
-local consumer = require(ReplicatedStorage.Consumers.Consumer)
+local consumerFactory = require(ReplicatedStorage.Consumers.ConsumerFactory)
+local consumerClass = require(ReplicatedStorage.Consumers.Consumer)
 
 local productFactory = require(ReplicatedStorage.Products.ProductFactory)
-local product = require(ReplicatedStorage.Products.Product)
+local productClass = require(ReplicatedStorage.Products.Product)
 
 local factoryFactory = require(ReplicatedStorage.Factories.FactoryFactory)
-local factory = require(ReplicatedStorage.Factories.Factory)
+local factoryClass = require(ReplicatedStorage.Factories.Factory)
 
 
 local MAX_SEARCH_FOR_PLOTS = 1000
@@ -62,15 +65,77 @@ local function getAvailableProducerPlot(map)
   return getAvailablePlot(map, "ProducerPlot")
 end
 
-local function handleConsumerPrompt(consumer, player)
-  if consumer and consumer:IsA("Model") then
-    print("CONSUMER")
+local function handleConsumerPrompt(consumerModel, player)
+  if consumerModel and consumerModel:IsA("Model") then
+    local consumerInputStr = consumerModel:GetAttribute("Input")
+    print("Consumer: ".. consumerModel.Name.. "; Input=".. consumerInputStr)
+    local primaryPart = consumerModel.PrimaryPart
+
+    -- Check if player is holding the right input
+    local character = Util:GetCharacterFromPlayer(player)
+    if character then
+      local characterProductsFolder = character:WaitForChild("Products", 2)
+      if characterProductsFolder then
+        for _, currentProduct in pairs(characterProductsFolder:GetChildren()) do
+          if currentProduct.Name == consumerInputStr then
+            SoundModule.PlaySwitch3(character)
+
+            -- Break welds between product and player
+            local hand = Util:GetRightHandFromPlayer(player)
+            for __, descendant in ipairs(hand:GetChildren()) do
+              if descendant.Name == "ProductPlayerWeld" then
+                descendant:Destroy()
+              end
+            end
+
+            -- Check if model already has an attachment Part for the product
+            local attachmentPart = nil
+            for ___, currentConsumerModelPart in pairs(consumerModel:GetDescendants()) do
+              if currentConsumerModelPart.Name == "ProductAttachmentPart" then
+                attachmentPart = currentConsumerModelPart
+                break
+              end
+            end
+            if not attachmentPart then
+              -- Create a default attachment Part
+              if primaryPart then
+                attachmentPart = Instance.new("Part", primaryPart)
+                attachmentPart.Name = "ProductAttachmentPart"
+                attachmentPart.Position = Vector3.new(0, 3, 0)
+                attachmentPart.Size = Vector3.new(0.1, 0.1, 0.1)
+                attachmentPart.Transparency = 1.0
+                attachmentPart.CastShadow = false
+              end
+            end
+            currentProduct:SetPrimaryPartCFrame(attachmentPart.CFrame)
+            Util:WeldModelToPart(currentProduct, attachmentPart, "ProductConsumerWeld")
+
+            -- Reparent product to consumer
+            local consumerProductsFolder = consumerModel:WaitForChild("Products", 2)
+            if not consumerProductsFolder then
+              consumerProductsFolder = Instance.new("Folder", consumerModel)
+              consumerProductsFolder.Name = "Products"
+            end
+            currentProduct.Parent = consumerProductsFolder
+
+            -- Remove product after delay
+            Promise.delay(consumerClass.DEFAULT_CONSUME_TIME_SEC):andThen(function()
+              currentProduct:Destroy()
+            end)
+
+            break
+          end
+        end
+      else
+        error("Could not find player Products folder for ".. player.Name)
+      end
+    end
   end
 end
 
-local function handleProductPrompt(product, player)
-  if product and product:IsA("Model") then
-    local primaryPart = product.PrimaryPart
+local function handleProductPrompt(productModel, player)
+  if productModel and productModel:IsA("Model") then
+    local primaryPart = productModel.PrimaryPart
 
     -- TODO
     -- If player already holding product, then swap
@@ -79,16 +144,17 @@ local function handleProductPrompt(product, player)
     local hand = Util:GetRightHandFromPlayer(player)
     if hand then
       if primaryPart then
-        product:SetPrimaryPartCFrame(hand.CFrame)
+        productModel:SetPrimaryPartCFrame(hand.CFrame)
         -- Rotate model so it's upright in hand
-        product:SetPrimaryPartCFrame(hand.CFrame * CFrame.Angles(math.rad(-90), 0, 0))
+        productModel:SetPrimaryPartCFrame(hand.CFrame * CFrame.Angles(math.rad(-90), 0, 0))
       else
         -- Just use another part
-        primaryPart = product:FindFirstChildWhichIsA("BasePart")
+        primaryPart = productModel:FindFirstChildWhichIsA("BasePart")
         primaryPart.CFrame = hand.CFrame
-        warn(script.Name.. " could not find PrimaryPart for ".. product.Name)
+        warn(script.Name.. " could not find PrimaryPart for ".. productModel.Name)
       end
-      Util:WeldModelToPart(product, hand)
+      Util:WeldModelToPart(productModel, hand, "ProductPlayerWeld")
+      SoundModule.PlaySwitch3(hand)
     else
       error("Unable to find hand for ".. player.Name)
     end
@@ -100,7 +166,7 @@ local function handleProductPrompt(product, player)
       productsFolder = Instance.new("Folder", character)
       productsFolder.Name = "Products"
     end
-    product.Parent = productsFolder
+    productModel.Parent = productsFolder
 
     -- Destroy the proximity prompt
     local promptAttachment = primaryPart:WaitForChild("PromptAttachment")
@@ -155,7 +221,7 @@ local function onGameStart()
     print("Consumer: ".. consumerModel.Name.. "; Input=".. inputStr)
 
     -- Create consumer
-    local consumerInstance = consumer.new()
+    local consumerInstance = consumerFactory.GetConsumer(consumerModel.Name, inputStr)
     local consumerClone = consumerModel:Clone()
     consumerInstance:SetModel(consumerClone)
     local consumerPlot = getAvailableConsumerPlot(map)
