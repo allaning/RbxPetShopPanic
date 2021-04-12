@@ -11,6 +11,10 @@ game.Players.PlayerAdded:Connect(function(Player)
       productsFolder = Instance.new("Folder", Character)
       productsFolder.Name = "Products"
     end
+
+    -- Set walk speed
+    local humanoid = Character:FindFirstChild("Humanoid")
+    humanoid.WalkSpeed = 18
   end)
 
 end)

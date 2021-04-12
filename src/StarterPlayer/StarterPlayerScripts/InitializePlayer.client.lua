@@ -5,9 +5,9 @@ local TransformBeginEvent = TransformsFolder:WaitForChild("Events"):WaitForChild
 local ProgressBarFactory = require(ReplicatedStorage.Gui.ProgressBarFactory)
 local Promise = require(ReplicatedStorage.Vendor.Promise)
 
-local Players = game:GetService("Players")
-local Player = Players.LocalPlayer
-local PlayerGui = Player:WaitForChild("PlayerGui")
+--local Players = game:GetService("Players")
+--local Player = Players.LocalPlayer
+--local PlayerGui = Player:WaitForChild("PlayerGui")
 
 
 local function showTransformInProgress(subjectPosition, durationSec)

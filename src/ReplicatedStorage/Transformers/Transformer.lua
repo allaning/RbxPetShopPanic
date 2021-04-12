@@ -144,7 +144,7 @@ function Transformer:SetProximityPrompt(model, actionText)
     -- Create the prompt
     local prompt = ProximityPromptFactory.GetDefaultProximityPrompt(self:GetName(), actionText)
     if prompt then
-      ProximityPromptFactory.SetMaxDistance(prompt, 6)
+      ProximityPromptFactory.SetMaxDistance(prompt, 7)
       prompt.Parent = attachment
     end
   end
