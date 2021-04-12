@@ -19,6 +19,8 @@ local Promise = require(ReplicatedStorage.Vendor.Promise)
 
 local Product = require(ReplicatedStorage.Products.Product)
 
+local TransformBeginEvent = ReplicatedStorage.Transformers.Events.TransformBegin
+
 
 local Transformer = {}
 Transformer.__index = Transformer
@@ -154,32 +156,38 @@ function Transformer:TransformProduct(productInstance)
     clearAttachment(self.itsProximityPromptAttachment)
   end
 
-  -- Delay for the transform
-  Promise.delay(self:GetTransformTimeSec()):andThen(function()
-    local productFolder = self.itsProductFolder
-    if productFolder then
-      local inputObj = productFolder:FindFirstChild(self:GetInput())
-      if inputObj then
-        inputObj:Destroy()
+  if productInstance and productInstance.Name == self:GetInput() then
+    local transformerModel = self:GetModel()
+    if transformerModel then
+      local spawnPart = transformerModel:WaitForChild("ProductAttachmentPart")
 
-        -- Spawn output product
-        local product = self:GetProduct()
-        if product then
-          print("  Transformer:GetProduct: ".. product:GetName())
-          local productClone = product:GetModelClone()
-          if productClone then
-            local transformerModel = self:GetModel()
-            if transformerModel then
-              local spawnPart = transformerModel:WaitForChild("ProductAttachmentPart")
-              productClone:SetPrimaryPartCFrame(spawnPart.CFrame) -- Set PrimaryPart CFrame so whole model moves with it
-              productClone.Parent = self.itsProductFolder
+      -- Tell client to show transform progress
+      TransformBeginEvent:FireAllClients(spawnPart.Position, self:GetTransformTimeSec())
+
+      -- Delay for the transform
+      Promise.delay(self:GetTransformTimeSec()):andThen(function()
+        local productFolder = self.itsProductFolder
+        if productFolder then
+          local inputObj = productFolder:FindFirstChild(self:GetInput())
+          if inputObj then
+            inputObj:Destroy()
+
+            -- Spawn output product
+            local product = self:GetProduct()
+            if product then
+              print("  Transformer:GetProduct: ".. product:GetName())
+              local productClone = product:GetModelClone()
+              if productClone then
+                productClone:SetPrimaryPartCFrame(spawnPart.CFrame) -- Set PrimaryPart CFrame so whole model moves with it
+                productClone.Parent = self.itsProductFolder
+              end
             end
           end
         end
+      end)
 
-      end
     end
-  end)
+  end
 end
 
 function Transformer:Run()
@@ -201,7 +209,7 @@ function Transformer:Run()
 
       -- Create event for whenever product is added
       self.itsProductFolder.ChildAdded:Connect(function(instance)
-        self:TransformProduct()
+        self:TransformProduct(instance)
       end)
 
       -- Create event for whenever product is removed
