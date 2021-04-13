@@ -12,11 +12,16 @@ function ProximityPromptFactory.SetMaxDistance(prompt, distance)
   prompt.MaxActivationDistance = distance
 end
 
+function ProximityPromptFactory.SetRequiresLineOfSight(prompt, lineOfSight)
+  prompt.RequiresLineOfSight = lineOfSight
+end
+
 function ProximityPromptFactory.GetDefaultProximityPrompt(objectText, actionText)
   local prompt = Instance.new("ProximityPrompt")
   prompt.Name = objectText
   prompt.ObjectText = objectText
   prompt.ActionText = actionText
+  prompt.RequiresLineOfSight = false
   return prompt
 end
 

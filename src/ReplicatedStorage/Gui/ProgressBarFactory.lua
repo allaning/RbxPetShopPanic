@@ -30,8 +30,12 @@ end
 function ProgressBarFactory.TweenAutoProgressBar(billboardGui, timeSec)
   local progressBar = billboardGui:FindFirstChild("ProgressBar")
   if progressBar then
-    local animTweenInfo = TweenInfo.new(timeSec, Enum.EasingStyle["Linear"])
-    TweenService:Create(progressBar, animTweenInfo, {Size = UDim2.fromOffset(125, 32)}):Play()
+    -- Move gradient position
+    local uiGradient = progressBar:FindFirstChild("UIGradient")
+    if uiGradient then
+      local animTweenInfo = TweenInfo.new(timeSec, Enum.EasingStyle["Linear"])
+      TweenService:Create(uiGradient, animTweenInfo, {Offset = Vector2.new(1, 0)}):Play() -- move gradient
+    end
   end
 end
 
@@ -53,8 +57,7 @@ function ProgressBarFactory.GetAutoProgressBar(timeSec)
   -- Create progress bar frame
   local progressBar = createInstance("Frame", {
       Name = "ProgressBar",
-      --Size = UDim2.new(0, 0, 0.5, 0),
-      Size = UDim2.fromOffset(1, 32),
+      Size = UDim2.fromOffset(125, 32),
       Position = UDim2.new(0, 0, 0, 0),
       AnchorPoint = Vector2.new(0, 0),
       BackgroundColor3 = Color3.new(1, 1, 1),
@@ -70,7 +73,7 @@ function ProgressBarFactory.GetAutoProgressBar(timeSec)
   -- Create UIGradient
   local uiGradient = createInstance("UIGradient", {
       Color = ColorSequence.new({
-          ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
+          ColorSequenceKeypoint.new(0, Color3.new(0, 1, 0)),
           ColorSequenceKeypoint.new(0.001, backgroundColor),
           ColorSequenceKeypoint.new(1, backgroundColor)
         }),
