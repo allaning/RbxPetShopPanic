@@ -6,6 +6,7 @@ local wsMapsFolder = Workspace:WaitForChild("Maps")
 local wsConsumersFolder = Workspace:WaitForChild("Consumers")
 local wsFactoriesFolder = Workspace:WaitForChild("Factories")
 local wsTransformersFolder = Workspace:WaitForChild("Transformers")
+local wsTrashBinsFolder = Workspace:WaitForChild("TrashBins")
 
 local assetsFolder = ServerStorage:WaitForChild("Assets")
 local serverMapsFolder = assetsFolder:WaitForChild("Maps")
@@ -13,6 +14,7 @@ local serverConsumersFolder = assetsFolder:WaitForChild("Consumers")
 local serverFactoriesFolder = assetsFolder:WaitForChild("Factories")
 local serverProductsFolder = assetsFolder:WaitForChild("Products")
 local serverTransformersFolder = assetsFolder:WaitForChild("Transformers")
+local serverTrashBinsFolder = assetsFolder:WaitForChild("TrashBins")
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Util = require(ReplicatedStorage.Util)
@@ -31,6 +33,8 @@ local factoryClass = require(ReplicatedStorage.Factories.Factory)
 local transformerFactory = require(ReplicatedStorage.Transformers.TransformerFactory)
 local transformerClass = require(ReplicatedStorage.Transformers.Transformer)
 
+local trashBinClass = require(ReplicatedStorage.TrashBins.TrashBin)
+
 
 local MAX_SEARCH_FOR_PLOTS = 1000
 local PRODUCT_PLAYER_WELD_NAME = "ProductPlayerWeld"
@@ -44,6 +48,9 @@ local transformers = {}
 
 -- List of product instances
 local products = {}
+
+-- List of trash bin instances
+local trashBins = {}
 
 
 -- Find random available plot on map
@@ -72,6 +79,46 @@ local function getAvailableProducerPlot(map)
   return getAvailablePlot(map, "ProducerPlot")
 end
 
+local function getCharacterProduct(character)
+  if character then
+    print("getPlayerProduct for ".. character.Name)
+    local characterProductsFolder = character:WaitForChild("Products", 2)
+    if characterProductsFolder then
+      for _, currentProduct in pairs(characterProductsFolder:GetChildren()) do
+        -- Return the first product
+        return currentProduct
+      end
+    else
+      error("Could not find player Products folder for ".. character.Parent.Name)
+    end
+  end
+end
+
+local function getProductAttachmentPart(model)
+  -- Check if model has an attachment Part for the product
+  for ___, currentModelPart in pairs(model:GetDescendants()) do
+    if currentModelPart.Name == "ProductAttachmentPart" then
+      return currentModelPart
+    end
+  end
+
+  -- Create a default attachment Part
+  -- NOTE: This isn't working right...
+  local attachmentPart = nil
+  local primaryPart = model.PrimaryPart
+  if primaryPart then
+    attachmentPart = Instance.new("Part", primaryPart)
+    attachmentPart.Name = "ProductAttachmentPart"
+    attachmentPart.Position = primaryPart.Position + Vector3.new(0, 6, 0)
+    attachmentPart.Size = Vector3.new(0.5, 0.5, 0.5)
+    Util:WeldModelToPart(attachmentPart, primaryPart, "ProductAttachmentPartWeld")
+    attachmentPart.Transparency = 1.0
+    attachmentPart.CanCollide = false
+    attachmentPart.CastShadow = false
+  end
+  return attachmentPart
+end
+
 local function handleConsumerPrompt(consumerModel, player)
   if consumerModel and consumerModel:IsA("Model") then
     local consumerInputStr = consumerModel:GetAttribute("Input")
@@ -81,62 +128,39 @@ local function handleConsumerPrompt(consumerModel, player)
     -- Check if player is holding the right input
     local character = Util:GetCharacterFromPlayer(player)
     if character then
-      local characterProductsFolder = character:WaitForChild("Products", 2)
-      if characterProductsFolder then
-        for _, currentProduct in pairs(characterProductsFolder:GetChildren()) do
-          if currentProduct.Name == consumerInputStr then
-            SoundModule.PlaySwitch3(character)
+      local currentProduct = getCharacterProduct(character)
+      if currentProduct then
+        if currentProduct.Name == consumerInputStr then
+          SoundModule.PlaySwitch3(character)
 
-            -- Break welds between product and player
-            local hand = Util:GetRightHandFromPlayer(player)
-            for __, descendant in ipairs(hand:GetChildren()) do
-              if descendant.Name == consumerInputStr..PRODUCT_PLAYER_WELD_NAME then
-                descendant:Destroy()
-              end
+          -- Break welds between product and player
+          local hand = Util:GetRightHandFromPlayer(player)
+          for __, descendant in ipairs(hand:GetChildren()) do
+            if descendant.Name == consumerInputStr..PRODUCT_PLAYER_WELD_NAME then
+              descendant:Destroy()
             end
+          end
 
-            -- Check if model already has an attachment Part for the product
-            local attachmentPart = nil
-            for ___, currentConsumerModelPart in pairs(consumerModel:GetDescendants()) do
-              if currentConsumerModelPart.Name == "ProductAttachmentPart" then
-                attachmentPart = currentConsumerModelPart
-                break
-              end
-            end
-            if not attachmentPart then
-              -- Create a default attachment Part
-              -- NOTE: This isn't working right...
-              if primaryPart then
-                attachmentPart = Instance.new("Part", primaryPart)
-                attachmentPart.Name = "ProductAttachmentPart"
-                attachmentPart.Position = primaryPart.Position + Vector3.new(0, 6, 0)
-                attachmentPart.Size = Vector3.new(0.5, 0.5, 0.5)
-                Util:WeldModelToPart(attachmentPart, primaryPart, "ProductAttachmentPartWeld")
-                attachmentPart.Transparency = 1.0
-                attachmentPart.CastShadow = false
-              end
-            end
+          -- Check if model already has an attachment Part for the product
+          local attachmentPart = getProductAttachmentPart(consumerModel)
+          if attachmentPart then
             currentProduct:SetPrimaryPartCFrame(attachmentPart.CFrame)
             Util:WeldModelToPart(currentProduct, attachmentPart, "ProductConsumerWeld")
-
-            -- Reparent product to consumer
-            local consumerProductsFolder = consumerModel:WaitForChild("Products", 2)
-            if not consumerProductsFolder then
-              consumerProductsFolder = Instance.new("Folder", consumerModel)
-              consumerProductsFolder.Name = "Products"
-            end
-            currentProduct.Parent = consumerProductsFolder
-
-            -- Remove product after delay
-            Promise.delay(consumerClass.DEFAULT_CONSUME_TIME_SEC):andThen(function()
-              currentProduct:Destroy()
-            end)
-
-            break
           end
+
+          -- Reparent product to consumer
+          local consumerProductsFolder = consumerModel:WaitForChild("Products", 2)
+          if not consumerProductsFolder then
+            consumerProductsFolder = Instance.new("Folder", consumerModel)
+            consumerProductsFolder.Name = "Products"
+          end
+          currentProduct.Parent = consumerProductsFolder
+
+          -- Remove product after delay
+          Promise.delay(consumerClass.DEFAULT_CONSUME_TIME_SEC):andThen(function()
+            currentProduct:Destroy()
+          end)
         end
-      else
-        error("Could not find player Products folder for ".. player.Name)
       end
     end
   end
@@ -144,12 +168,22 @@ end
 
 local function handleProductPrompt(productModel, player)
   if productModel and productModel:IsA("Model") then
-    local primaryPart = productModel.PrimaryPart
+    local character = Util:GetCharacterFromPlayer(player)
+    local productsFolder = character:WaitForChild("Products", 2)
+    if not productsFolder then
+      productsFolder = Instance.new("Folder", character)
+      productsFolder.Name = "Products"
+    end
 
-    -- TODO
-    -- If player already holding product, then swap
+    -- If player already holding product, then do nothing
+    local playerProducts = productsFolder:GetChildren()
+    if #playerProducts > 0 then
+      -- Player already has product
+      return
+    end
 
     -- Weld product to character
+    local primaryPart = productModel.PrimaryPart
     local hand = Util:GetRightHandFromPlayer(player)
     if hand then
       if primaryPart then
@@ -169,12 +203,6 @@ local function handleProductPrompt(productModel, player)
     end
 
     -- Reparent the product to the player
-    local character = Util:GetCharacterFromPlayer(player)
-    local productsFolder = character:WaitForChild("Products", 2)
-    if not productsFolder then
-      productsFolder = Instance.new("Folder", character)
-      productsFolder.Name = "Products"
-    end
     productModel.Parent = productsFolder
 
     -- Destroy the proximity prompt
@@ -194,56 +222,76 @@ local function handleTransformerPrompt(transformerModel, player)
     -- Check if player is holding the right input
     local character = Util:GetCharacterFromPlayer(player)
     if character then
-      local characterProductsFolder = character:WaitForChild("Products", 2)
-      if characterProductsFolder then
-        for _, currentProduct in pairs(characterProductsFolder:GetChildren()) do
-          if currentProduct.Name == transformerInputStr then
-            SoundModule.PlaySwitch3(character)
+      local currentProduct = getCharacterProduct(character)
+      if currentProduct then
+        if currentProduct.Name == transformerInputStr then
+          SoundModule.PlaySwitch3(character)
 
-            -- Break welds between product and player
-            local hand = Util:GetRightHandFromPlayer(player)
-            for __, descendant in ipairs(hand:GetChildren()) do
-              if descendant.Name == transformerInputStr..PRODUCT_PLAYER_WELD_NAME then
-                descendant:Destroy()
-              end
+          -- Break welds between product and player
+          local hand = Util:GetRightHandFromPlayer(player)
+          for __, descendant in ipairs(hand:GetChildren()) do
+            if descendant.Name == transformerInputStr..PRODUCT_PLAYER_WELD_NAME then
+              descendant:Destroy()
             end
+          end
 
-            -- Check if model already has an attachment Part for the product
-            local attachmentPart = nil
-            for ___, currentTransformerModelPart in pairs(transformerModel:GetDescendants()) do
-              if currentTransformerModelPart.Name == "ProductAttachmentPart" then
-                attachmentPart = currentTransformerModelPart
-                break
-              end
-            end
-            if not attachmentPart then
-              -- Create a default attachment Part
-              if primaryPart then
-                attachmentPart = Instance.new("Part", primaryPart)
-                attachmentPart.Name = "ProductAttachmentPart"
-                attachmentPart.Position = Vector3.new(0, 6, 0)
-                attachmentPart.Size = Vector3.new(0.1, 0.1, 0.1)
-                attachmentPart.Transparency = 1.0
-                attachmentPart.CanCollide = false
-                attachmentPart.CastShadow = false
-              end
-            end
+          -- Check if model already has an attachment Part for the product
+          local attachmentPart = getProductAttachmentPart(transformerModel)
+          if attachmentPart then
             currentProduct:SetPrimaryPartCFrame(attachmentPart.CFrame)
             Util:WeldModelToPart(currentProduct, attachmentPart, "ProductTransformerWeld")
+          end
 
-            -- Reparent product to transformer
-            local transformerProductsFolder = transformerModel:WaitForChild("Products", 2)
-            if not transformerProductsFolder then
-              transformerProductsFolder = Instance.new("Folder", transformerModel)
-              transformerProductsFolder.Name = "Products"
-            end
-            currentProduct.Parent = transformerProductsFolder
+          -- Reparent product to transformer
+          local transformerProductsFolder = transformerModel:WaitForChild("Products", 2)
+          if not transformerProductsFolder then
+            transformerProductsFolder = Instance.new("Folder", transformerModel)
+            transformerProductsFolder.Name = "Products"
+          end
+          currentProduct.Parent = transformerProductsFolder
+        end
+      end
+    end
+  end
+end
 
-            break
+local function handleTrashBinPrompt(trashBinModel, player)
+  if trashBinModel and trashBinModel:IsA("Model") then
+    local primaryPart = trashBinModel.PrimaryPart
+
+    local character = Util:GetCharacterFromPlayer(player)
+    if character then
+      local currentProduct = getCharacterProduct(character)
+      if currentProduct then
+        SoundModule.PlaySwitch3(character)
+
+        -- Break welds between product and player
+        local hand = Util:GetRightHandFromPlayer(player)
+        for __, descendant in ipairs(hand:GetChildren()) do
+          if descendant.Name == currentProduct.Name..PRODUCT_PLAYER_WELD_NAME then
+            descendant:Destroy()
           end
         end
-      else
-        error("Could not find player Products folder for ".. player.Name)
+
+        -- Check if model already has an attachment Part for the product
+        local attachmentPart = getProductAttachmentPart(trashBinModel)
+        if attachmentPart then
+          currentProduct:SetPrimaryPartCFrame(attachmentPart.CFrame)
+          Util:WeldModelToPart(currentProduct, attachmentPart, "ProductTrashBinWeld")
+        end
+
+        -- Reparent product to trashBin
+        local trashBinProductsFolder = trashBinModel:WaitForChild("Products", 2)
+        if not trashBinProductsFolder then
+          trashBinProductsFolder = Instance.new("Folder", trashBinModel)
+          trashBinProductsFolder.Name = "Products"
+        end
+        currentProduct.Parent = trashBinProductsFolder
+
+        -- Remove product after delay
+        Promise.delay(0.2):andThen(function()
+          currentProduct:Destroy()
+        end)
       end
     end
   end
@@ -266,6 +314,8 @@ local function onPromptTriggered(promptObject, player)
         handleConsumerPrompt(promptModel, player)
       elseif promptModelTypeName == "Transformers" then
         handleTransformerPrompt(promptModel, player)
+      elseif promptModelTypeName == "TrashBins" then
+        handleTrashBinPrompt(promptModel, player)
       end
     end
   else
@@ -278,19 +328,19 @@ ProximityPromptService.PromptTriggered:Connect(onPromptTriggered)
 
 
 local function onGameStart()
-  -- Select a map
+  -- Select a map TODO
   -- aing Hardcoded for now
   local map = serverMapsFolder:WaitForChild("Level1"):WaitForChild("1.1")
   -- Make plots transparent
   for _, obj in pairs(map:GetDescendants()) do
-    if obj.Name == "ConsumerPlot" or obj.Name == "ProducerPlot" then
+    if obj.Name == "ConsumerPlot" or obj.Name == "ProducerPlot" or obj.Name == "TrashBinPlot" then
       obj.Transparency = 1
     end
   end
   map.Parent = wsMapsFolder
 
   -- Look for the consumers and find their producers
-  for _, consumerModel in pairs(serverConsumersFolder:GetChildren()) do
+  for consumerModelIdx, consumerModel in pairs(serverConsumersFolder:GetChildren()) do
     local inputStr = consumerModel:GetAttribute("Input")
     print("Consumer: ".. consumerModel.Name.. "; Input=".. inputStr)
 
@@ -344,7 +394,7 @@ local function onGameStart()
             table.insert(transformers, transformerInstance)
             table.insert(products, productInstance)
 
-            -- Copy to workspace
+            -- Move to workspace
             transformerClone:SetPrimaryPartCFrame(plot.CFrame) -- Set PrimaryPart CFrame so whole model moves with it
             transformerClone.Parent = wsTransformersFolder
             break
@@ -373,7 +423,7 @@ local function onGameStart()
             table.insert(factories, factoryInstance)
             table.insert(products, productInstance)
 
-            -- Copy factory to workspace
+            -- Move factory to workspace
             factoryClone:SetPrimaryPartCFrame(plot.CFrame) -- Set PrimaryPart CFrame so whole model moves with it
             factoryClone.Parent = wsFactoriesFolder
 
@@ -389,6 +439,25 @@ local function onGameStart()
       end
     end -- while
   end -- consumer
+
+
+  -- Place trash bins
+  for _, obj in pairs(map:GetChildren()) do
+    if obj.Name == "TrashBinPlot" then
+      -- Get copy of trash bin
+      local trashBinClone = serverTrashBinsFolder:FindFirstChild("TrashBin"):Clone()
+
+      -- Create object instance
+      local trashBinInstance = trashBinClass.new()
+      trashBinInstance:SetModel(trashBinClone)
+      trashBinInstance:Run()
+      table.insert(trashBins, trashBinInstance)
+
+      -- Move to workspace
+      trashBinClone:SetPrimaryPartCFrame(obj.CFrame)
+      trashBinClone.Parent = wsTrashBinsFolder
+    end
+  end
 
 end
 
