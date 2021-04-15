@@ -13,6 +13,7 @@ local MarketplaceService = game:GetService("MarketplaceService")
 -- Accurate wait
 -- https://devforum.roblox.com/t/avoiding-wait-and-why/244015/61
 function Util:RealWait(seconds)
+  local seconds = seconds or 0.003
   local total = 0
   repeat
     total = total + RunService.Heartbeat:Wait()
@@ -273,16 +274,14 @@ function Util:FadeIn(player, fadeScreenGui)
 end
 
 
--- Uses part to return Y position of the floor
-function Util:FloorHeight()
-  return workspace:WaitForChild("FloorHeight", math.huge).Position.Y
-end
 
--- Uses part to return Y position of the floor
-function Util:FloorHeightLevel2()
-  return workspace:WaitForChild("FloorHeightLevel2", math.huge).Position.Y
+function Util:MakeModelCanCollide(model, canCollide)
+  for _, obj in ipairs(model:GetDescendants()) do
+    if obj:IsA("BasePart") or obj:IsA("MeshPart") then
+      obj.CanCollide = false
+    end
+  end
 end
-
 
 
 function Weld(x, y, weldName)

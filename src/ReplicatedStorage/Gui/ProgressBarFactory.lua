@@ -5,7 +5,7 @@
 local TweenService = game:GetService("TweenService")
 
 local backgroundTransparency = 0.5
-local frameXPosition = 0 --aing -60
+local frameXPosition = 0
 local textSize = 16
 local backgroundColor = Color3.new(0, 0, 0)
 local textColor = Color3.fromRGB(243, 243, 243)

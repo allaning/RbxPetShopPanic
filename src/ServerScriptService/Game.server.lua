@@ -276,8 +276,9 @@ local function handleTrashBinPrompt(trashBinModel, player)
         -- Check if model already has an attachment Part for the product
         local attachmentPart = getProductAttachmentPart(trashBinModel)
         if attachmentPart then
+          Util:MakeModelCanCollide(currentProduct, false)
           currentProduct:SetPrimaryPartCFrame(attachmentPart.CFrame)
-          Util:WeldModelToPart(currentProduct, attachmentPart, "ProductTrashBinWeld")
+          --Util:WeldModelToPart(currentProduct, attachmentPart, "ProductTrashBinWeld")
         end
 
         -- Reparent product to trashBin
@@ -288,8 +289,18 @@ local function handleTrashBinPrompt(trashBinModel, player)
         end
         currentProduct.Parent = trashBinProductsFolder
 
+        -- Make product "fall" straight down
+        Promise.try(function()
+          local yOffset = 0
+          while currentProduct and currentProduct.PrimaryPart do
+            yOffset -= 0.035
+            currentProduct:SetPrimaryPartCFrame(attachmentPart.CFrame + Vector3.new(0, yOffset, 0))
+            Util:RealWait()
+          end
+        end)
+
         -- Remove product after delay
-        Promise.delay(0.2):andThen(function()
+        Promise.delay(0.1):andThen(function()
           currentProduct:Destroy()
         end)
       end

@@ -5,9 +5,24 @@ local TransformBeginEvent = TransformsFolder:WaitForChild("Events"):WaitForChild
 local ProgressBarFactory = require(ReplicatedStorage.Gui.ProgressBarFactory)
 local Promise = require(ReplicatedStorage.Vendor.Promise)
 
---local Players = game:GetService("Players")
---local Player = Players.LocalPlayer
+local Settings = require(ReplicatedStorage.Settings)
+
+
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
 --local PlayerGui = Player:WaitForChild("PlayerGui")
+
+
+local character = Player.Character or Player.CharacterAdded:wait()
+local Humanoid = character:WaitForChild("Humanoid");
+
+
+if Settings.IsJumpDisabled then
+  -- Disable jumping
+  Humanoid.Changed:Connect(function()
+    Humanoid.Jump = false
+  end)
+end
 
 
 local function showTransformInProgress(subjectPosition, durationSec)
