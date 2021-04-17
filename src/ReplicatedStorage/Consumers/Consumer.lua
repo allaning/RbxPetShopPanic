@@ -5,7 +5,7 @@ Consumer rules:
   - Should be in ServerStorage/Assets/Consumers
   - Top level must be a Model with PrimaryPart
   - Must have Attribute named Input, which is a string matching name of input object
-  - Recommended: Add a descendant Attachment named PromptAttachment where the ProximityPrompt will be located
+  - Recommended: Add a 1st level child Part with Attachment named PromptAttachment where the ProximityPrompt will be located
   - Recommended: Add a descendant Part named ProductAttachmentPart where the Product received will be welded
   - Optional: Add an Attribute named ConsumeTimeSec to specify non-default time it takes to consume product
 ]]--
@@ -25,6 +25,10 @@ Consumer.__index = Consumer
 Consumer.DEFAULT_CONSUME_TIME_SEC = 2.0
 
 
+-- Name of attribute that indicates whether consumer is currently asking for an input
+Consumer.IS_REQUESTING_INPUT_ATTR_STR = "IsRequestingInput"
+
+
 function Consumer.new()
   local self = {}
   setmetatable(self, Consumer)
@@ -36,6 +40,9 @@ function Consumer.new()
 
   -- Folder to hold the product model
   self.itsProductFolder = nil
+
+  -- Boolean to indicate whether consumer is currently asking for an input
+  self.isRequestingInput = true -- TODO: Make default false
 
   self.itsModel = nil
 
@@ -87,7 +94,8 @@ function Consumer:SetProximityPrompt(model)
     end
 
     -- Create the prompt
-    local prompt = ProximityPromptFactory.GetDefaultProximityPrompt(self:GetName(), "Feed")
+    local actionTextStr = model:GetAttribute("PromptActionText") or "Feed"
+    local prompt = ProximityPromptFactory.GetDefaultProximityPrompt(self:GetName(), actionTextStr)
     if prompt then
       ProximityPromptFactory.SetMaxDistance(prompt, 6)
       prompt.Parent = attachment
@@ -126,6 +134,9 @@ function Consumer:Run()
     if consumerModel then
       self.itsProductFolder = Instance.new("Folder", consumerModel)
       self.itsProductFolder.Name = "Products"
+
+      -- Create attribute indicating if consumer is requesting an input
+      local isRequestingInputAttribute = consumerModel:SetAttribute(Consumer.IS_REQUESTING_INPUT_ATTR_STR, self.isRequestingInput)
     end
 
     local model = self:GetModel()

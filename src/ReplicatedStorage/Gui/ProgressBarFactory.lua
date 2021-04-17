@@ -49,19 +49,20 @@ function ProgressBarFactory.GetAutoProgressBar(timeSec)
   -- Create BillboardGui
   local billboardGui = createInstance("BillboardGui", {
       Name = "ProgressBarBillboardGui",
-      --AlwaysOnTop = true,
-      Size = UDim2.new(1, 0, 1, 0),
-      ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+      Size = UDim2.new(4, 0, 1, 0),
+      ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
     }, nil)
 
   -- Create progress bar frame
   local progressBar = createInstance("Frame", {
       Name = "ProgressBar",
-      Size = UDim2.fromOffset(125, 32),
-      Position = UDim2.new(0, 0, 0, 0),
-      AnchorPoint = Vector2.new(0, 0),
+      Size = UDim2.new(1, 0, 1, 0),
+      Position = UDim2.new(0.5, 0, 0.5, 0),
+      AnchorPoint = Vector2.new(0.5, 0.5),
       BackgroundColor3 = Color3.new(1, 1, 1),
-      BorderSizePixel = 0
+      --BorderMode = Enum.BorderMode["Outline"],
+      --BorderColor3 = Color3.new(1, 1, 1),
+      --BorderSizePixel = 2
     }, billboardGui)
 
   -- Create UICorner (if corner radius is not 0)

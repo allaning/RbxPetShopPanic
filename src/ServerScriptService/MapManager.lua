@@ -32,6 +32,9 @@ local MAX_SEARCH_FOR_PLOTS = 1000
 local MapManager = {}
 
 
+-- List of consumer instances
+local consumers = {}
+
 -- List of factory instances
 local factories = {}
 
@@ -43,6 +46,9 @@ local products = {}
 
 -- List of trash bin instances
 local trashBins = {}
+
+-- List of table models
+local tableModels = {}
 
 
 -- Find random available plot on map
@@ -92,6 +98,115 @@ function MapManager.ColorizeMap(map)
   end
 end
 
+local function createConsumer(consumerModel, inputStr, map)
+  local consumerInstance = consumerFactory.GetConsumer(consumerModel.Name, inputStr)
+  local consumerClone = consumerModel:Clone()
+  consumerInstance:SetModel(consumerClone)
+  local consumerPlot = getAvailableConsumerPlot(map)
+  if consumerPlot then
+    consumerPlot:SetAttribute("AssetName", consumerInstance:GetName())
+    local consumerHeightPos = Vector3.new(0, consumerClone.PrimaryPart.Position.Y, 0)
+    consumerClone:SetPrimaryPartCFrame(consumerPlot.CFrame + consumerHeightPos)
+
+    -- Set consumer direction to face the middle
+    local targetPos = Vector3.new(0, consumerClone.PrimaryPart.Position.Y, consumerClone.PrimaryPart.Position.Z)
+    consumerClone.PrimaryPart.CFrame = CFrame.new(consumerClone.PrimaryPart.Position, targetPos)
+
+    -- consumerClone.PrimaryPart.CFrame = consumerPlot.CFrame -- This will work if model is welded
+    consumerClone.Parent = wsConsumersFolder
+    consumerInstance:Run()
+  end
+  return consumerInstance
+end
+
+local function createTransformer(transformerModel, inputStr, map)
+  -- Find available plot on map
+  local plot = getAvailableProducerPlot(map)
+  if plot then
+    plot:SetAttribute("AssetName", inputStr)
+    local transformerClone = transformerModel:Clone()
+    local transformTimeSec = transformerClone:GetAttribute("TransformTimeSec")
+    local transformerName = transformerClone:GetAttribute("TransformerName")
+
+    -- Create product
+    local productModel = serverProductsFolder:FindFirstChild(inputStr)
+    local productInstance = productFactory.GetProduct(inputStr, productModel)
+
+    -- Get its input and set the new inputStr (a return value) to follow the chain all the way back to the factory
+    local newInputStr = ""
+    local transformerInputStr = transformerModel:GetAttribute("Input")
+    if transformerInputStr then
+      newInputStr = transformerInputStr
+    end
+
+    -- Create object instances
+    local transformerInstance = transformerFactory.GetTransformer(transformerName, transformerInputStr, transformTimeSec)
+    transformerInstance:SetModel(transformerClone)
+    transformerInstance:SetProduct(productInstance)
+    transformerInstance:Run()
+
+    -- Move to workspace
+    transformerClone:SetPrimaryPartCFrame(plot.CFrame) -- Set PrimaryPart CFrame so whole model moves with it
+    transformerClone.Parent = wsTransformersFolder
+
+    return transformerInstance, productInstance, newInputStr
+  end
+end
+
+local function createFactory(factoryModel, inputStr, map)
+  -- Find available plot on map
+  local plot = getAvailableProducerPlot(map)
+  if plot then
+    plot:SetAttribute("AssetName", inputStr)
+    -- Get a copy of the factory model and check stats
+    local factoryClone = factoryModel:Clone()
+    local spawnDelaySec = factoryClone:GetAttribute("SpawnDelaySec")
+
+    -- Create product
+    local productModel = serverProductsFolder:FindFirstChild(inputStr)
+    local productInstance = productFactory.GetProduct(inputStr, productModel)
+
+    -- Create object instances
+    local factoryInstance = factoryFactory.GetFactory(inputStr, spawnDelaySec)
+    factoryInstance:SetModel(factoryClone)
+    factoryInstance:SetProduct(productInstance)
+    factoryInstance:Run()
+
+    -- Move factory to workspace
+    factoryClone:SetPrimaryPartCFrame(plot.CFrame) -- Set PrimaryPart CFrame so whole model moves with it
+    factoryClone.Parent = wsFactoriesFolder
+
+    return factoryInstance, productInstance
+  end
+end
+
+local function createTrashBinAtPlot(trashBinModel, plot)
+  -- Get copy of trash bin
+  local trashBinClone = trashBinModel:Clone()
+
+  -- Create object instance
+  local trashBinInstance = trashBinClass.new()
+  trashBinInstance:SetModel(trashBinClone)
+  trashBinInstance:Run()
+
+  -- Move to workspace
+  trashBinClone:SetPrimaryPartCFrame(plot.CFrame)
+  trashBinClone.Parent = wsTrashBinsFolder
+
+  return trashBinInstance
+end
+
+local function createTableAtPlot(tableModel, plot)
+  -- Copy table
+  local tableClone = tableModel:Clone()
+
+  -- Move to workspace
+  tableClone:SetPrimaryPartCFrame(plot.CFrame)
+  tableClone.Parent = wsTablesFolder
+
+  return tableClone
+end
+
 function MapManager.InitializeMap()
   -- aing Hardcoded for now
   local map = serverMapsFolder:WaitForChild("Level1"):WaitForChild("1.1")
@@ -109,89 +224,35 @@ function MapManager.InitializeMap()
     print("Consumer: ".. consumerModel.Name.. "; Input=".. inputStr)
 
     -- Create consumer
-    local consumerInstance = consumerFactory.GetConsumer(consumerModel.Name, inputStr)
-    local consumerClone = consumerModel:Clone()
-    consumerInstance:SetModel(consumerClone)
-    local consumerPlot = getAvailableConsumerPlot(map)
-    if consumerPlot then
-      consumerPlot:SetAttribute("AssetName", consumerInstance:GetName())
-      consumerClone:SetPrimaryPartCFrame(consumerPlot.CFrame) -- Set PrimaryPart CFrame so whole model moves with it
-      consumerClone.PrimaryPart.CFrame = CFrame.new(consumerPlot.Position, map.PrimaryPart.Position)
-      -- consumerClone.PrimaryPart.CFrame = consumerPlot.CFrame -- This will work if model is welded
-      consumerClone.Parent = wsConsumersFolder
-      consumerInstance:Run()
-    end
+    local consumerInstance = createConsumer(consumerModel, inputStr, map)
+    table.insert(consumers, consumerInstance)
 
     -- Find the producers of the input (the names should match)
     -- Everything should start from a Factory (versus Transformer or Aggregator)
-    local isDone = false
+    local isDoneFindingFactory = false
     local count = 0
-    while not isDone do
+    while not isDoneFindingFactory do
       for _, transformerModel in pairs(serverTransformersFolder:GetChildren()) do
         -- Note that for Transformers, the Transformer name is the name of the output product
         if transformerModel.Name == inputStr then
           -- Found Transformer that outputs product named inputStr
 
-          -- Find available plot on map
-          local plot = getAvailableProducerPlot(map)
-          if plot then
-            plot:SetAttribute("AssetName", inputStr)
-            local transformerClone = transformerModel:Clone()
-            local transformTimeSec = transformerClone:GetAttribute("TransformTimeSec")
-            local transformerName = transformerClone:GetAttribute("TransformerName")
-
-            -- Create product
-            local productModel = serverProductsFolder:FindFirstChild(inputStr)
-            local productInstance = productFactory.GetProduct(inputStr, productModel)
-
-            -- Get its input and update the inputStr to follow the chain all the way back to the factory
-            local transformerInputStr = transformerModel:GetAttribute("Input")
-            if transformerInputStr then
-              inputStr = transformerInputStr
-            end
-
-            -- Create object instances
-            local transformerInstance = transformerFactory.GetTransformer(transformerName, transformerInputStr, transformTimeSec)
-            transformerInstance:SetModel(transformerClone)
-            transformerInstance:SetProduct(productInstance)
-            transformerInstance:Run()
+          local transformerInstance, productInstance, newInputStr = createTransformer(transformerModel, inputStr, map)
+          if transformerInstance and productInstance and newInputStr then
             table.insert(transformers, transformerInstance)
             table.insert(products, productInstance)
-
-            -- Move to workspace
-            transformerClone:SetPrimaryPartCFrame(plot.CFrame) -- Set PrimaryPart CFrame so whole model moves with it
-            transformerClone.Parent = wsTransformersFolder
+            inputStr = newInputStr
             break
           end
         end
       end
       for _, factoryModel in pairs(serverFactoriesFolder:GetChildren()) do
         if factoryModel.Name == inputStr then
-          -- Find available plot on map
-          local plot = getAvailableProducerPlot(map)
-          if plot then
-            plot:SetAttribute("AssetName", inputStr)
-            -- Get a copy of the factory model and check stats
-            local factoryClone = factoryModel:Clone()
-            local spawnDelaySec = factoryClone:GetAttribute("SpawnDelaySec")
-
-            -- Create product
-            local productModel = serverProductsFolder:FindFirstChild(inputStr)
-            local productInstance = productFactory.GetProduct(inputStr, productModel)
-
-            -- Create object instances
-            local factoryInstance = factoryFactory.GetFactory(inputStr, spawnDelaySec)
-            factoryInstance:SetModel(factoryClone)
-            factoryInstance:SetProduct(productInstance)
-            factoryInstance:Run()
+          local factoryInstance, productInstance = createFactory(factoryModel, inputStr, map)
+          if factoryInstance and productInstance then
             table.insert(factories, factoryInstance)
             table.insert(products, productInstance)
-
-            -- Move factory to workspace
-            factoryClone:SetPrimaryPartCFrame(plot.CFrame) -- Set PrimaryPart CFrame so whole model moves with it
-            factoryClone.Parent = wsFactoriesFolder
-
-            isDone = true
+            isDoneFindingFactory = true
             break
           end
         end
@@ -199,34 +260,22 @@ function MapManager.InitializeMap()
 
       count += 1
       if count > MAX_SEARCH_FOR_PLOTS then
-        isDone = true
+        isDoneFindingFactory = true
       end
     end -- while
   end -- consumer
 
 
   -- Place tables and trash bins
+  local trashBinModel = serverTrashBinsFolder:WaitForChild("TrashBin")
+  local tableModel = serverTablesFolder:WaitForChild("Table")
   for _, obj in pairs(map:GetChildren()) do
     if obj.Name == "TrashBinPlot" then
-      -- Get copy of trash bin
-      local trashBinClone = serverTrashBinsFolder:FindFirstChild("TrashBin"):Clone()
-
-      -- Create object instance
-      local trashBinInstance = trashBinClass.new()
-      trashBinInstance:SetModel(trashBinClone)
-      trashBinInstance:Run()
+      local trashBinInstance = createTrashBinAtPlot(trashBinModel, obj)
       table.insert(trashBins, trashBinInstance)
-
-      -- Move to workspace
-      trashBinClone:SetPrimaryPartCFrame(obj.CFrame)
-      trashBinClone.Parent = wsTrashBinsFolder
     elseif obj.Name == "TablePlot" then
-      -- Copy table
-      local tableClone = serverTablesFolder:FindFirstChild("Table"):Clone()
-
-      -- Move to workspace
-      tableClone:SetPrimaryPartCFrame(obj.CFrame)
-      tableClone.Parent = wsTablesFolder
+      local tableClone = createTableAtPlot(tableModel, obj)
+      table.insert(tableModels, tableClone)
     end
   end
 

@@ -34,7 +34,7 @@ end
 local function getProductAttachmentPart(model)
   -- Check if model has an attachment Part for the product
   for ___, currentModelPart in pairs(model:GetDescendants()) do
-    if currentModelPart.Name == "ProductAttachmentPart" then
+    if currentModelPart.Name == "ProductAttachmentPart" and currentModelPart:IsA("BasePart") then
       return currentModelPart
     end
   end
@@ -56,51 +56,55 @@ local function getProductAttachmentPart(model)
   return attachmentPart
 end
 
--- TODO debounce
 local function handleConsumerPrompt(consumerModel, player)
   if consumerModel and consumerModel:IsA("Model") then
     local consumerInputStr = consumerModel:GetAttribute("Input")
     print("Consumer: ".. consumerModel.Name.. "; Input=".. consumerInputStr)
-    local primaryPart = consumerModel.PrimaryPart
 
-    -- Check if player is holding the right input
-    local character = Util:GetCharacterFromPlayer(player)
-    if character then
-      local currentProduct = getCharacterProduct(character)
-      if currentProduct then
-        if currentProduct.Name == consumerInputStr then
-          SoundModule.PlaySwitch3(character)
+    -- Check if consumer is currently requesting an input
+    local isRequestingInput = consumerModel:GetAttribute(consumerClass .IS_REQUESTING_INPUT_ATTR_STR)
+    if isRequestingInput then
+      local primaryPart = consumerModel.PrimaryPart
 
-          -- Break welds between product and player
-          local hand = Util:GetRightHandFromPlayer(player)
-          for __, descendant in ipairs(hand:GetChildren()) do
-            if descendant.Name == consumerInputStr..PRODUCT_PLAYER_WELD_NAME then
-              descendant:Destroy()
+      -- Check if player is holding the right input
+      local character = Util:GetCharacterFromPlayer(player)
+      if character then
+        local currentProduct = getCharacterProduct(character)
+        if currentProduct then
+          if currentProduct.Name == consumerInputStr then
+            SoundModule.PlaySwitch3(character)
+
+            -- Break welds between product and player
+            local hand = Util:GetRightHandFromPlayer(player)
+            for __, descendant in ipairs(hand:GetChildren()) do
+              if descendant.Name == consumerInputStr..PRODUCT_PLAYER_WELD_NAME then
+                descendant:Destroy()
+              end
             end
-          end
 
-          -- Check if model already has an attachment Part for the product
-          local attachmentPart = getProductAttachmentPart(consumerModel)
-          if attachmentPart then
-            currentProduct:SetPrimaryPartCFrame(attachmentPart.CFrame)
-            Util:WeldModelToPart(currentProduct, attachmentPart, "ProductConsumerWeld")
-          end
+            -- Check if model already has an attachment Part for the product
+            local attachmentPart = getProductAttachmentPart(consumerModel)
+            if attachmentPart then
+              currentProduct:SetPrimaryPartCFrame(attachmentPart.CFrame)
+              Util:WeldModelToPart(currentProduct, attachmentPart, "ProductConsumerWeld")
+            end
 
-          -- Reparent product to consumer
-          local consumerProductsFolder = consumerModel:WaitForChild("Products", 2)
-          if not consumerProductsFolder then
-            consumerProductsFolder = Instance.new("Folder", consumerModel)
-            consumerProductsFolder.Name = "Products"
-          end
-          currentProduct.Parent = consumerProductsFolder
+            -- Reparent product to consumer
+            local consumerProductsFolder = consumerModel:WaitForChild("Products", 2)
+            if not consumerProductsFolder then
+              consumerProductsFolder = Instance.new("Folder", consumerModel)
+              consumerProductsFolder.Name = "Products"
+            end
+            currentProduct.Parent = consumerProductsFolder
 
-          -- Remove product after delay
-          Promise.delay(consumerClass.DEFAULT_CONSUME_TIME_SEC):andThen(function()
-            currentProduct:Destroy()
-          end)
-        end
-      end
-    end
+            -- Remove product after delay
+            Promise.delay(consumerClass.DEFAULT_CONSUME_TIME_SEC):andThen(function()
+              currentProduct:Destroy()
+            end)
+          end
+        end -- currentProduct
+      end -- primaryPart
+    end -- isRequestingInput
   end
 end
 
