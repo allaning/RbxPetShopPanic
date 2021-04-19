@@ -7,6 +7,7 @@ Consumer rules:
   - Must have Attribute named Input, which is a string matching name of input object
   - Recommended: Add a 1st level child Part with Attachment named PromptAttachment where the ProximityPrompt will be located
   - Recommended: Add a descendant Part named ProductAttachmentPart where the Product received will be welded
+  - Optional: Add an Attribute named HoldDuration to specify non-default time it takes to give product to consumer
   - Optional: Add an Attribute named ConsumeTimeSec to specify non-default time it takes to consume product
 ]]--
 
@@ -187,6 +188,19 @@ function Consumer:SetProximityPrompt(model)
     local prompt = ProximityPromptFactory.GetDefaultProximityPrompt(self:GetName(), actionTextStr)
     if prompt then
       ProximityPromptFactory.SetMaxDistance(prompt, PROXIMITY_PROMPT_DISTANCE)
+
+      -- Check if consumer has non-default name
+      local objectText = model:GetAttribute("PromptObjectText")
+      if objectText then
+        ProximityPromptFactory.SetObjectText(prompt, objectText)
+      end
+
+      -- Check if consumer has a HoldDuration
+      local holdDuration = model:GetAttribute("HoldDuration")
+      if holdDuration then
+        ProximityPromptFactory.SetHoldDuration(prompt, holdDuration)
+      end
+
       prompt.Parent = attachment
     end
   end

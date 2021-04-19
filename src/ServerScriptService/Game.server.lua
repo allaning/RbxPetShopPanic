@@ -273,7 +273,6 @@ local function onPromptTriggered(promptObject, player)
     error("Game.onPromptTriggered() Could not find Model for ".. promptObject.Parent.Parent.Name)
   end
 end
-
 -- Connect prompt events to handling functions
 ProximityPromptService.PromptTriggered:Connect(onPromptTriggered)
 

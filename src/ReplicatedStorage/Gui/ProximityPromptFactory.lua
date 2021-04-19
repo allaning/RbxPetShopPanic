@@ -4,12 +4,20 @@
 
 local ProximityPromptFactory = {}
 
+function ProximityPromptFactory.SetObjectText(prompt, objectText)
+  prompt.ObjectText = objectText
+end
+
 function ProximityPromptFactory.SetHotkey(prompt, hotkey)
   prompt.KeyboardKeyCode = hotkey
 end
 
 function ProximityPromptFactory.SetMaxDistance(prompt, distance)
   prompt.MaxActivationDistance = distance
+end
+
+function ProximityPromptFactory.SetHoldDuration(prompt, holdDuration)
+  prompt.HoldDuration = holdDuration
 end
 
 function ProximityPromptFactory.SetRequiresLineOfSight(prompt, lineOfSight)
