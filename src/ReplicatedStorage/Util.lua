@@ -129,6 +129,25 @@ function Util:IsSubsetOfList(partialList, fullList)
 end
 
 
+function Util:IsChild(parent, childName)
+  for _, obj in ipairs(parent:GetChildren()) do
+    if obj.Name == childName then
+      return true
+    end
+  end
+  return false
+end
+
+
+function Util:GetChildWithName(parent, childName)
+  for _, obj in ipairs(parent:GetChildren()) do
+    if obj.Name == childName then
+      return obj
+    end
+  end
+end
+
+
 -- Returns a comma separated string representing num, e.g. if num=123456789 then retruns "123,456,789"
 function Util:ConvertComma(num)
   local x = tostring(num)

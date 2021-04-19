@@ -4,3 +4,6 @@
 [submodule "submodules/DataStore2"]
 	path = submodules/DataStore2
 	url = https://github.com/Kampfkarren/Roblox.git
+[submodule "submodules/Flipper"]
+	path = submodules/Flipper
+	url = https://github.com/Reselim/Flipper

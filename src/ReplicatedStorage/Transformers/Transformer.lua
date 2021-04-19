@@ -101,6 +101,7 @@ function Transformer:SetProduct(productInstance)
   self.itsProduct = productInstance
 end
 
+local TRANSFORMER_ATTACHMENT_HEIGHT_ABOVE_PART = 6
 function Transformer:GetProximityPromptAttachment(model)
   if model then
     -- Check if model already has an attachment for the prompt
@@ -117,7 +118,7 @@ function Transformer:GetProximityPromptAttachment(model)
       if primaryPart then
         attachment = Instance.new("Attachment", primaryPart)
         attachment.Name = "PromptAttachment"
-        attachment.Position = Vector3.new(0, 6, 0)
+        attachment.Position = Vector3.new(0, TRANSFORMER_ATTACHMENT_HEIGHT_ABOVE_PART, 0)
       end
     end
 
@@ -162,7 +163,7 @@ function Transformer:TransformProduct(productInstance)
       local spawnPart = transformerModel:WaitForChild("ProductAttachmentPart")
 
       -- Tell client to show transform progress
-      TransformBeginEvent:FireAllClients(spawnPart.Position, self:GetTransformTimeSec())
+      TransformBeginEvent:FireAllClients(spawnPart, self:GetTransformTimeSec())
 
       -- Delay for the transform
       Promise.delay(self:GetTransformTimeSec()):andThen(function()

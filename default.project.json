@@ -20,6 +20,9 @@
         "$className": "Folder",
         "Promise": {
           "$path": "submodules/Promise/lib"
+        },
+        "Flipper": {
+          "$path": "submodules/Flipper"
         }
       }
     },

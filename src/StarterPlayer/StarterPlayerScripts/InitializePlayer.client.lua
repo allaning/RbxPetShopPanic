@@ -1,21 +1,34 @@
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Promise = require(ReplicatedStorage.Vendor.Promise)
+local Util = require(ReplicatedStorage.Util)
+local ProgressBarFactory = require(ReplicatedStorage.Gui.ProgressBarFactory)
+local ViewportFrameFactory = require(ReplicatedStorage.Gui.ViewportFrameFactory)
+local TweenGuiFactory = require(ReplicatedStorage.Gui.TweenGuiFactory)
+local Settings = require(ReplicatedStorage.Settings)
+local SoundModule = require(ReplicatedStorage.SoundModule)
+
+local consumerClass = require(ReplicatedStorage.Consumers.Consumer)
+
 local TransformsFolder = ReplicatedStorage:WaitForChild("Transformers")
 local TransformBeginEvent = TransformsFolder:WaitForChild("Events"):WaitForChild("TransformBegin")
-local ProgressBarFactory = require(ReplicatedStorage.Gui.ProgressBarFactory)
-local Promise = require(ReplicatedStorage.Vendor.Promise)
-
-local Settings = require(ReplicatedStorage.Settings)
-
+local ShowOverheadBillboardEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ShowOverheadBillboard")
+local ConsumerInputReceivedEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ConsumerInputReceived")
 
 local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
---local PlayerGui = Player:WaitForChild("PlayerGui")
+local PlayerGui = Player:WaitForChild("PlayerGui")
 
 
 local character = Player.Character or Player.CharacterAdded:wait()
 local Humanoid = character:WaitForChild("Humanoid");
 
+
+Promise.try(function()
+  -- Update things in Workspace
+  local baseplate = Workspace:WaitForChild("Baseplate")
+  baseplate.Color = Color3.fromRGB(80, 109, 84)
+end)
 
 if Settings.IsJumpDisabled then
   -- Disable jumping
@@ -24,19 +37,87 @@ if Settings.IsJumpDisabled then
   end)
 end
 
+-- Create place for SurfaceGuis
+local surfaceGuiFolder = Instance.new("Folder", PlayerGui)
+surfaceGuiFolder.Name = "SurfaceGuis"
+surfaceGuiFolder.Parent = PlayerGui
 
-local function showTransformInProgress(subjectPosition, durationSec)
-  --print("In progress: ".. subjectPosition.X.. ",".. subjectPosition.Y.. ",".. subjectPosition.Z.. "; ".. tostring(durationSec))
+
+local function getViewportSurfaceGuiName(consumerUid)
+  return "ViewportSurfaceGui_".. tostring(consumerUid)
+end
+
+local REQUEST_INPUT_GUI_BILLBOARD_PART_NAME = "RequestInputGuiBillboardPart"
+local REQUEST_INPUT_GUI_HEIGHT_ABOVE_PART = -1 -- Start lower since tweening up
+
+-- Show a request above the consumer for some input product
+local function showRequestInputGui(model, attachmentPart, productModel)
+  --print("In showRequestInputGui")
+  local billboardPart = Util:GetChildWithName(attachmentPart, REQUEST_INPUT_GUI_BILLBOARD_PART_NAME)
+  if not billboardPart then
+    billboardPart = Instance.new("Part")
+    billboardPart.Name = REQUEST_INPUT_GUI_BILLBOARD_PART_NAME
+    billboardPart.Position = attachmentPart.Position + Vector3.new(0, REQUEST_INPUT_GUI_HEIGHT_ABOVE_PART, -2) -- Above and farther from camera
+    billboardPart.Size = Vector3.new(3, 3, 0.001)
+    billboardPart.Color = Color3.fromRGB(124, 225, 255)
+    billboardPart.CFrame = billboardPart.CFrame * CFrame.Angles(math.rad(-35), math.rad(180), 0) -- Rotate front to face player and tilt
+    billboardPart.Anchored = true
+    billboardPart.CanCollide = false
+    billboardPart.CastShadow = false
+    billboardPart.Transparency = 0.0
+  end
+
+  local surfaceGui = Instance.new("SurfaceGui")
+  local modelUid = model:GetAttribute(consumerClass.UID_ATTRIBUTE_NAME) or ""
+  surfaceGui.Name = getViewportSurfaceGuiName(modelUid)
+  local viewport = ViewportFrameFactory.GetViewportFrame(productModel)
+  viewport.Parent = surfaceGui
+  surfaceGui.Adornee = billboardPart
+  surfaceGui.Parent = surfaceGuiFolder
+  billboardPart.Parent = attachmentPart
+
+  SoundModule.PlayDrip(attachmentPart)
+  local goalPosition = billboardPart.Position + Vector3.new(0, 1, 0)
+  TweenGuiFactory.SpringUpPart(goalPosition , billboardPart)
+end
+ShowOverheadBillboardEvent.OnClientEvent:Connect(showRequestInputGui)
+
+-- This is triggered when a consumer receives its input
+local function onConsumerInputReceived(model)
+  --print("In onConsumerInputReceived")
+  if model then
+    local attachmentPart = consumerClass.GetRequestInputGuiAttachmentPart(model)
+    if attachmentPart then
+      local billboardPart = attachmentPart:FindFirstChild(REQUEST_INPUT_GUI_BILLBOARD_PART_NAME)
+      if billboardPart then
+        SoundModule.PlaySquish(attachmentPart)
+        billboardPart:Destroy()
+      end
+    end
+  end
+end
+ConsumerInputReceivedEvent.OnClientEvent:Connect(onConsumerInputReceived)
+
+
+local TRANSFORMER_BILLBOARD_PART_NAME = "TransformerBillboardPart"
+local PROGRESS_BAR_HEIGHT_ABOVE_PART = 3
+
+-- Show a progress bar above a transformer
+local function showTransformInProgress(attachmentPart, durationSec)
+  --print("In progress: ".. attachmentPart.Position.X.. ",".. attachmentPart.Position.Y.. ",".. attachmentPart.Position.Z.. "; ".. tostring(durationSec))
   -- Create progress bar above transformer
   local billboardGui = ProgressBarFactory.GetAutoProgressBar()
   if billboardGui then
-    local billboardPart = Instance.new("Part", Workspace)
-    billboardPart.Name = "TransformerBillboardPart"
-    billboardPart.Position = subjectPosition + Vector3.new(0, 3, 0)
-    billboardPart.CFrame = billboardPart.CFrame * CFrame.Angles(0, math.rad(180), 0) -- Rotate front to face player
-    billboardPart.Anchored = true
-    billboardPart.CanCollide = false
-    billboardPart.Transparency = 1.0
+    local billboardPart = Util:GetChildWithName(attachmentPart, TRANSFORMER_BILLBOARD_PART_NAME)
+    if not billboardPart  then
+      billboardPart = Instance.new("Part", attachmentPart)
+      billboardPart.Name = TRANSFORMER_BILLBOARD_PART_NAME
+      billboardPart.Position = attachmentPart.Position + Vector3.new(0, PROGRESS_BAR_HEIGHT_ABOVE_PART, 0)
+      billboardPart.CFrame = billboardPart.CFrame * CFrame.Angles(0, math.rad(180), 0) -- Rotate front to face player
+      billboardPart.Anchored = true
+      billboardPart.CanCollide = false
+      billboardPart.Transparency = 1.0
+    end
     billboardGui.Adornee = billboardPart
     billboardGui.Parent = billboardPart
 

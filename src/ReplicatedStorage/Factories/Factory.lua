@@ -75,7 +75,7 @@ function Factory:GenerateProduct(instance)
 
   local product = self:GetProduct()
   if product then
-    print("  Factory:GetProduct: ".. product:GetName())
+    --print("Factory:GetProduct: ".. product:GetName())
     local productClone = product:GetModelClone()
     if productClone then
       local factoryModel = self:GetModel()

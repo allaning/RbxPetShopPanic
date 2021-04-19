@@ -19,6 +19,8 @@ local serverTransformersFolder = assetsFolder:WaitForChild("Transformers")
 local serverTablesFolder = assetsFolder:WaitForChild("Tables")
 local serverTrashBinsFolder = assetsFolder:WaitForChild("TrashBins")
 
+local consumerClass = require(ReplicatedStorage.Consumers.Consumer)
+
 local consumerFactory = require(ReplicatedStorage.Consumers.ConsumerFactory)
 local productFactory = require(ReplicatedStorage.Products.ProductFactory)
 local factoryFactory = require(ReplicatedStorage.Factories.FactoryFactory)
@@ -98,10 +100,12 @@ function MapManager.ColorizeMap(map)
   end
 end
 
-local function createConsumer(consumerModel, inputStr, map)
+local function createConsumer(consumerModel, inputStr, map, currentConsumerUid)
+  currentConsumerUid = currentConsumerUid or consumerClass.UID_UNINITIALIZED
   local consumerInstance = consumerFactory.GetConsumer(consumerModel.Name, inputStr)
   local consumerClone = consumerModel:Clone()
   consumerInstance:SetModel(consumerClone)
+  consumerInstance:SetUid(currentConsumerUid)
   local consumerPlot = getAvailableConsumerPlot(map)
   if consumerPlot then
     consumerPlot:SetAttribute("AssetName", consumerInstance:GetName())
@@ -114,7 +118,6 @@ local function createConsumer(consumerModel, inputStr, map)
 
     -- consumerClone.PrimaryPart.CFrame = consumerPlot.CFrame -- This will work if model is welded
     consumerClone.Parent = wsConsumersFolder
-    consumerInstance:Run()
   end
   return consumerInstance
 end
@@ -219,12 +222,14 @@ function MapManager.InitializeMap()
   map.Parent = wsMapsFolder
 
   -- Look for the consumers and find their producers
+  local currentConsumerUid = 1
   for consumerModelIdx, consumerModel in pairs(serverConsumersFolder:GetChildren()) do
     local inputStr = consumerModel:GetAttribute("Input")
     print("Consumer: ".. consumerModel.Name.. "; Input=".. inputStr)
 
     -- Create consumer
-    local consumerInstance = createConsumer(consumerModel, inputStr, map)
+    local consumerInstance = createConsumer(consumerModel, inputStr, map, currentConsumerUid)
+    currentConsumerUid += 1
     table.insert(consumers, consumerInstance)
 
     -- Find the producers of the input (the names should match)
@@ -252,6 +257,12 @@ function MapManager.InitializeMap()
           if factoryInstance and productInstance then
             table.insert(factories, factoryInstance)
             table.insert(products, productInstance)
+
+            -- Update current Consumer with the product info
+            consumerInstance:SetInput(inputStr)
+            consumerInstance:SetInputModel(productInstance:GetModel())
+            consumerInstance:Run()
+
             isDoneFindingFactory = true
             break
           end

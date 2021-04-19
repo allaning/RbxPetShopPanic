@@ -106,7 +106,7 @@ endif
 set shortmess=aoO
 argglobal
 %argdel
-$argadd src\ReplicatedStorage\Themes.lua
+$argadd src\ReplicatedStorage\Gui\ViewportFrameFactory.lua
 tabnew
 tabrewind
 edit C:\Data\Roblox\Places\PetShopPanic\default.project.json
@@ -114,10 +114,6 @@ set splitbelow splitright
 wincmd _ | wincmd |
 vsplit
 1wincmd h
-wincmd w
-wincmd _ | wincmd |
-split
-1wincmd k
 wincmd w
 set nosplitbelow
 set nosplitright
@@ -127,10 +123,7 @@ set winheight=1
 set winminwidth=0
 set winwidth=1
 exe 'vert 1resize ' . ((&columns * 134 + 134) / 269)
-exe '2resize ' . ((&lines * 29 + 30) / 61)
 exe 'vert 2resize ' . ((&columns * 134 + 134) / 269)
-exe '3resize ' . ((&lines * 28 + 30) / 61)
-exe 'vert 3resize ' . ((&columns * 134 + 134) / 269)
 argglobal
 setlocal keymap=
 setlocal noarabic
@@ -258,322 +251,168 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 17 - ((16 * winheight(0) + 29) / 58)
+let s:l = 22 - ((21 * winheight(0) + 29) / 58)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-17
+22
+normal! 011|
+wincmd w
+argglobal
+if bufexists("C:\Data\Roblox\Places\PetShopPanic\src\StarterPlayer\StarterPlayerScripts\InitializePlayer.client.lua") | buffer C:\Data\Roblox\Places\PetShopPanic\src\StarterPlayer\StarterPlayerScripts\InitializePlayer.client.lua | else | edit C:\Data\Roblox\Places\PetShopPanic\src\StarterPlayer\StarterPlayerScripts\InitializePlayer.client.lua | endif
+let s:cpo_save=&cpo
+set cpo&vim
+imap <buffer> <F1> :call xolox#lua#help()
+nmap <buffer> K :call xolox#lua#help()
+noremap <buffer> <silent> [] m':call xolox#lua#jumpotherfunc(0)
+noremap <buffer> <silent> [[ m':call xolox#lua#jumpthisfunc(0)
+noremap <buffer> <silent> [{ m':call xolox#lua#jumpblock(0)
+noremap <buffer> <silent> ]] m':call xolox#lua#jumpotherfunc(1)
+noremap <buffer> <silent> ][ m':call xolox#lua#jumpthisfunc(1)
+noremap <buffer> <silent> ]} m':call xolox#lua#jumpblock(1)
+nmap <buffer> <F1> :call xolox#lua#help()
+inoremap <buffer> <silent> <expr> " xolox#lua#completedynamic('"')
+inoremap <buffer> <silent> <expr> ' xolox#lua#completedynamic("'")
+inoremap <buffer> <silent> <expr> . xolox#lua#completedynamic('.')
+let &cpo=s:cpo_save
+unlet s:cpo_save
+setlocal keymap=
+setlocal noarabic
+setlocal autoindent
+setlocal backupcopy=
+setlocal balloonexpr=xolox#lua#getsignature(v:beval_text)
+setlocal nobinary
+setlocal nobreakindent
+setlocal breakindentopt=
+setlocal bufhidden=
+setlocal buflisted
+setlocal buftype=
+setlocal nocindent
+setlocal cinkeys=0{,0},0),0],:,0#,!^F,o,O,e
+setlocal cinoptions=
+setlocal cinwords=if,else,while,do,for,switch
+setlocal colorcolumn=
+setlocal comments=s:--[[,m:\ ,e:]],:--
+setlocal commentstring=--%s
+setlocal complete=.,w,b,u,t,i
+setlocal concealcursor=
+setlocal conceallevel=0
+setlocal completefunc=xolox#lua#completefunc
+setlocal completeslash=
+setlocal nocopyindent
+setlocal cryptmethod=
+setlocal nocursorbind
+setlocal nocursorcolumn
+set cursorline
+setlocal cursorline
+setlocal cursorlineopt=both
+setlocal define=
+setlocal dictionary=
+setlocal nodiff
+setlocal equalprg=
+setlocal errorformat=
+setlocal expandtab
+if &filetype != 'lua'
+setlocal filetype=lua
+endif
+setlocal fixendofline
+setlocal foldcolumn=0
+setlocal foldenable
+setlocal foldexpr=0
+setlocal foldignore=#
+setlocal foldlevel=0
+setlocal foldmarker={{{,}}}
+setlocal foldmethod=manual
+setlocal foldminlines=1
+setlocal foldnestmax=20
+setlocal foldtext=foldtext()
+setlocal formatexpr=
+setlocal formatoptions=croql
+setlocal formatlistpat=^\\s*\\d\\+[\\]:.)}\\t\ ]\\s*
+setlocal formatprg=
+setlocal grepprg=
+setlocal iminsert=0
+setlocal imsearch=-1
+setlocal include=\\v<((do|load)file|require)[^'\"]*['\"]\\zs[^'\"]+
+setlocal includeexpr=xolox#lua#includeexpr(v:fname)
+setlocal indentexpr=GetLuaIndent()
+setlocal indentkeys=0{,0},0),0],:,0#,!^F,o,O,e,0=end,0=until,0=elseif,0=else
+setlocal noinfercase
+setlocal iskeyword=@,48-57,_,192-255
+setlocal keywordprg=
+setlocal nolinebreak
+setlocal nolisp
+setlocal lispwords=
+set list
+setlocal list
+setlocal makeencoding=
+setlocal makeprg=
+setlocal matchpairs=(:),{:},[:]
+setlocal modeline
+setlocal modifiable
+setlocal nrformats=bin,octal,hex
+setlocal nonumber
+setlocal numberwidth=4
+setlocal omnifunc=xolox#lua#omnifunc
+setlocal path=
+setlocal nopreserveindent
+setlocal nopreviewwindow
+setlocal quoteescape=\\
+setlocal noreadonly
+set relativenumber
+setlocal relativenumber
+setlocal norightleft
+setlocal rightleftcmd=search
+setlocal noscrollbind
+setlocal scrolloff=-1
+setlocal shiftwidth=2
+setlocal noshortname
+setlocal showbreak=
+setlocal sidescrolloff=-1
+setlocal signcolumn=auto
+setlocal nosmartindent
+setlocal softtabstop=2
+setlocal nospell
+setlocal spellcapcheck=[.?!]\\_[\\])'\"\	\ ]\\+
+setlocal spellfile=
+setlocal spelllang=en
+setlocal statusline=
+setlocal suffixesadd=
+setlocal swapfile
+setlocal synmaxcol=3000
+if &syntax != 'lua'
+setlocal syntax=lua
+endif
+setlocal tabstop=2
+setlocal tagcase=
+setlocal tagfunc=
+setlocal tags=
+setlocal termwinkey=
+setlocal termwinscroll=10000
+setlocal termwinsize=
+setlocal textwidth=0
+setlocal thesaurus=
+setlocal noundofile
+setlocal undolevels=-123456
+setlocal varsofttabstop=
+setlocal vartabstop=
+setlocal wincolor=
+setlocal nowinfixheight
+setlocal nowinfixwidth
+setlocal wrap
+setlocal wrapmargin=0
+silent! normal! zE
+let s:l = 26 - ((25 * winheight(0) + 29) / 58)
+if s:l < 1 | let s:l = 1 | endif
+exe s:l
+normal! zt
+26
 normal! 0
 wincmd w
-argglobal
-if bufexists("C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Themes.lua") | buffer C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Themes.lua | else | edit C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Themes.lua | endif
-let s:cpo_save=&cpo
-set cpo&vim
-imap <buffer> <F1> :call xolox#lua#help()
-nmap <buffer> K :call xolox#lua#help()
-noremap <buffer> <silent> [] m':call xolox#lua#jumpotherfunc(0)
-noremap <buffer> <silent> [[ m':call xolox#lua#jumpthisfunc(0)
-noremap <buffer> <silent> [{ m':call xolox#lua#jumpblock(0)
-noremap <buffer> <silent> ]] m':call xolox#lua#jumpotherfunc(1)
-noremap <buffer> <silent> ][ m':call xolox#lua#jumpthisfunc(1)
-noremap <buffer> <silent> ]} m':call xolox#lua#jumpblock(1)
-nmap <buffer> <F1> :call xolox#lua#help()
-inoremap <buffer> <silent> <expr> " xolox#lua#completedynamic('"')
-inoremap <buffer> <silent> <expr> ' xolox#lua#completedynamic("'")
-inoremap <buffer> <silent> <expr> . xolox#lua#completedynamic('.')
-let &cpo=s:cpo_save
-unlet s:cpo_save
-setlocal keymap=
-setlocal noarabic
-setlocal autoindent
-setlocal backupcopy=
-setlocal balloonexpr=xolox#lua#getsignature(v:beval_text)
-setlocal nobinary
-setlocal nobreakindent
-setlocal breakindentopt=
-setlocal bufhidden=
-setlocal buflisted
-setlocal buftype=
-setlocal nocindent
-setlocal cinkeys=0{,0},0),0],:,0#,!^F,o,O,e
-setlocal cinoptions=
-setlocal cinwords=if,else,while,do,for,switch
-setlocal colorcolumn=
-setlocal comments=s:--[[,m:\ ,e:]],:--
-setlocal commentstring=--%s
-setlocal complete=.,w,b,u,t,i
-setlocal concealcursor=
-setlocal conceallevel=0
-setlocal completefunc=xolox#lua#completefunc
-setlocal completeslash=
-setlocal nocopyindent
-setlocal cryptmethod=
-setlocal nocursorbind
-setlocal nocursorcolumn
-set cursorline
-setlocal cursorline
-setlocal cursorlineopt=both
-setlocal define=
-setlocal dictionary=
-setlocal nodiff
-setlocal equalprg=
-setlocal errorformat=
-setlocal expandtab
-if &filetype != 'lua'
-setlocal filetype=lua
-endif
-setlocal fixendofline
-setlocal foldcolumn=0
-setlocal foldenable
-setlocal foldexpr=0
-setlocal foldignore=#
-setlocal foldlevel=0
-setlocal foldmarker={{{,}}}
-setlocal foldmethod=manual
-setlocal foldminlines=1
-setlocal foldnestmax=20
-setlocal foldtext=foldtext()
-setlocal formatexpr=
-setlocal formatoptions=croql
-setlocal formatlistpat=^\\s*\\d\\+[\\]:.)}\\t\ ]\\s*
-setlocal formatprg=
-setlocal grepprg=
-setlocal iminsert=0
-setlocal imsearch=-1
-setlocal include=\\v<((do|load)file|require)[^'\"]*['\"]\\zs[^'\"]+
-setlocal includeexpr=xolox#lua#includeexpr(v:fname)
-setlocal indentexpr=GetLuaIndent()
-setlocal indentkeys=0{,0},0),0],:,0#,!^F,o,O,e,0=end,0=until,0=elseif,0=else
-setlocal noinfercase
-setlocal iskeyword=@,48-57,_,192-255
-setlocal keywordprg=
-setlocal nolinebreak
-setlocal nolisp
-setlocal lispwords=
-set list
-setlocal list
-setlocal makeencoding=
-setlocal makeprg=
-setlocal matchpairs=(:),{:},[:]
-setlocal modeline
-setlocal modifiable
-setlocal nrformats=bin,octal,hex
-setlocal nonumber
-setlocal numberwidth=4
-setlocal omnifunc=xolox#lua#omnifunc
-setlocal path=
-setlocal nopreserveindent
-setlocal nopreviewwindow
-setlocal quoteescape=\\
-setlocal noreadonly
-set relativenumber
-setlocal relativenumber
-setlocal norightleft
-setlocal rightleftcmd=search
-setlocal noscrollbind
-setlocal scrolloff=-1
-setlocal shiftwidth=2
-setlocal noshortname
-setlocal showbreak=
-setlocal sidescrolloff=-1
-setlocal signcolumn=auto
-setlocal nosmartindent
-setlocal softtabstop=2
-setlocal nospell
-setlocal spellcapcheck=[.?!]\\_[\\])'\"\	\ ]\\+
-setlocal spellfile=
-setlocal spelllang=en
-setlocal statusline=
-setlocal suffixesadd=
-setlocal swapfile
-setlocal synmaxcol=3000
-if &syntax != 'lua'
-setlocal syntax=lua
-endif
-setlocal tabstop=2
-setlocal tagcase=
-setlocal tagfunc=
-setlocal tags=
-setlocal termwinkey=
-setlocal termwinscroll=10000
-setlocal termwinsize=
-setlocal textwidth=0
-setlocal thesaurus=
-setlocal noundofile
-setlocal undolevels=-123456
-setlocal varsofttabstop=
-setlocal vartabstop=
-setlocal wincolor=
-setlocal nowinfixheight
-setlocal nowinfixwidth
-setlocal wrap
-setlocal wrapmargin=0
-silent! normal! zE
-let s:l = 2 - ((1 * winheight(0) + 14) / 29)
-if s:l < 1 | let s:l = 1 | endif
-exe s:l
-normal! zt
-2
-normal! 09|
-wincmd w
-argglobal
-if bufexists("C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\MapManager.lua") | buffer C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\MapManager.lua | else | edit C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\MapManager.lua | endif
-let s:cpo_save=&cpo
-set cpo&vim
-imap <buffer> <F1> :call xolox#lua#help()
-nmap <buffer> K :call xolox#lua#help()
-noremap <buffer> <silent> [] m':call xolox#lua#jumpotherfunc(0)
-noremap <buffer> <silent> [[ m':call xolox#lua#jumpthisfunc(0)
-noremap <buffer> <silent> [{ m':call xolox#lua#jumpblock(0)
-noremap <buffer> <silent> ]] m':call xolox#lua#jumpotherfunc(1)
-noremap <buffer> <silent> ][ m':call xolox#lua#jumpthisfunc(1)
-noremap <buffer> <silent> ]} m':call xolox#lua#jumpblock(1)
-nmap <buffer> <F1> :call xolox#lua#help()
-inoremap <buffer> <silent> <expr> " xolox#lua#completedynamic('"')
-inoremap <buffer> <silent> <expr> ' xolox#lua#completedynamic("'")
-inoremap <buffer> <silent> <expr> . xolox#lua#completedynamic('.')
-let &cpo=s:cpo_save
-unlet s:cpo_save
-setlocal keymap=
-setlocal noarabic
-setlocal autoindent
-setlocal backupcopy=
-setlocal balloonexpr=xolox#lua#getsignature(v:beval_text)
-setlocal nobinary
-setlocal nobreakindent
-setlocal breakindentopt=
-setlocal bufhidden=
-setlocal buflisted
-setlocal buftype=
-setlocal nocindent
-setlocal cinkeys=0{,0},0),0],:,0#,!^F,o,O,e
-setlocal cinoptions=
-setlocal cinwords=if,else,while,do,for,switch
-setlocal colorcolumn=
-setlocal comments=s:--[[,m:\ ,e:]],:--
-setlocal commentstring=--%s
-setlocal complete=.,w,b,u,t,i
-setlocal concealcursor=
-setlocal conceallevel=0
-setlocal completefunc=xolox#lua#completefunc
-setlocal completeslash=
-setlocal nocopyindent
-setlocal cryptmethod=
-setlocal nocursorbind
-setlocal nocursorcolumn
-set cursorline
-setlocal cursorline
-setlocal cursorlineopt=both
-setlocal define=
-setlocal dictionary=
-setlocal nodiff
-setlocal equalprg=
-setlocal errorformat=
-setlocal expandtab
-if &filetype != 'lua'
-setlocal filetype=lua
-endif
-setlocal fixendofline
-setlocal foldcolumn=0
-setlocal foldenable
-setlocal foldexpr=0
-setlocal foldignore=#
-setlocal foldlevel=0
-setlocal foldmarker={{{,}}}
-setlocal foldmethod=manual
-setlocal foldminlines=1
-setlocal foldnestmax=20
-setlocal foldtext=foldtext()
-setlocal formatexpr=
-setlocal formatoptions=croql
-setlocal formatlistpat=^\\s*\\d\\+[\\]:.)}\\t\ ]\\s*
-setlocal formatprg=
-setlocal grepprg=
-setlocal iminsert=0
-setlocal imsearch=-1
-setlocal include=\\v<((do|load)file|require)[^'\"]*['\"]\\zs[^'\"]+
-setlocal includeexpr=xolox#lua#includeexpr(v:fname)
-setlocal indentexpr=GetLuaIndent()
-setlocal indentkeys=0{,0},0),0],:,0#,!^F,o,O,e,0=end,0=until,0=elseif,0=else
-setlocal noinfercase
-setlocal iskeyword=@,48-57,_,192-255
-setlocal keywordprg=
-setlocal nolinebreak
-setlocal nolisp
-setlocal lispwords=
-set list
-setlocal list
-setlocal makeencoding=
-setlocal makeprg=
-setlocal matchpairs=(:),{:},[:]
-setlocal modeline
-setlocal modifiable
-setlocal nrformats=bin,octal,hex
-setlocal nonumber
-setlocal numberwidth=4
-setlocal omnifunc=xolox#lua#omnifunc
-setlocal path=
-setlocal nopreserveindent
-setlocal nopreviewwindow
-setlocal quoteescape=\\
-setlocal noreadonly
-set relativenumber
-setlocal relativenumber
-setlocal norightleft
-setlocal rightleftcmd=search
-setlocal noscrollbind
-setlocal scrolloff=-1
-setlocal shiftwidth=2
-setlocal noshortname
-setlocal showbreak=
-setlocal sidescrolloff=-1
-setlocal signcolumn=auto
-setlocal nosmartindent
-setlocal softtabstop=2
-setlocal nospell
-setlocal spellcapcheck=[.?!]\\_[\\])'\"\	\ ]\\+
-setlocal spellfile=
-setlocal spelllang=en
-setlocal statusline=
-setlocal suffixesadd=
-setlocal swapfile
-setlocal synmaxcol=3000
-if &syntax != 'lua'
-setlocal syntax=lua
-endif
-setlocal tabstop=2
-setlocal tagcase=
-setlocal tagfunc=
-setlocal tags=
-setlocal termwinkey=
-setlocal termwinscroll=10000
-setlocal termwinsize=
-setlocal textwidth=0
-setlocal thesaurus=
-setlocal noundofile
-setlocal undolevels=-123456
-setlocal varsofttabstop=
-setlocal vartabstop=
-setlocal wincolor=
-setlocal nowinfixheight
-setlocal nowinfixwidth
-setlocal wrap
-setlocal wrapmargin=0
-silent! normal! zE
-let s:l = 100 - ((13 * winheight(0) + 14) / 28)
-if s:l < 1 | let s:l = 1 | endif
-exe s:l
-normal! zt
-100
-normal! 05|
-wincmd w
 exe 'vert 1resize ' . ((&columns * 134 + 134) / 269)
-exe '2resize ' . ((&lines * 29 + 30) / 61)
 exe 'vert 2resize ' . ((&columns * 134 + 134) / 269)
-exe '3resize ' . ((&lines * 28 + 30) / 61)
-exe 'vert 3resize ' . ((&columns * 134 + 134) / 269)
 tabnext
-edit C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\Game.server.lua
+edit C:\Data\Roblox\Places\PetShopPanic\src\StarterPlayer\StarterPlayerScripts\InitializePlayer.client.lua
 set splitbelow splitright
 wincmd _ | wincmd |
 vsplit
@@ -586,8 +425,8 @@ set winminheight=0
 set winheight=1
 set winminwidth=0
 set winwidth=1
-exe 'vert 1resize ' . ((&columns * 135 + 134) / 269)
-exe 'vert 2resize ' . ((&columns * 133 + 134) / 269)
+exe 'vert 1resize ' . ((&columns * 134 + 134) / 269)
+exe 'vert 2resize ' . ((&columns * 134 + 134) / 269)
 argglobal
 let s:cpo_save=&cpo
 set cpo&vim
@@ -731,15 +570,15 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 59 - ((28 * winheight(0) + 29) / 58)
+let s:l = 60 - ((32 * winheight(0) + 29) / 58)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-59
-normal! 016|
+60
+normal! 020|
 wincmd w
 argglobal
-if bufexists("C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\MapManager.lua") | buffer C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\MapManager.lua | else | edit C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\MapManager.lua | endif
+if bufexists("C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Consumers\Consumer.lua") | buffer C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Consumers\Consumer.lua | else | edit C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Consumers\Consumer.lua | endif
 let s:cpo_save=&cpo
 set cpo&vim
 imap <buffer> <F1> :call xolox#lua#help()
@@ -882,40 +721,41 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 232 - ((37 * winheight(0) + 29) / 58)
+let s:l = 46 - ((45 * winheight(0) + 29) / 58)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-232
+46
 normal! 0
 wincmd w
-exe 'vert 1resize ' . ((&columns * 135 + 134) / 269)
-exe 'vert 2resize ' . ((&columns * 133 + 134) / 269)
+exe 'vert 1resize ' . ((&columns * 134 + 134) / 269)
+exe 'vert 2resize ' . ((&columns * 134 + 134) / 269)
 tabnext 1
-badd +17 C:\Data\Roblox\Places\PetShopPanic\default.project.json
-badd +96 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\TrashBins\TrashBin.lua
-badd +19 C:\Data\Roblox\Places\PetShopPanic\src\StarterPlayer\StarterPlayerScripts\InitializePlayer.client.lua
-badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Factories\Factory.lua
-badd +278 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Util.lua
-badd +8 C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\Game.server.lua
+badd +22 C:\Data\Roblox\Places\PetShopPanic\default.project.json
+badd +2 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Themes.lua
+badd +63 C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\Game.server.lua
+badd +25 C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\MapManager.lua
+badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\TrashBins\TrashBin.lua
+badd +26 C:\Data\Roblox\Places\PetShopPanic\src\StarterPlayer\StarterPlayerScripts\InitializePlayer.client.lua
+badd +77 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Factories\Factory.lua
+badd +201 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Util.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Products\ProductFactory.lua
-badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Products\Product.lua
-badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Gui\ProximityPromptFactory.lua
+badd +8 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Products\Product.lua
+badd +19 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Gui\ProximityPromptFactory.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Factories\FactoryFactory.lua
-badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Consumers\Consumer.lua
-badd +20 C:\Data\Roblox\Places\PetShopPanic\src\StarterGui\PlayerCamera.client.lua
+badd +95 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Consumers\Consumer.lua
+badd +1 C:\Data\Roblox\Places\PetShopPanic\src\StarterGui\PlayerCamera.client.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Consumers\DefaultConsumer.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Consumers\ConsumerFactory.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\SoundModule.lua
-badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Transformers\Transformer.lua
+badd +215 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Transformers\Transformer.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Transformers\DefaultTransformer.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Factories\DefaultFactory.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Transformers\TransformerFactory.lua
-badd +8 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Gui\ProgressBarFactory.lua
+badd +93 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Gui\ProgressBarFactory.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\InitializePlayer.server.lua
-badd +2 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Settings.lua
-badd +100 C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\MapManager.lua
-badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Themes.lua
+badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Settings.lua
+badd +25 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Gui\ViewportFrameFactory.lua
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0
   silent exe 'bwipe ' . s:wipebuf
 endif

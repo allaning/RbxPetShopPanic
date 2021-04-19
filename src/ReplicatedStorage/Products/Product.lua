@@ -5,6 +5,7 @@ Product rules:
   - Should be in ServerStorage/Assets/Products
   - Top level must be a Model with PrimaryPart
   - Optional: Add an Attachment named "PromptAttachment" to PrimaryPart
+  - Optional: Add an Attribute named "ImageAssetId" to Model; otherwise, ViewportFrame will be used
 ]]--
 
 
@@ -35,6 +36,10 @@ function Product:GetModel()
   return self.itsModel
 end
 
+function Product:SetModel(model)
+  self.itsModel = model
+end
+
 function Product:SetProximityPrompt(model)
   if model then
     -- Check if model already has an attachment for the prompt
@@ -63,10 +68,6 @@ function Product:GetModelClone()
     self:SetProximityPrompt(clone)
     return clone
   end
-end
-
-function Product:SetModel(model)
-  self.itsModel = model
 end
 
 function Product:GetModelPrimaryPart()

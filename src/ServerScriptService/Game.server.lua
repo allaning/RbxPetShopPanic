@@ -4,13 +4,14 @@ local ServerStorage = game:GetService("ServerStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ProximityPromptService = game:GetService("ProximityPromptService")
 
-local MapManager = require(ServerScriptService.MapManager)
-
 local Util = require(ReplicatedStorage.Util)
 local SoundModule = require(ReplicatedStorage.SoundModule)
 local Promise = require(ReplicatedStorage.Vendor.Promise)
 
 local consumerClass = require(ReplicatedStorage.Consumers.Consumer)
+local MapManager = require(ServerScriptService.MapManager)
+
+local ConsumerInputReceivedEvent = ReplicatedStorage.Events.ConsumerInputReceived
 
 
 local PRODUCT_PLAYER_WELD_NAME = "ProductPlayerWeld"
@@ -18,7 +19,7 @@ local PRODUCT_PLAYER_WELD_NAME = "ProductPlayerWeld"
 
 local function getCharacterProduct(character)
   if character then
-    print("getPlayerProduct for ".. character.Name)
+    --print("getPlayerProduct for ".. character.Name)
     local characterProductsFolder = character:WaitForChild("Products", 2)
     if characterProductsFolder then
       for _, currentProduct in pairs(characterProductsFolder:GetChildren()) do
@@ -34,7 +35,7 @@ end
 local function getProductAttachmentPart(model)
   -- Check if model has an attachment Part for the product
   for ___, currentModelPart in pairs(model:GetDescendants()) do
-    if currentModelPart.Name == "ProductAttachmentPart" and currentModelPart:IsA("BasePart") then
+    if currentModelPart.Name == consumerClass.PRODUCT_ATTACHMENT_PART_NAME and currentModelPart:IsA("BasePart") then
       return currentModelPart
     end
   end
@@ -45,10 +46,10 @@ local function getProductAttachmentPart(model)
   local primaryPart = model.PrimaryPart
   if primaryPart then
     attachmentPart = Instance.new("Part", primaryPart)
-    attachmentPart.Name = "ProductAttachmentPart"
+    attachmentPart.Name = consumerClass.PRODUCT_ATTACHMENT_PART_NAME
     attachmentPart.Position = primaryPart.Position + Vector3.new(0, 6, 0)
     attachmentPart.Size = Vector3.new(0.5, 0.5, 0.5)
-    Util:WeldModelToPart(attachmentPart, primaryPart, "ProductAttachmentPartWeld")
+    Util:WeldModelToPart(attachmentPart, primaryPart, consumerClass.PRODUCT_ATTACHMENT_PART_NAME.."Weld")
     attachmentPart.Transparency = 1.0
     attachmentPart.CanCollide = false
     attachmentPart.CastShadow = false
@@ -62,7 +63,7 @@ local function handleConsumerPrompt(consumerModel, player)
     print("Consumer: ".. consumerModel.Name.. "; Input=".. consumerInputStr)
 
     -- Check if consumer is currently requesting an input
-    local isRequestingInput = consumerModel:GetAttribute(consumerClass .IS_REQUESTING_INPUT_ATTR_STR)
+    local isRequestingInput = consumerModel:GetAttribute(consumerClass.IS_REQUESTING_INPUT_ATTR_STR)
     if isRequestingInput then
       local primaryPart = consumerModel.PrimaryPart
 
@@ -72,7 +73,7 @@ local function handleConsumerPrompt(consumerModel, player)
         local currentProduct = getCharacterProduct(character)
         if currentProduct then
           if currentProduct.Name == consumerInputStr then
-            SoundModule.PlaySwitch3(character)
+            --SoundModule.PlaySwitch3(character)  -- Client will handle sound
 
             -- Break welds between product and player
             local hand = Util:GetRightHandFromPlayer(player)
@@ -96,6 +97,8 @@ local function handleConsumerPrompt(consumerModel, player)
               consumerProductsFolder.Name = "Products"
             end
             currentProduct.Parent = consumerProductsFolder
+
+            ConsumerInputReceivedEvent:FireAllClients(consumerModel)
 
             -- Remove product after delay
             Promise.delay(consumerClass.DEFAULT_CONSUME_TIME_SEC):andThen(function()
@@ -181,7 +184,7 @@ local function handleTransformerPrompt(transformerModel, player)
           local attachmentPart = getProductAttachmentPart(transformerModel)
           if attachmentPart then
             currentProduct:SetPrimaryPartCFrame(attachmentPart.CFrame)
-            Util:WeldModelToPart(currentProduct, attachmentPart, "ProductTransformerWeld")
+            Util:WeldModelToPart(currentProduct, attachmentPart, transformerInputStr..PRODUCT_PLAYER_WELD_NAME)
           end
 
           -- Reparent product to transformer

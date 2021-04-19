@@ -6,6 +6,9 @@ local Promise = require(ReplicatedStorage.Vendor.Promise)
 local SoundModule = {}
 
 
+-- Drip
+SoundModule.SOUND_ID_DRIP = "rbxassetid://2676723649"  -- https://www.roblox.com/library/2676723649/Drip
+
 -- Mouse click
 SoundModule.SOUND_ID_MOUSE_CLICK = "rbxassetid://421058925"  -- https://www.roblox.com/library/421058925/Click
 
@@ -28,9 +31,15 @@ local function playSound(parentObject, soundId)
     mouseClickSound:Play()
     Util:RealWait(2)
     mouseClickSound:Destroy()
+  end):catch(function()
+    warn("Problem playing sound: ".. soundId)
   end)
 end 
 
+
+function SoundModule.PlayDrip(parentObject)
+  playSound(parentObject, SoundModule.SOUND_ID_DRIP)
+end
 
 function SoundModule.PlayMouseClick(parentObject)
   playSound(parentObject, SoundModule.SOUND_ID_MOUSE_CLICK)
