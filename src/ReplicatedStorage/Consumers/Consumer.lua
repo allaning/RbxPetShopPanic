@@ -9,6 +9,7 @@ Consumer rules:
   - Recommended: Add a descendant Part named ProductAttachmentPart where the Product received will be welded
   - Optional: Add an Attribute named HoldDuration to specify non-default time it takes to give product to consumer
   - Optional: Add an Attribute named ConsumeTimeSec to specify non-default time it takes to consume product
+  - Optional: Add an Attribute named ExpireTimeSec to specify non-default time it takes to quit waiting for input
 ]]--
 
 
@@ -18,17 +19,29 @@ local Util = require(ReplicatedStorage.Util)
 local Promise = require(ReplicatedStorage.Vendor.Promise)
 
 local ShowOverheadBillboardEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ShowOverheadBillboard")
+local UpdateOverheadBillboardEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("UpdateOverheadBillboard")
 local ReplicatedStorageAssetsFolder = ReplicatedStorage:WaitForChild("Assets")
 
 local Consumer = {}
 Consumer.__index = Consumer
 
 
--- Multiplier for delay time before requesting first input
-Consumer.INITIAL_INPUT_REQUEST_DELAY_MULTIPLIER = 2.5
+-- Default time after requesting an input before quitting
+Consumer.DEFAULT_EXPIRE_TIME_SEC = 18--aing 30
+
+-- Show first warning when this much time left
+Consumer.YELLOW_WARNING_TIME_SEC_BEFORE_EXPIRING = 15
+Consumer.YELLOW_WARNING_COLOR = Color3.new(0.7, 0.7, 0)
+
+-- Show second warning when this much time left
+Consumer.RED_WARNING_TIME_SEC_BEFORE_EXPIRING = 5
+Consumer.RED_WARNING_COLOR = Color3.new(0.7, 0, 0)
+
+-- Additional delay time before requesting first input
+Consumer.INITIAL_INPUT_REQUEST_DELAY_SEC = 6.0
 
 -- Min delay time before requesting input
-Consumer.MIN_INPUT_REQUEST_DELAY_SEC = 5.0
+Consumer.MIN_INPUT_REQUEST_DELAY_SEC = 4.0
 
 -- Max delay time before requesting input
 Consumer.MAX_INPUT_REQUEST_DELAY_SEC = 9.0
@@ -60,6 +73,8 @@ function Consumer.new()
   -- Unique ID for this consumer instance
   self.uid = Consumer.UID_UNINITIALIZED
 
+  self.expireTimeSec = Consumer.DEFAULT_EXPIRE_TIME_SEC
+
   -- Input product for this consumer (string type), e.g. Carrot input for a Bunny consumer
   self.inputProductStr = ""
 
@@ -70,6 +85,9 @@ function Consumer.new()
   self.itsProductFolder = nil
 
   self.itsModel = nil
+
+  -- Handle to Promise waiting for consumer's input request to be fulfilled
+  self.itsAwaitingInputHandler = nil
 
   return self
 end
@@ -164,6 +182,32 @@ function Consumer.GetRequestInputGuiAttachmentPart(model)
   end
 end
 
+-- Pass color=nil to indicate that timer expired
+local function runTimer(itself, delaySec, model, attachmentPart, color)
+  return Promise.new(function(resolve, reject, onCancel)
+    Util:RealWait(delaySec)
+
+    -- Check to see if timer was cancelled
+    if onCancel(function()
+        --print("Time was cancelled for ".. model.Name)
+      end) then
+      return
+    end
+
+    -- Listener will check if color is nil and act accordingly
+    UpdateOverheadBillboardEvent:FireAllClients(model, attachmentPart, color)
+
+    if not color then
+      -- Reset consumer
+      itself:OnReceiveInput()
+      itself:OnInputConsumed()
+      return
+    end
+
+    resolve()
+  end)
+end
+
 function Consumer:ShowInputRequest(model, productModel)
   if model and productModel then
     local attachmentPart = self.GetRequestInputGuiAttachmentPart(model)
@@ -174,6 +218,21 @@ function Consumer:ShowInputRequest(model, productModel)
 
       -- Allow input consumption
       model:SetAttribute(Consumer.IS_REQUESTING_INPUT_ATTR_STR, true)
+
+      -- Start the timer
+      local awaitingInputHandler = Promise.resolve() -- Begin Promise chain
+        :doneCall(
+          runTimer, self, self.expireTimeSec - Consumer.YELLOW_WARNING_TIME_SEC_BEFORE_EXPIRING, model, attachmentPart, Consumer.YELLOW_WARNING_COLOR
+        ):doneCall(
+          runTimer, self, Consumer.YELLOW_WARNING_TIME_SEC_BEFORE_EXPIRING - Consumer.RED_WARNING_TIME_SEC_BEFORE_EXPIRING, model, attachmentPart, Consumer.RED_WARNING_COLOR
+        ):doneCall(
+          runTimer, self, Consumer.RED_WARNING_TIME_SEC_BEFORE_EXPIRING, model, attachmentPart, nil
+        ):catch(function(err)
+          print("Error in Consumer ".. self:GetName().. " while waiting for input: ".. tostring(err))
+        end)
+
+      print("Exiting ShowInputRequest")
+      return awaitingInputHandler
     end
   end
 end
@@ -238,6 +297,29 @@ function Consumer:RunIdleAnimation(model)
   end
 end
 
+function Consumer:OnReceiveInput(instance)
+  -- Set attribute to disallow input consumption until next request
+  local model = self:GetModel()
+  if model then
+    model:SetAttribute(Consumer.IS_REQUESTING_INPUT_ATTR_STR, false)
+  end
+
+  -- Cancel any existing timer
+  if self.itsAwaitingInputHandler then
+    print("Cancelling timer for consumer: ".. self:GetName())
+    self.itsAwaitingInputHandler:cancel()
+  end
+end
+
+function Consumer:OnInputConsumed(instance)
+  -- Repeat after delay
+  local rand = Random.new()
+  local randNum = rand:NextNumber(Consumer.MIN_INPUT_REQUEST_DELAY_SEC, Consumer.MAX_INPUT_REQUEST_DELAY_SEC)
+  Promise.delay(randNum):andThen(function()
+    self.itsAwaitingInputHandler = self:ShowInputRequest(self:GetModel(), self:GetInputModel())
+  end)
+end
+
 function Consumer:Run()
   -- Run in new thread
   Promise.try(function()
@@ -268,24 +350,29 @@ function Consumer:Run()
       --  end
       --end
 
+      -- Check if consumer has a non-default expire time
+      local customExpireTimeSec = model:GetAttribute("ExpireTimeSec")
+      if customExpireTimeSec then
+        self.expireTimeSec = customExpireTimeSec
+      end
+
       self:RunIdleAnimation(model)
 
       -- Show first input request
-      local rand = Random.new()
-      local randNum = rand:NextNumber(Consumer.MIN_INPUT_REQUEST_DELAY_SEC, Consumer.MAX_INPUT_REQUEST_DELAY_SEC)
-      randNum *= Consumer.INITIAL_INPUT_REQUEST_DELAY_MULTIPLIER
-      Promise.delay(randNum):andThen(function()
-        self:ShowInputRequest(model, self:GetInputModel())
+      Promise.delay(Consumer.INITIAL_INPUT_REQUEST_DELAY_SEC):andThen(function()
+        self:OnInputConsumed()
       end)
 
-      -- Create event for whenever product is removed
-      self.itsProductFolder.ChildRemoved:Connect(function(instance)
-        model:SetAttribute(Consumer.IS_REQUESTING_INPUT_ATTR_STR, false)
-        local randNum = rand:NextNumber(Consumer.MIN_INPUT_REQUEST_DELAY_SEC, Consumer.MAX_INPUT_REQUEST_DELAY_SEC)
-        Promise.delay(randNum):andThen(function()
-          self:ShowInputRequest(model, self:GetInputModel())
-        end)
+      -- Create event for whenever product is received (i.e. input received)
+      self.itsProductFolder.ChildAdded:Connect(function(instance)
+        self:OnReceiveInput(instance)
       end)
+
+      -- Create event for whenever product is removed (i.e. input received, then consumed)
+      self.itsProductFolder.ChildRemoved:Connect(function(instance)
+        self:OnInputConsumed(instance)
+      end)
+
     end
   end):catch(function(err)
     local name = self:GetName() or "UNKNOWN"

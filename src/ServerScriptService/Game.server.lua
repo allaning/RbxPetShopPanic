@@ -41,7 +41,7 @@ local function getProductAttachmentPart(model)
   end
 
   -- Create a default attachment Part
-  -- NOTE: This isn't working right...
+  -- NOTE: This hasn't been tested
   local attachmentPart = nil
   local primaryPart = model.PrimaryPart
   if primaryPart then
