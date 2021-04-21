@@ -40,7 +40,8 @@
 
     "StarterGui": {
       "$className": "StarterGui",
-      "$path": "src/StarterGui"
+      "$path": "src/StarterGui",
+      "$ignoreUnknownInstances": true
     },
 
     "StarterPlayer": {
@@ -89,7 +90,7 @@
           0,
           0
         ],
-        "Brightness": 2,
+        "Brightness": 2.6,
         "GlobalShadows": true,
         "Outlines": false,
         "Technology": "Voxel"

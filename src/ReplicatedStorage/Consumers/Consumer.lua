@@ -10,6 +10,7 @@ Consumer rules:
   - Optional: Add an Attribute named HoldDuration to specify non-default time it takes to give product to consumer
   - Optional: Add an Attribute named ConsumeTimeSec to specify non-default time it takes to consume product
   - Optional: Add an Attribute named ExpireTimeSec to specify non-default time it takes to quit waiting for input
+  - Optional: Add an Attribute named ExtraInputRequestDelaySec to specify additional time to wait before requesting input
 ]]--
 
 
@@ -27,24 +28,24 @@ Consumer.__index = Consumer
 
 
 -- Default time after requesting an input before quitting
-Consumer.DEFAULT_EXPIRE_TIME_SEC = 18--aing 30
+Consumer.DEFAULT_EXPIRE_TIME_SEC = 60
 
 -- Show first warning when this much time left
-Consumer.YELLOW_WARNING_TIME_SEC_BEFORE_EXPIRING = 15
+Consumer.YELLOW_WARNING_TIME_SEC_BEFORE_EXPIRING = 20
 Consumer.YELLOW_WARNING_COLOR = Color3.new(0.7, 0.7, 0)
 
 -- Show second warning when this much time left
-Consumer.RED_WARNING_TIME_SEC_BEFORE_EXPIRING = 5
+Consumer.RED_WARNING_TIME_SEC_BEFORE_EXPIRING = 10
 Consumer.RED_WARNING_COLOR = Color3.new(0.7, 0, 0)
 
 -- Additional delay time before requesting first input
-Consumer.INITIAL_INPUT_REQUEST_DELAY_SEC = 6.0
+Consumer.INITIAL_INPUT_REQUEST_DELAY_SEC = 5.0
 
 -- Min delay time before requesting input
-Consumer.MIN_INPUT_REQUEST_DELAY_SEC = 4.0
+Consumer.MIN_INPUT_REQUEST_DELAY_SEC = 5.0
 
 -- Max delay time before requesting input
-Consumer.MAX_INPUT_REQUEST_DELAY_SEC = 9.0
+Consumer.MAX_INPUT_REQUEST_DELAY_SEC = 15.0
 
 -- Model Attribute override: ConsumeTimeSec [number]
 Consumer.DEFAULT_CONSUME_TIME_SEC = 2.0
@@ -313,11 +314,15 @@ end
 
 function Consumer:OnInputConsumed(instance)
   -- Repeat after delay
-  local rand = Random.new()
-  local randNum = rand:NextNumber(Consumer.MIN_INPUT_REQUEST_DELAY_SEC, Consumer.MAX_INPUT_REQUEST_DELAY_SEC)
-  Promise.delay(randNum):andThen(function()
-    self.itsAwaitingInputHandler = self:ShowInputRequest(self:GetModel(), self:GetInputModel())
-  end)
+  local model = self:GetModel()
+  if model then
+    local extraDelaySec = model:GetAttribute("ExtraInputRequestDelaySec") or 0
+    local rand = Random.new()
+    local randNum = rand:NextNumber(Consumer.MIN_INPUT_REQUEST_DELAY_SEC, Consumer.MAX_INPUT_REQUEST_DELAY_SEC)
+    Promise.delay(extraDelaySec + randNum):andThen(function()
+      self.itsAwaitingInputHandler = self:ShowInputRequest(model, self:GetInputModel())
+    end)
+  end
 end
 
 function Consumer:Run()

@@ -16,6 +16,7 @@ local function createInstance(className, properties, parent)
 end
 
 
+-- Returns ViewportFrame containing image of model
 function ViewportFrameFactory.GetViewportFrame(model)
   if model then
     local viewportFrame = Instance.new("ViewportFrame")
