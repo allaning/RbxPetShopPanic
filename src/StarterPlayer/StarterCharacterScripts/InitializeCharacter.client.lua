@@ -88,11 +88,45 @@ local function showRequestInputGui(model, attachmentPart, productModel)
 end
 ShowOverheadBillboardEvent.OnClientEvent:Connect(showRequestInputGui)
 
--- Update an existing part
+
+local function createTransparentPart(partName, parentPart)
+  local transparentPart = Instance.new("Part")
+  transparentPart.Name = partName
+  transparentPart.Anchored = true
+  transparentPart.CanCollide = false
+  transparentPart.CastShadow = false
+  transparentPart.Massless = true
+  transparentPart.Size = Vector3.new(0.1, 0.1, 0.1)
+  transparentPart.Transparency = 1
+  if parentPart then
+    transparentPart.Position = parentPart.Position
+    transparentPart.Parent = parentPart
+  end
+  return transparentPart
+end
+
+local REQUEST_GUI_PARTICLE_PART_NAME = "RequestGuiParticlePart"
+
+-- Update an existing part, e.g. the customer input request guis
+-- If no color is provided, then the gui will be destroyed
 local function updateRequestInputGui(model, attachmentPart, color)
   if model and attachmentPart then
     local billboardPart = Util:GetChildWithName(attachmentPart, REQUEST_INPUT_GUI_BILLBOARD_PART_NAME)
     if billboardPart then
+      -- Setup particles
+      local emitter = nil
+      local parentPart = Util:GetChildWithName(attachmentPart, REQUEST_GUI_PARTICLE_PART_NAME)
+      if parentPart then
+        emitter = Util:GetChildWithName(parentPart, "ParticleEmitter")
+      else
+        parentPart = createTransparentPart(REQUEST_GUI_PARTICLE_PART_NAME, attachmentPart)
+        parentPart.Position = parentPart.Position + Vector3.new(0, REQUEST_INPUT_GUI_HEIGHT_ABOVE_PART, -2) -- Match billboard part created previously
+        emitter = ParticleEmitterFactory.AttachFizzleEmitter(parentPart, false)
+      end
+      if not emitter then
+        emitter = ParticleEmitterFactory.AttachFizzleEmitter(parentPart, false)
+      end
+
       if color then
         billboardPart.Color = color
         -- Bounce
@@ -100,8 +134,15 @@ local function updateRequestInputGui(model, attachmentPart, color)
         local goalPosition = billboardPart.Position + Vector3.new(0, 1, 0)
         TweenGuiFactory.SpringUpPart(goalPosition , billboardPart)
       else
+        -- Remove the gui, e.g. time expired
         billboardPart:Destroy()
-        -- TODO: Fail
+
+        if emitter then
+          emitter.Enabled = true
+          Promise.delay(0.4):andThen(function()
+            emitter.Enabled = false
+          end)
+        end
       end
     end
   end
@@ -127,6 +168,7 @@ ConsumerInputReceivedEvent.OnClientEvent:Connect(onConsumerInputReceived)
 
 local TRANSFORMER_BILLBOARD_PART_NAME = "TransformerBillboardPart"
 local TRANSFORMER_PARTICLE_PART_NAME = "TransformerParticlePart"
+
 local PROGRESS_BAR_HEIGHT_ABOVE_PART = 3
 
 -- Show a progress bar above a transformer
@@ -154,19 +196,9 @@ local function showTransformInProgress(attachmentPart, durationSec)
     if parentPart then
       emitter = Util:GetChildWithName(parentPart, "ParticleEmitter")
     else
-      parentPart = Instance.new("Part")
-      parentPart.Name = TRANSFORMER_PARTICLE_PART_NAME
-      parentPart.Anchored = true
-      parentPart.CanCollide = false
-      parentPart.CastShadow = false
-      parentPart.Massless = true
-      parentPart.Size = Vector3.new(0.1, 0.1, 0.1)
-      parentPart.Transparency = 1
-      parentPart.Position = attachmentPart.Position -- + Vector3.new(0, 0, 0)
-      parentPart.Parent = attachmentPart
+      parentPart = createTransparentPart(TRANSFORMER_PARTICLE_PART_NAME, attachmentPart)
       emitter = ParticleEmitterFactory.AttachSparkleEmitter(parentPart, false)
     end
-
     if not emitter then
       emitter = ParticleEmitterFactory.AttachSparkleEmitter(parentPart, false)
     end
