@@ -4,8 +4,11 @@
 Product rules:
   - Should be in ServerStorage/Assets/Products
   - Top level must be a Model with PrimaryPart
-  - Optional: Add an Attachment named "PromptAttachment" to PrimaryPart
-  - Optional: Add an Attribute named "ImageAssetId" to Model; otherwise, ViewportFrame will be used
+  - Optional: Add Vector3 Attribute named ViewportCameraPosition to specify custom position for ViewportFrame Camera
+  - Optional: Add Vector3 Attribute named ViewportTargetPositionOffset to specify target position offset for ViewportFrame Camera
+  - Optional: Add an Attribute named IsAggregate to indicate that the product's descendants must match its input -- Note: Not implemented yet
+  - Optional: Add an Attribute named ImageAssetId to Model; otherwise, ViewportFrame will be used -- Note: Not implemented yet
+  - Optional: Add an Attachment named PromptAttachment to PrimaryPart to position the ProximityPrompt
 ]]--
 
 

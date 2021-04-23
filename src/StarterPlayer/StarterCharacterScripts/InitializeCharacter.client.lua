@@ -58,6 +58,7 @@ local REQUEST_INPUT_GUI_HEIGHT_ABOVE_PART = -1 -- Start lower since tweening up
 local function showRequestInputGui(model, attachmentPart, productModel)
   --print("In showRequestInputGui")
   if model and attachmentPart and productModel then
+    print("In showRequestInputGui; model=".. model.Name.. "; product=".. productModel.Name)
     local billboardPart = Util:GetChildWithName(attachmentPart, REQUEST_INPUT_GUI_BILLBOARD_PART_NAME)
     if not billboardPart then
       billboardPart = Instance.new("Part")
@@ -72,6 +73,7 @@ local function showRequestInputGui(model, attachmentPart, productModel)
       billboardPart.Transparency = 0.0
     end
 
+    -- Setup Viewport
     local surfaceGui = Instance.new("SurfaceGui")
     local modelUid = model:GetAttribute(consumerClass.UID_ATTRIBUTE_NAME) or ""
     surfaceGui.Name = getViewportSurfaceGuiName(modelUid)
@@ -81,7 +83,7 @@ local function showRequestInputGui(model, attachmentPart, productModel)
     surfaceGui.Parent = surfaceGuiFolder
     billboardPart.Parent = attachmentPart
 
-    SoundModule.PlayDrip(attachmentPart)
+    SoundModule.PlayAssetIdStr(attachmentPart, consumerClass.INPUT_REQUEST_BEGIN_SOUND)
     local goalPosition = billboardPart.Position + Vector3.new(0, 1, 0)
     TweenGuiFactory.SpringUpPart(goalPosition , billboardPart)
   end
@@ -136,6 +138,7 @@ local function updateRequestInputGui(model, attachmentPart, color)
       else
         -- Remove the gui, e.g. time expired
         billboardPart:Destroy()
+        SoundModule.PlayAssetIdStr(attachmentPart, consumerClass.INPUT_REQUEST_EXPIRED_SOUND)
 
         if emitter then
           emitter.Enabled = true
@@ -157,7 +160,7 @@ local function onConsumerInputReceived(model)
     if attachmentPart then
       local billboardPart = attachmentPart:FindFirstChild(REQUEST_INPUT_GUI_BILLBOARD_PART_NAME)
       if billboardPart then
-        SoundModule.PlaySquish(attachmentPart)
+        SoundModule.PlayAssetIdStr(attachmentPart, consumerClass.INPUT_REQUEST_RECEIVED_SOUND, 1)
         billboardPart:Destroy()
       end
     end
@@ -182,7 +185,7 @@ local function showTransformInProgress(attachmentPart, durationSec)
       billboardPart = Instance.new("Part", attachmentPart)
       billboardPart.Name = TRANSFORMER_BILLBOARD_PART_NAME
       billboardPart.Position = attachmentPart.Position + Vector3.new(0, PROGRESS_BAR_HEIGHT_ABOVE_PART, 0)
-      billboardPart.CFrame = billboardPart.CFrame * CFrame.Angles(0, math.rad(180), 0) -- Rotate front to face player
+      billboardPart.CFrame = billboardPart.CFrame
       billboardPart.Anchored = true
       billboardPart.CanCollide = false
       billboardPart.Transparency = 1.0

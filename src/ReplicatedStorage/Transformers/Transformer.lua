@@ -8,6 +8,7 @@ Transformer rules:
   - Must have Attribute named Input, which is a string matching name of input object
   - Must have Attribute named TransformerName, which is the name of the transformer shown in prompts
   - Recommended: Add a descendant Part named ProductAttachmentPart where the Product received will be welded
+  - Optional: Add an Attribute named PromptActionText to specify non-default ActionText for ProximityPrompt
   - Optional: Add an Attribute named TransformTimeSec to specify non-default transformation duration time
 ]]--
 
@@ -16,6 +17,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ProximityPromptFactory = require(ReplicatedStorage.Gui.ProximityPromptFactory)
 local Util = require(ReplicatedStorage.Util)
 local Promise = require(ReplicatedStorage.Vendor.Promise)
+local SoundModule = require(ReplicatedStorage.SoundModule)
 
 local Product = require(ReplicatedStorage.Products.Product)
 
@@ -25,6 +27,9 @@ local TransformBeginEvent = ReplicatedStorage.Transformers.Events.TransformBegin
 local Transformer = {}
 Transformer.__index = Transformer
 
+
+-- Sound when transformer done
+Transformer.TRANSFORM_COMPLETE_SOUND = SoundModule.SOUND_ID_CHIME_2
 
 -- Model Attribute override: TransformTimeSec [number]
 Transformer.DEFAULT_TRANSFORM_TIME_SEC = 5.0
@@ -181,6 +186,7 @@ function Transformer:TransformProduct(productInstance)
               if productClone then
                 productClone:SetPrimaryPartCFrame(spawnPart.CFrame) -- Set PrimaryPart CFrame so whole model moves with it
                 productClone.Parent = self.itsProductFolder
+                SoundModule.PlayAssetIdStr(productClone, Transformer.TRANSFORM_COMPLETE_SOUND)
               end
             end
           end
@@ -206,7 +212,8 @@ function Transformer:Run()
       end
 
       -- Set initial proximity prompt
-      self:SetProximityPrompt(model, "Drop")
+      local actionTextStr = model:GetAttribute("PromptActionText") or "Drop"
+      self:SetProximityPrompt(model, actionTextStr)
 
       -- Create event for whenever product is added
       self.itsProductFolder.ChildAdded:Connect(function(instance)
@@ -215,7 +222,7 @@ function Transformer:Run()
 
       -- Create event for whenever product is removed
       self.itsProductFolder.ChildRemoved:Connect(function(instance)
-        self:SetProximityPrompt(model, "Drop")
+        self:SetProximityPrompt(model, actionTextStr)
       end)
     end
   end)

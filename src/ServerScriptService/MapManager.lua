@@ -122,24 +122,24 @@ local function createConsumer(consumerModel, inputStr, map, currentConsumerUid)
   return consumerInstance
 end
 
-local function createTransformer(transformerModel, inputStr, map)
+local function createTransformer(transformerModel, outputProductStr, map)
   -- Find available plot on map
   local plot = getAvailableProducerPlot(map)
   if plot then
-    plot:SetAttribute("AssetName", inputStr)
+    plot:SetAttribute("AssetName", outputProductStr)
     local transformerClone = transformerModel:Clone()
     local transformTimeSec = transformerClone:GetAttribute("TransformTimeSec")
     local transformerName = transformerClone:GetAttribute("TransformerName")
 
     -- Create product
-    local productModel = serverProductsFolder:FindFirstChild(inputStr)
-    local productInstance = productFactory.GetProduct(inputStr, productModel)
+    local productModel = serverProductsFolder:FindFirstChild(outputProductStr)
+    local productInstance = productFactory.GetProduct(outputProductStr, productModel)
 
-    -- Get its input and set the new inputStr (a return value) to follow the chain all the way back to the factory
-    local newInputStr = ""
+    -- Get its input and set the new transformer's input (a return value) to follow the chain all the way back to the factory
+    local inputStr = ""
     local transformerInputStr = transformerModel:GetAttribute("Input")
     if transformerInputStr then
-      newInputStr = transformerInputStr
+      inputStr = transformerInputStr
     end
 
     -- Create object instances
@@ -152,7 +152,7 @@ local function createTransformer(transformerModel, inputStr, map)
     transformerClone:SetPrimaryPartCFrame(plot.CFrame) -- Set PrimaryPart CFrame so whole model moves with it
     transformerClone.Parent = wsTransformersFolder
 
-    return transformerInstance, productInstance, newInputStr
+    return transformerInstance, productInstance, inputStr
   end
 end
 
@@ -241,9 +241,13 @@ function MapManager.InitializeMap()
         -- Note that for Transformers, the Transformer name is the name of the output product
         if transformerModel.Name == inputStr then
           -- Found Transformer that outputs product named inputStr
-
           local transformerInstance, productInstance, newInputStr = createTransformer(transformerModel, inputStr, map)
           if transformerInstance and productInstance and newInputStr then
+            -- Update current Consumer with the product info
+            consumerInstance:SetInput(inputStr)
+            consumerInstance:SetInputModel(productInstance:GetModel())
+            print("consumerInstance:SetInputModel(productInstance:GetModel()".. productInstance:GetName())
+
             table.insert(transformers, transformerInstance)
             table.insert(products, productInstance)
             inputStr = newInputStr
@@ -258,9 +262,13 @@ function MapManager.InitializeMap()
             table.insert(factories, factoryInstance)
             table.insert(products, productInstance)
 
-            -- Update current Consumer with the product info
-            consumerInstance:SetInput(inputStr)
-            consumerInstance:SetInputModel(productInstance:GetModel())
+            -- Update current Consumer with the product info if not already set
+            if consumerInstance:GetInput() == "" then
+              consumerInstance:SetInput(inputStr)
+              consumerInstance:SetInputModel(productInstance:GetModel())
+              print("consumerInstance:SetInputModel(productInstance:GetModel()".. productInstance:GetName())
+            end
+            -- Start the consumer
             consumerInstance:Run()
 
             isDoneFindingFactory = true

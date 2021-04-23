@@ -7,6 +7,8 @@ Consumer rules:
   - Must have Attribute named Input, which is a string matching name of input object
   - Recommended: Add a 1st level child Part with Attachment named PromptAttachment where the ProximityPrompt will be located
   - Recommended: Add a descendant Part named ProductAttachmentPart where the Product received will be welded
+  - Optional: Add an Attribute named PromptObjectText to specify non-default ObjectText for ProximityPrompt
+  - Optional: Add an Attribute named PromptActionText to specify non-default ActionText for ProximityPrompt
   - Optional: Add an Attribute named HoldDuration to specify non-default time it takes to give product to consumer
   - Optional: Add an Attribute named ConsumeTimeSec to specify non-default time it takes to consume product
   - Optional: Add an Attribute named ExpireTimeSec to specify non-default time it takes to quit waiting for input
@@ -18,10 +20,12 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ProximityPromptFactory = require(ReplicatedStorage.Gui.ProximityPromptFactory)
 local Util = require(ReplicatedStorage.Util)
 local Promise = require(ReplicatedStorage.Vendor.Promise)
+local SoundModule = require(ReplicatedStorage.SoundModule)
 
 local ShowOverheadBillboardEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ShowOverheadBillboard")
 local UpdateOverheadBillboardEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("UpdateOverheadBillboard")
 local ReplicatedStorageAssetsFolder = ReplicatedStorage:WaitForChild("Assets")
+
 
 local Consumer = {}
 Consumer.__index = Consumer
@@ -37,6 +41,15 @@ Consumer.YELLOW_WARNING_COLOR = Color3.new(0.7, 0.7, 0)
 -- Show second warning when this much time left
 Consumer.RED_WARNING_TIME_SEC_BEFORE_EXPIRING = 10
 Consumer.RED_WARNING_COLOR = Color3.new(0.7, 0, 0)
+
+-- Sound when consumer initiates its input request
+Consumer.INPUT_REQUEST_BEGIN_SOUND = SoundModule.SOUND_ID_DRIP
+
+-- Sound when consumer receives its input request
+Consumer.INPUT_REQUEST_RECEIVED_SOUND = SoundModule.SOUND_ID_LEVEL_UP_HIGH
+
+-- Sound when consumer doesn't get its input in time
+Consumer.INPUT_REQUEST_EXPIRED_SOUND = SoundModule.SOUND_ID_WAH
 
 -- Additional delay time before requesting first input
 Consumer.INITIAL_INPUT_REQUEST_DELAY_SEC = 5.0
@@ -215,6 +228,7 @@ function Consumer:ShowInputRequest(model, productModel)
     if attachmentPart then
       local productClone = productModel:Clone()
       productClone.Parent = ReplicatedStorageAssetsFolder -- Move product clone somewhere accessible by clients
+      print("ShowOverheadBillboardEvent:FireAllClients; model=".. model.Name.. "; product=".. productClone.Name)
       ShowOverheadBillboardEvent:FireAllClients(model, attachmentPart, productClone)
 
       -- Allow input consumption
@@ -239,13 +253,12 @@ function Consumer:ShowInputRequest(model, productModel)
 end
 
 local PROXIMITY_PROMPT_DISTANCE = 6
-function Consumer:SetProximityPrompt(model)
+function Consumer:SetProximityPrompt(model, actionText)
   if model then
     local attachment = self:GetProximityPromptAttachment(model)
 
     -- Create the prompt
-    local actionTextStr = model:GetAttribute("PromptActionText") or "Feed"
-    local prompt = ProximityPromptFactory.GetDefaultProximityPrompt(self:GetName(), actionTextStr)
+    local prompt = ProximityPromptFactory.GetDefaultProximityPrompt(self:GetName(), actionText)
     if prompt then
       ProximityPromptFactory.SetMaxDistance(prompt, PROXIMITY_PROMPT_DISTANCE)
 
@@ -339,7 +352,8 @@ function Consumer:Run()
       -- Create attribute indicating if consumer is requesting an input
       model:SetAttribute(Consumer.IS_REQUESTING_INPUT_ATTR_STR, false)
 
-      self:SetProximityPrompt(model)
+      local actionTextStr = model:GetAttribute("PromptActionText") or "Feed"
+      self:SetProximityPrompt(model, actionTextStr)
 
       -- Break any welds from HumanoidRootPart so they don't move with NPC animation
       --for _, obj in pairs(model:GetDescendants()) do
