@@ -4,7 +4,10 @@
 Consumer rules:
   - Should be in ServerStorage/Assets/Consumers
   - Top level must be a Model with PrimaryPart
-  - Must have Attribute named Input, which is a string matching name of input object
+  - Must have Attribute named Input, which is a string matching name of input object. For multiple input choices:
+      "Shopping Bag & Doggie Treats || Shopping Bag & Doggie Treats & Sprinkles"
+      Input requests separated by ||
+      Inputs that are aggregated products separate its components by &
   - Recommended: Add a 1st level child Part with Attachment named PromptAttachment where the ProximityPrompt will be located
   - Recommended: Add a descendant Part named ProductAttachmentPart where the Product received will be welded
   - Optional: Add an Attribute named PromptObjectText to specify non-default ObjectText for ProximityPrompt
@@ -13,6 +16,7 @@ Consumer rules:
   - Optional: Add an Attribute named ConsumeTimeSec to specify non-default time it takes to consume product
   - Optional: Add an Attribute named ExpireTimeSec to specify non-default time it takes to quit waiting for input
   - Optional: Add an Attribute named ExtraInputRequestDelaySec to specify additional time to wait before requesting input
+  - Optional: Add Vector3 Attribute named PrimaryPartPositionOffset to specify custom position offset for PrimaryPart
 ]]--
 
 
@@ -21,6 +25,7 @@ local ProximityPromptFactory = require(ReplicatedStorage.Gui.ProximityPromptFact
 local Util = require(ReplicatedStorage.Util)
 local Promise = require(ReplicatedStorage.Vendor.Promise)
 local SoundModule = require(ReplicatedStorage.SoundModule)
+local productFactory = require(ReplicatedStorage.Products.ProductFactory)
 
 local ShowOverheadBillboardEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ShowOverheadBillboard")
 local UpdateOverheadBillboardEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("UpdateOverheadBillboard")
@@ -69,8 +74,20 @@ Consumer.REQUEST_INPUT_GUI_ATTACHMENT_PART_NAME = "RequestInputGuiAttachmentPart
 -- Name of Part to attach input Product
 Consumer.PRODUCT_ATTACHMENT_PART_NAME = "ProductAttachmentPart"
 
--- Name of attribute that indicates whether consumer is currently asking for an input
-Consumer.IS_REQUESTING_INPUT_ATTR_STR = "IsRequestingInput"
+-- Name of string Attribute indicating input(s)
+Consumer.INPUT_ATTR_NAME = "Input"
+
+-- Delimiter separating multiple inputs
+Consumer.INPUT_DELIMITER_STR = "||"
+
+-- Delimiter separating products in an aggregate product input
+Consumer.AGGREGATE_PRODUCT_DELIMITER_STR = "&"
+
+-- Name of boolean Attribute that indicates whether consumer is currently asking for an input
+Consumer.IS_REQUESTING_INPUT_ATTR_NAME = "IsRequestingInput"
+
+-- Name of string Attribute that indicates input currently being requested
+Consumer.CURRENT_REQUESTED_INPUT_ATTR_NAME = "CurrentRequestedInput"
 
 -- Name of UID Attribute
 -- This can be used to identify the consumer on the client side, etc.
@@ -89,11 +106,11 @@ function Consumer.new()
 
   self.expireTimeSec = Consumer.DEFAULT_EXPIRE_TIME_SEC
 
-  -- Input product for this consumer (string type), e.g. Carrot input for a Bunny consumer
+  -- Input product for this consumer (string type), e.g. "Carrot || Water" for a Bunny consumer
   self.inputProductStr = ""
 
-  -- Handle to its product model
-  self.itsProductModel = nil
+  -- Handle to its current product model
+  self.itsCurrentProductModel = nil
 
   -- Folder to hold the product model
   self.itsProductFolder = nil
@@ -134,12 +151,37 @@ function Consumer:SetInput(inputStr)
   self.inputProductStr = inputStr
 end
 
-function Consumer:GetInputModel()
-  return self.itsProductModel
+-- Select a product to request, set values accordingly and return its model
+function Consumer:GetProductModel()
+  local model = self:GetModel()
+  if model then
+    local inputAttribute = model:GetAttribute(Consumer.INPUT_ATTR_NAME)
+    if inputAttribute then
+      -- Check if more than one input option
+      local inputs = string.split(inputAttribute, Consumer.INPUT_DELIMITER_STR)
+      for _, input in ipairs(inputs) do
+        print("Consumer:GetProductModel()  input:".. input)
+      end
+      local inputIdx = 1
+      if #inputs > 1 then
+        -- Choose random input
+        local rand = Random.new()
+        inputIdx = rand:NextInteger(1, #inputs)
+      end
+
+      -- TODO Check if aggregate input
+
+      self.itsCurrentProductModel = productFactory.GetProductModel(inputs[inputIdx])
+      if self.itsCurrentProductModel then
+        model:SetAttribute(Consumer.CURRENT_REQUESTED_INPUT_ATTR_NAME, self.itsCurrentProductModel.Name)
+        return self.itsCurrentProductModel
+      end
+    end
+  end
 end
 
 function Consumer:SetInputModel(inputModel)
-  self.itsProductModel = inputModel
+  self.itsCurrentProductModel = inputModel
 end
 
 function Consumer:GetModel()
@@ -148,6 +190,21 @@ end
 
 function Consumer:SetModel(model)
   self.itsModel = model
+end
+
+function Consumer:SetRequestedInput(model, newInput)
+  if model then
+    local newInput = newInput or ""
+    model:SetAttribute(Consumer.IS_REQUESTING_INPUT_ATTR_NAME, true)
+    model:SetAttribute(Consumer.CURRENT_REQUESTED_INPUT_ATTR_NAME, newInput)
+  end
+end
+
+function Consumer:ClearRequestingInputStatus(model)
+  if model then
+    model:SetAttribute(Consumer.IS_REQUESTING_INPUT_ATTR_NAME, false)
+    model:SetAttribute(Consumer.CURRENT_REQUESTED_INPUT_ATTR_NAME, "")
+  end
 end
 
 local PROXIMITY_PROMPT_HEIGHT_ABOVE_PART = 6
@@ -232,7 +289,8 @@ function Consumer:ShowInputRequest(model, productModel)
       ShowOverheadBillboardEvent:FireAllClients(model, attachmentPart, productClone)
 
       -- Allow input consumption
-      model:SetAttribute(Consumer.IS_REQUESTING_INPUT_ATTR_STR, true)
+      local currentInputRequested = model:GetAttribute(Consumer.CURRENT_REQUESTED_INPUT_ATTR_NAME)
+      self:SetRequestedInput(model, currentInputRequested)
 
       -- Start the timer
       local awaitingInputHandler = Promise.resolve() -- Begin Promise chain
@@ -246,7 +304,6 @@ function Consumer:ShowInputRequest(model, productModel)
           print("Error in Consumer ".. self:GetName().. " while waiting for input: ".. tostring(err))
         end)
 
-      print("Exiting ShowInputRequest")
       return awaitingInputHandler
     end
   end
@@ -315,7 +372,7 @@ function Consumer:OnReceiveInput(instance)
   -- Set attribute to disallow input consumption until next request
   local model = self:GetModel()
   if model then
-    model:SetAttribute(Consumer.IS_REQUESTING_INPUT_ATTR_STR, false)
+    self:ClearRequestingInputStatus(model)
   end
 
   -- Cancel any existing timer
@@ -333,7 +390,7 @@ function Consumer:OnInputConsumed(instance)
     local rand = Random.new()
     local randNum = rand:NextNumber(Consumer.MIN_INPUT_REQUEST_DELAY_SEC, Consumer.MAX_INPUT_REQUEST_DELAY_SEC)
     Promise.delay(extraDelaySec + randNum):andThen(function()
-      self.itsAwaitingInputHandler = self:ShowInputRequest(model, self:GetInputModel())
+      self.itsAwaitingInputHandler = self:ShowInputRequest(model, self:GetProductModel())
     end)
   end
 end
@@ -350,7 +407,7 @@ function Consumer:Run()
       self.itsProductFolder.Name = "Products"
 
       -- Create attribute indicating if consumer is requesting an input
-      model:SetAttribute(Consumer.IS_REQUESTING_INPUT_ATTR_STR, false)
+      self:ClearRequestingInputStatus(model)
 
       local actionTextStr = model:GetAttribute("PromptActionText") or "Feed"
       self:SetProximityPrompt(model, actionTextStr)

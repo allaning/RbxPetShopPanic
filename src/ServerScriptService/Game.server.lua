@@ -59,11 +59,11 @@ end
 
 local function handleConsumerPrompt(consumerModel, player)
   if consumerModel and consumerModel:IsA("Model") then
-    local consumerInputStr = consumerModel:GetAttribute("Input")
+    local consumerInputStr = consumerModel:GetAttribute(consumerClass.CURRENT_REQUESTED_INPUT_ATTR_NAME)
     print("Consumer: ".. consumerModel.Name.. "; Input=".. consumerInputStr)
 
     -- Check if consumer is currently requesting an input
-    local isRequestingInput = consumerModel:GetAttribute(consumerClass.IS_REQUESTING_INPUT_ATTR_STR)
+    local isRequestingInput = consumerModel:GetAttribute(consumerClass.IS_REQUESTING_INPUT_ATTR_NAME)
     if isRequestingInput then
       local primaryPart = consumerModel.PrimaryPart
 

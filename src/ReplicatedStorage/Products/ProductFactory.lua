@@ -22,4 +22,24 @@ function ProductFactory.GetProduct(productName, itsModel)
 end
 
 
+
+-- Server side only
+
+local RunService = game:GetService("RunService")
+if RunService:IsServer() then
+
+  local ServerStorage = game:GetService("ServerStorage")
+  local AssetsFolder = ServerStorage.Assets
+  local ProductsFolder = AssetsFolder.Products
+
+  function ProductFactory.GetProductModel(name)
+    local model = ProductsFolder:FindFirstChild(name)
+    if model then
+      return model
+    end
+  end
+
+end -- server
+
+
 return ProductFactory

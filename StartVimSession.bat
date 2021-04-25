@@ -1,1 +1,2 @@
-gvim -S session.vim
+start gvim -S session.vim
+exit

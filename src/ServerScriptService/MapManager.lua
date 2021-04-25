@@ -110,7 +110,9 @@ local function createConsumer(consumerModel, inputStr, map, currentConsumerUid)
   if consumerPlot then
     consumerPlot:SetAttribute("AssetName", consumerInstance:GetName())
     local consumerHeightPos = Vector3.new(0, consumerClone.PrimaryPart.Position.Y, 0)
-    consumerClone:SetPrimaryPartCFrame(consumerPlot.CFrame + consumerHeightPos)
+    -- Check for custom position offset
+    local primaryPartPositionOffset = consumerClone:GetAttribute("PrimaryPartPositionOffset") or Vector3.new(0, 0, 0)
+    consumerClone:SetPrimaryPartCFrame(consumerPlot.CFrame + consumerHeightPos + primaryPartPositionOffset)
 
     -- Set consumer direction to face the middle
     local targetPos = Vector3.new(0, consumerClone.PrimaryPart.Position.Y, consumerClone.PrimaryPart.Position.Z)
@@ -137,7 +139,7 @@ local function createTransformer(transformerModel, outputProductStr, map)
 
     -- Get its input and set the new transformer's input (a return value) to follow the chain all the way back to the factory
     local inputStr = ""
-    local transformerInputStr = transformerModel:GetAttribute("Input")
+    local transformerInputStr = transformerModel:GetAttribute(consumerClass.INPUT_ATTR_NAME)
     if transformerInputStr then
       inputStr = transformerInputStr
     end
@@ -224,7 +226,7 @@ function MapManager.InitializeMap()
   -- Look for the consumers and find their producers
   local currentConsumerUid = 1
   for consumerModelIdx, consumerModel in pairs(serverConsumersFolder:GetChildren()) do
-    local inputStr = consumerModel:GetAttribute("Input")
+    local inputStr = consumerModel:GetAttribute(consumerClass.INPUT_ATTR_NAME)
     print("Consumer: ".. consumerModel.Name.. "; Input=".. inputStr)
 
     -- Create consumer
@@ -245,7 +247,7 @@ function MapManager.InitializeMap()
           if transformerInstance and productInstance and newInputStr then
             -- Update current Consumer with the product info
             consumerInstance:SetInput(inputStr)
-            consumerInstance:SetInputModel(productInstance:GetModel())
+            consumerInstance:SetInputModel(productInstance:GetModel()) -- TODO: refactor
             print("consumerInstance:SetInputModel(productInstance:GetModel()".. productInstance:GetName())
 
             table.insert(transformers, transformerInstance)

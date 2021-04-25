@@ -256,7 +256,7 @@ if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
 93
-normal! 09|
+normal! 0
 wincmd w
 argglobal
 if bufexists("C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Consumers\Consumer.lua") | buffer C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Consumers\Consumer.lua | else | edit C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Consumers\Consumer.lua | endif
@@ -402,12 +402,12 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 35 - ((34 * winheight(0) + 29) / 58)
+let s:l = 357 - ((28 * winheight(0) + 29) / 58)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-35
-normal! 0
+357
+normal! 043|
 wincmd w
 exe 'vert 1resize ' . ((&columns * 134 + 134) / 269)
 exe 'vert 2resize ' . ((&columns * 134 + 134) / 269)
@@ -575,7 +575,7 @@ if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
 171
-normal! 07|
+normal! 0
 wincmd w
 argglobal
 if bufexists("C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Gui\ParticleEmitterFactory.lua") | buffer C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Gui\ParticleEmitterFactory.lua | else | edit C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Gui\ParticleEmitterFactory.lua | endif
@@ -721,7 +721,7 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 28 - ((27 * winheight(0) + 29) / 58)
+let s:l = 28 - ((0 * winheight(0) + 29) / 58)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -732,11 +732,13 @@ exe 'vert 1resize ' . ((&columns * 134 + 134) / 269)
 exe 'vert 2resize ' . ((&columns * 134 + 134) / 269)
 tabnext 1
 badd +93 C:\Data\Roblox\Places\PetShopPanic\default.project.json
+badd +35 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Gui\ParticleEmitterFactory.lua
+badd +171 C:\Data\Roblox\Places\PetShopPanic\src\StarterPlayer\StarterCharacterScripts\InitializeCharacter.client.lua
+badd +102 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Consumers\Consumer.lua
 badd +15 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Gui\TweenGuiFactory.lua
-badd +292 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Consumers\Consumer.lua
 badd +36 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\SoundModule.lua
 badd +2 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Themes.lua
-badd +32 C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\Game.server.lua
+badd +66 C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\Game.server.lua
 badd +264 C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\MapManager.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\TrashBins\TrashBin.lua
 badd +77 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Factories\Factory.lua
@@ -755,10 +757,8 @@ badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Gui\ProgressBar
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\InitializePlayer.server.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Settings.lua
 badd +19 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Gui\ViewportFrameFactory.lua
-badd +1 C:\Data\Roblox\Places\PetShopPanic\src\StarterPlayer\StarterCharacterScripts\InitializeCharacter.client.lua
 badd +24 C:\Data\Roblox\Places\PetShopPanic\src\StarterPlayer\StarterPlayerScripts\InitializePlayer.client.lua
 badd +3 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Gui\RadialBackgroundFactory.lua
-badd +35 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Gui\ParticleEmitterFactory.lua
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0
   silent exe 'bwipe ' . s:wipebuf
 endif
