@@ -158,9 +158,10 @@ function Consumer:GetProductModel()
     local inputAttribute = model:GetAttribute(Consumer.INPUT_ATTR_NAME)
     if inputAttribute then
       -- Check if more than one input option
+      print(self:GetName().. " Consumer:GetProductModel()  inputs:".. inputAttribute)
       local inputs = string.split(inputAttribute, Consumer.INPUT_DELIMITER_STR)
       for _, input in ipairs(inputs) do
-        print("Consumer:GetProductModel()  input:".. input)
+        print("  ".. self:GetName().. " input:".. input)
       end
       local inputIdx = 1
       if #inputs > 1 then
@@ -168,13 +169,17 @@ function Consumer:GetProductModel()
         local rand = Random.new()
         inputIdx = rand:NextInteger(1, #inputs)
       end
+      local inputName = Util:Trim(inputs[inputIdx])
+      print(self:GetName().. " request: ".. inputName)
 
       -- TODO Check if aggregate input
 
-      self.itsCurrentProductModel = productFactory.GetProductModel(inputs[inputIdx])
+      self.itsCurrentProductModel = productFactory.GetProductModel(inputName)
       if self.itsCurrentProductModel then
         model:SetAttribute(Consumer.CURRENT_REQUESTED_INPUT_ATTR_NAME, self.itsCurrentProductModel.Name)
         return self.itsCurrentProductModel
+      else
+        error("Unable to get product from ProductFactory.GetProductModel: ".. inputName)
       end
     end
   end
@@ -280,6 +285,7 @@ local function runTimer(itself, delaySec, model, attachmentPart, color)
 end
 
 function Consumer:ShowInputRequest(model, productModel)
+  print(self:GetName().. " Consumer:ShowInputRequest(model, productModel=".. productModel.Name.. ")")
   if model and productModel then
     local attachmentPart = self.GetRequestInputGuiAttachmentPart(model)
     if attachmentPart then
@@ -383,6 +389,7 @@ function Consumer:OnReceiveInput(instance)
 end
 
 function Consumer:OnInputConsumed(instance)
+  print("Consumer:OnInputConsumed(instance): ".. self:GetName())
   -- Repeat after delay
   local model = self:GetModel()
   if model then
@@ -390,7 +397,9 @@ function Consumer:OnInputConsumed(instance)
     local rand = Random.new()
     local randNum = rand:NextNumber(Consumer.MIN_INPUT_REQUEST_DELAY_SEC, Consumer.MAX_INPUT_REQUEST_DELAY_SEC)
     Promise.delay(extraDelaySec + randNum):andThen(function()
-      self.itsAwaitingInputHandler = self:ShowInputRequest(model, self:GetProductModel())
+      print(self:GetName().. " self.itsAwaitingInputHandler = self:ShowInputRequest(model, self:GetProductModel())")
+      local productModel = self:GetProductModel()
+      self.itsAwaitingInputHandler = self:ShowInputRequest(model, productModel)
     end)
   end
 end

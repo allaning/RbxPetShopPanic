@@ -129,6 +129,14 @@ function Util:IsSubsetOfList(partialList, fullList)
 end
 
 
+-- Trim leading and trailing spaces
+function Util:Trim(str)
+  local result = string.gsub(str, '^%s+', '')
+  result = string.gsub(result, '%s+$', '')
+  return result
+end
+
+
 function Util:IsChild(parent, childName)
   for _, obj in ipairs(parent:GetChildren()) do
     if obj.Name == childName then

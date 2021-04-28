@@ -2,6 +2,7 @@ local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 local Themes = require(ReplicatedStorage.Themes)
+local Util = require(ReplicatedStorage.Util)
 
 local wsMapsFolder = Workspace:WaitForChild("Maps")
 local wsConsumersFolder = Workspace:WaitForChild("Consumers")
@@ -226,64 +227,73 @@ function MapManager.InitializeMap()
   -- Look for the consumers and find their producers
   local currentConsumerUid = 1
   for consumerModelIdx, consumerModel in pairs(serverConsumersFolder:GetChildren()) do
-    local inputStr = consumerModel:GetAttribute(consumerClass.INPUT_ATTR_NAME)
-    print("Consumer: ".. consumerModel.Name.. "; Input=".. inputStr)
+    local inputAttribute = consumerModel:GetAttribute(consumerClass.INPUT_ATTR_NAME)
+    print("Consumer: ".. consumerModel.Name.. "; Input=".. inputAttribute)
 
     -- Create consumer
-    local consumerInstance = createConsumer(consumerModel, inputStr, map, currentConsumerUid)
+    local consumerInstance = createConsumer(consumerModel, inputAttribute, map, currentConsumerUid)
     currentConsumerUid += 1
     table.insert(consumers, consumerInstance)
 
-    -- Find the producers of the input (the names should match)
-    -- Everything should start from a Factory (versus Transformer or Aggregator)
-    local isDoneFindingFactory = false
-    local count = 0
-    while not isDoneFindingFactory do
-      for _, transformerModel in pairs(serverTransformersFolder:GetChildren()) do
-        -- Note that for Transformers, the Transformer name is the name of the output product
-        if transformerModel.Name == inputStr then
-          -- Found Transformer that outputs product named inputStr
-          local transformerInstance, productInstance, newInputStr = createTransformer(transformerModel, inputStr, map)
-          if transformerInstance and productInstance and newInputStr then
-            -- Update current Consumer with the product info
-            consumerInstance:SetInput(inputStr)
-            consumerInstance:SetInputModel(productInstance:GetModel()) -- TODO: refactor
-            print("consumerInstance:SetInputModel(productInstance:GetModel()".. productInstance:GetName())
+    -- Process multiple inputs
+    -- TODO: Make sure it creats all product factories
+    local inputs = string.split(inputAttribute, consumerClass.INPUT_DELIMITER_STR)
+    for _, inputStr in ipairs(inputs) do
+      inputStr = Util:Trim(inputStr)
+      print("In MapManager.InitializeMap() inputStr=".. inputStr)
 
-            table.insert(transformers, transformerInstance)
-            table.insert(products, productInstance)
-            inputStr = newInputStr
-            break
-          end
-        end
-      end
-      for _, factoryModel in pairs(serverFactoriesFolder:GetChildren()) do
-        if factoryModel.Name == inputStr then
-          local factoryInstance, productInstance = createFactory(factoryModel, inputStr, map)
-          if factoryInstance and productInstance then
-            table.insert(factories, factoryInstance)
-            table.insert(products, productInstance)
-
-            -- Update current Consumer with the product info if not already set
-            if consumerInstance:GetInput() == "" then
+      -- Find the producers of the input (the names should match)
+      -- Everything should start from a Factory (versus Transformer or Aggregator)
+      local isDoneFindingFactory = false
+      local count = 0
+      while not isDoneFindingFactory do
+        for _, transformerModel in pairs(serverTransformersFolder:GetChildren()) do
+          -- Note that for Transformers, the Transformer name is the name of the output product
+          if transformerModel.Name == inputStr then
+            -- Found Transformer that outputs product named inputStr
+            local transformerInstance, productInstance, newInputStr = createTransformer(transformerModel, inputStr, map)
+            if transformerInstance and productInstance and newInputStr then
+              -- Update current Consumer with the product info
               consumerInstance:SetInput(inputStr)
-              consumerInstance:SetInputModel(productInstance:GetModel())
-              print("consumerInstance:SetInputModel(productInstance:GetModel()".. productInstance:GetName())
-            end
-            -- Start the consumer
-            consumerInstance:Run()
+              consumerInstance:SetInputModel(productInstance:GetModel()) -- TODO: refactor
+              print("consumerInstance:SetInputModel(productInstance:GetModel() ".. productInstance:GetName())
 
-            isDoneFindingFactory = true
-            break
+              table.insert(transformers, transformerInstance)
+              table.insert(products, productInstance)
+              inputStr = newInputStr
+              break
+            end
           end
         end
-      end
+        for _, factoryModel in pairs(serverFactoriesFolder:GetChildren()) do
+          if factoryModel.Name == inputStr then
+            local factoryInstance, productInstance = createFactory(factoryModel, inputStr, map)
+            if factoryInstance and productInstance then
+              table.insert(factories, factoryInstance)
+              table.insert(products, productInstance)
 
-      count += 1
-      if count > MAX_SEARCH_FOR_PLOTS then
-        isDoneFindingFactory = true
-      end
-    end -- while
+              isDoneFindingFactory = true
+              break
+            end
+          end
+        end
+
+        count += 1
+        if count > MAX_SEARCH_FOR_PLOTS then
+          isDoneFindingFactory = true
+        end
+      end -- while
+    end
+
+    -- Update current Consumer with the product info if not already set
+    if consumerInstance:GetInput() == "" then
+      consumerInstance:SetInput(inputStr)
+      consumerInstance:SetInputModel(productInstance:GetModel())
+      print("consumerInstance:SetInputModel(productInstance:GetModel() ".. productInstance:GetName())
+    end
+    -- Start the consumer
+    consumerInstance:Run()
+
   end -- consumer
 
 

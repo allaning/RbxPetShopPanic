@@ -17,6 +17,7 @@ function ConsumerFactory.GetConsumer(consumerName, inputStr)
   end
 
   newConsumer:SetName(consumerName)
+  newConsumer:SetInput(inputStr)
 
   return newConsumer
 end
