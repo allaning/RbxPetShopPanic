@@ -3,6 +3,8 @@
 
 
 local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Util = require(ReplicatedStorage.Util)
 
 local backgroundTransparency = 0.5
 local frameXPosition = 0
@@ -12,19 +14,6 @@ local textColor = Color3.fromRGB(243, 243, 243)
 
 
 local ProgressBarFactory = {}
-
-
--- Create an instance of a class and set properties
-local function createInstance(className, properties, parent)
-  local instance = Instance.new(className)
-  for i, v in pairs(properties) do
-    instance[i] = v
-  end
-  if parent then
-    instance.Parent = parent
-  end
-  return instance
-end
 
 
 function ProgressBarFactory.TweenAutoProgressBar(billboardGui, timeSec)
@@ -47,14 +36,14 @@ end
 ]]--
 function ProgressBarFactory.GetAutoProgressBar(timeSec)
   -- Create BillboardGui
-  local billboardGui = createInstance("BillboardGui", {
+  local billboardGui = Util:CreateInstance("BillboardGui", {
       Name = "ProgressBarBillboardGui",
       Size = UDim2.new(4, 0, 1, 0),
       ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
     }, nil)
 
   -- Create progress bar frame
-  local progressBar = createInstance("Frame", {
+  local progressBar = Util:CreateInstance("Frame", {
       Name = "ProgressBar",
       Size = UDim2.new(1, 0, 1, 0),
       Position = UDim2.new(0.5, 0, 0.5, 0),
@@ -68,11 +57,11 @@ function ProgressBarFactory.GetAutoProgressBar(timeSec)
   -- Create UICorner (if corner radius is not 0)
   local cornerRadius = UDim.new(0, 8)
   if cornerRadius.Scale ~= 0 or cornerRadius.Offset ~= 0 then
-    createInstance("UICorner", {CornerRadius = cornerRadius}, progressBar)
+    Util:CreateInstance("UICorner", {CornerRadius = cornerRadius}, progressBar)
   end
 
   -- Create UIGradient
-  local uiGradient = createInstance("UIGradient", {
+  local uiGradient = Util:CreateInstance("UIGradient", {
       Color = ColorSequence.new({
           ColorSequenceKeypoint.new(0, Color3.new(0, 1, 0)),
           ColorSequenceKeypoint.new(0.001, backgroundColor),
@@ -87,7 +76,7 @@ function ProgressBarFactory.GetAutoProgressBar(timeSec)
     }, progressBar)
 
   -- Create TextLabel for current progress
-  local uiTextLabel = createInstance("TextLabel", {
+  local uiTextLabel = Util:CreateInstance("TextLabel", {
       Size = UDim2.new(0, 100, 1, 0),
       Position = UDim2.new(1, -8, 0, 0),
       AnchorPoint = Vector2.new(1, 0),

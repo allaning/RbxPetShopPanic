@@ -72,13 +72,12 @@ local function handleConsumerPrompt(consumerModel, player)
       if character then
         local currentProduct = getCharacterProduct(character)
         if currentProduct then
-          if currentProduct.Name == consumerInputStr then
             --SoundModule.PlaySwitch3(character)  -- Client will handle sound
 
             -- Break welds between product and player
             local hand = Util:GetRightHandFromPlayer(player)
             for __, descendant in ipairs(hand:GetChildren()) do
-              if descendant.Name == consumerInputStr..PRODUCT_PLAYER_WELD_NAME then
+              if descendant.Name == PRODUCT_PLAYER_WELD_NAME then
                 descendant:Destroy()
               end
             end
@@ -98,12 +97,17 @@ local function handleConsumerPrompt(consumerModel, player)
             end
             currentProduct.Parent = consumerProductsFolder
 
-            ConsumerInputReceivedEvent:FireAllClients(consumerModel)
-
-            -- Remove product after delay
+            -- Remove product after delay (non-blocking)
             Promise.delay(consumerClass.DEFAULT_CONSUME_TIME_SEC):andThen(function()
               currentProduct:Destroy()
             end)
+
+          if currentProduct.Name == consumerInputStr then
+            -- Correct input
+            ConsumerInputReceivedEvent:FireAllClients(consumerModel, true)
+          else
+            -- Wrong input
+            ConsumerInputReceivedEvent:FireAllClients(consumerModel, false)
           end
         end -- currentProduct
       end -- primaryPart
@@ -141,7 +145,7 @@ local function handleProductPrompt(productModel, player)
         primaryPart.CFrame = hand.CFrame
         warn(script.Name.. " could not find PrimaryPart for ".. productModel.Name)
       end
-      Util:WeldModelToPart(productModel, hand, productModel.Name..PRODUCT_PLAYER_WELD_NAME)
+      Util:WeldModelToPart(productModel, hand, PRODUCT_PLAYER_WELD_NAME)
       SoundModule.PlaySwitch3(hand)
     else
       error("Unable to find hand for ".. player.Name)
@@ -175,7 +179,7 @@ local function handleTransformerPrompt(transformerModel, player)
           -- Break welds between product and player
           local hand = Util:GetRightHandFromPlayer(player)
           for __, descendant in ipairs(hand:GetChildren()) do
-            if descendant.Name == transformerInputStr..PRODUCT_PLAYER_WELD_NAME then
+            if descendant.Name == PRODUCT_PLAYER_WELD_NAME then
               descendant:Destroy()
             end
           end
@@ -184,7 +188,7 @@ local function handleTransformerPrompt(transformerModel, player)
           local attachmentPart = getProductAttachmentPart(transformerModel)
           if attachmentPart then
             currentProduct:SetPrimaryPartCFrame(attachmentPart.CFrame)
-            Util:WeldModelToPart(currentProduct, attachmentPart, transformerInputStr..PRODUCT_PLAYER_WELD_NAME)
+            Util:WeldModelToPart(currentProduct, attachmentPart, PRODUCT_PLAYER_WELD_NAME)
           end
 
           -- Reparent product to transformer
@@ -213,7 +217,7 @@ local function handleTrashBinPrompt(trashBinModel, player)
         -- Break welds between product and player
         local hand = Util:GetRightHandFromPlayer(player)
         for __, descendant in ipairs(hand:GetChildren()) do
-          if descendant.Name == currentProduct.Name..PRODUCT_PLAYER_WELD_NAME then
+          if descendant.Name == PRODUCT_PLAYER_WELD_NAME then
             descendant:Destroy()
           end
         end

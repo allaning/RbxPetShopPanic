@@ -1,19 +1,10 @@
 -- Creates ViewportFrames
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Util = require(ReplicatedStorage.Util)
+
+
 local ViewportFrameFactory = {}
-
-
--- Create an instance of a class and set properties
-local function createInstance(className, properties, parent)
-  local instance = Instance.new(className)
-  for i, v in pairs(properties) do
-    instance[i] = v
-  end
-  if parent then
-    instance.Parent = parent
-  end
-  return instance
-end
 
 
 -- Returns ViewportFrame containing image of model
@@ -23,12 +14,14 @@ function ViewportFrameFactory.GetViewportFrame(model)
     local targetPositionOffset = model:GetAttribute("ViewportTargetPositionOffset") or Vector3.new(0, 0, 0)
 
     local viewportFrame = Instance.new("ViewportFrame")
-    viewportFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-    viewportFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-    viewportFrame.Size = UDim2.new(0.9, 0, 0.9, 0)
-    viewportFrame.BackgroundColor3 = Color3.new(1, 1, 1)
-    viewportFrame.BackgroundTransparency = 0.0
-    viewportFrame.BorderSizePixel = 0
+    local viewportFrame = Util:CreateInstance("ViewportFrame", {
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Position = UDim2.new(0.5, 0, 0.5, 0),
+        Size = UDim2.new(0.9, 0, 0.9, 0),
+        BackgroundColor3 = Color3.new(1, 1, 1),
+        BackgroundTransparency = 0.0,
+        BorderSizePixel = 0,
+      }, nil)
 
     local clone = model:Clone()
     local part = clone.PrimaryPart

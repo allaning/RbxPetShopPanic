@@ -156,6 +156,19 @@ function Util:GetChildWithName(parent, childName)
 end
 
 
+-- Create an instance of a class and set properties
+function Util:CreateInstance(className, properties, parent)
+  local instance = Instance.new(className)
+  for i, v in pairs(properties) do
+    instance[i] = v
+  end
+  if parent then
+    instance.Parent = parent
+  end
+  return instance
+end
+
+
 -- Returns a comma separated string representing num, e.g. if num=123456789 then retruns "123,456,789"
 function Util:ConvertComma(num)
   local x = tostring(num)

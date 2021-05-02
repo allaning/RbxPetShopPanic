@@ -3,6 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Promise = require(ReplicatedStorage.Vendor.Promise)
 local Util = require(ReplicatedStorage.Util)
 local ProgressBarFactory = require(ReplicatedStorage.Gui.ProgressBarFactory)
+local DecalFactory = require(ReplicatedStorage.Gui.DecalFactory)
 local ViewportFrameFactory = require(ReplicatedStorage.Gui.ViewportFrameFactory)
 local TweenGuiFactory = require(ReplicatedStorage.Gui.TweenGuiFactory)
 local ParticleEmitterFactory = require(ReplicatedStorage.Gui.ParticleEmitterFactory)
@@ -26,6 +27,11 @@ local character = Player.Character or Player.CharacterAdded:wait()
 local Humanoid = character:WaitForChild("Humanoid");
 
 
+local CONSUMER_RECEIVED_NIL_DECAL = "http://www.roblox.com/asset/?id=15637705" -- https://www.roblox.com/catalog/15637848/unnamed
+local CONSUMER_RECEIVED_CORRECT_INPUT_DECAL = "http://www.roblox.com/asset/?id=209713384" -- https://www.roblox.com/catalog/209995366/Joyful-Smile
+local CONSUMER_RECEIVED_INCORRECT_INPUT_DECAL = "http://www.roblox.com/asset/?id=8560912" -- https://www.roblox.com/catalog/8560975/Anguished
+
+
 Promise.try(function()
   -- Update things in Workspace
   local baseplate = Workspace:WaitForChild("Baseplate", 8)
@@ -47,8 +53,26 @@ surfaceGuiFolder.Name = "SurfaceGuis"
 surfaceGuiFolder.Parent = PlayerGui
 
 
-local function getViewportSurfaceGuiName(consumerUid)
-  return "ViewportSurfaceGui_".. tostring(consumerUid)
+local function getSurfaceGuiName(uid)
+  local uid = uid or ""
+  return "SurfaceGui_".. tostring(uid)
+end
+
+local function findSurfaceGui(uid)
+  local uid = uid or ""
+  for _, obj in pairs(surfaceGuiFolder:GetChildren()) do
+    if obj.Name == getSurfaceGuiName(uid) then
+      return obj
+    end
+  end
+end
+
+local function destroySurfaceGui(uid)
+  local uid = uid or ""
+  local gui = findSurfaceGui(uid)
+  if gui then
+    gui:Destroy()
+  end
 end
 
 local REQUEST_INPUT_GUI_BILLBOARD_PART_NAME = "RequestInputGuiBillboardPart"
@@ -61,22 +85,22 @@ local function showRequestInputGui(model, attachmentPart, productModel)
     print("In showRequestInputGui; model=".. model.Name.. "; product=".. productModel.Name)
     local billboardPart = Util:GetChildWithName(attachmentPart, REQUEST_INPUT_GUI_BILLBOARD_PART_NAME)
     if not billboardPart then
-      billboardPart = Instance.new("Part")
-      billboardPart.Name = REQUEST_INPUT_GUI_BILLBOARD_PART_NAME
-      billboardPart.Position = attachmentPart.Position + Vector3.new(0, REQUEST_INPUT_GUI_HEIGHT_ABOVE_PART, -2) -- Above and farther from camera
-      billboardPart.Size = Vector3.new(3, 3, 0.001)
-      billboardPart.Color = Color3.fromRGB(124, 225, 255)
-      billboardPart.CFrame = billboardPart.CFrame * CFrame.Angles(math.rad(-35), math.rad(180), 0) -- Rotate front to face player and tilt
-      billboardPart.Anchored = true
-      billboardPart.CanCollide = false
-      billboardPart.CastShadow = false
-      billboardPart.Transparency = 0.0
+      billboardPart = Util:CreateInstance("Part", {
+        Name = REQUEST_INPUT_GUI_BILLBOARD_PART_NAME,
+        Position = attachmentPart.Position + Vector3.new(0, REQUEST_INPUT_GUI_HEIGHT_ABOVE_PART, -2), -- Above and farther from camera
+        Size = Vector3.new(3, 3, 0.001),
+        Color = Color3.fromRGB(124, 225, 255),
+        Anchored = true,
+        CanCollide = false,
+        CastShadow = false,
+        Transparency = 0.0,
+      }, nil)
+      billboardPart.CFrame = billboardPart.CFrame * CFrame.Angles(math.rad(-35), math.rad(180), 0) -- Rotate front to face player and tilt,
     end
 
     -- Setup Viewport
     local surfaceGui = Instance.new("SurfaceGui")
-    local modelUid = model:GetAttribute(consumerClass.UID_ATTRIBUTE_NAME) or ""
-    surfaceGui.Name = getViewportSurfaceGuiName(modelUid)
+    surfaceGui.Name = getSurfaceGuiName(model:GetAttribute(consumerClass.UID_ATTRIBUTE_NAME))
     local viewport = ViewportFrameFactory.GetViewportFrame(productModel)
     viewport.Parent = surfaceGui
     surfaceGui.Adornee = billboardPart
@@ -85,21 +109,22 @@ local function showRequestInputGui(model, attachmentPart, productModel)
 
     SoundModule.PlayAssetIdStr(attachmentPart, consumerClass.INPUT_REQUEST_BEGIN_SOUND)
     local goalPosition = billboardPart.Position + Vector3.new(0, 1, 0)
-    TweenGuiFactory.SpringUpPart(goalPosition , billboardPart)
+    TweenGuiFactory.SpringUpPart(goalPosition, billboardPart)
   end
 end
 ShowOverheadBillboardEvent.OnClientEvent:Connect(showRequestInputGui)
 
 
 local function createTransparentPart(partName, parentPart)
-  local transparentPart = Instance.new("Part")
-  transparentPart.Name = partName
-  transparentPart.Anchored = true
-  transparentPart.CanCollide = false
-  transparentPart.CastShadow = false
-  transparentPart.Massless = true
-  transparentPart.Size = Vector3.new(0.1, 0.1, 0.1)
-  transparentPart.Transparency = 1
+  local transparentPart = Util:CreateInstance("Part", {
+      Name = partName,
+      Anchored = true,
+      CanCollide = false,
+      CastShadow = false,
+      Massless = true,
+      Size = Vector3.new(0.1, 0.1, 0.1),
+      Transparency = 1,
+    }, nil)
   if parentPart then
     transparentPart.Position = parentPart.Position
     transparentPart.Parent = parentPart
@@ -146,6 +171,9 @@ local function updateRequestInputGui(model, attachmentPart, color)
             emitter.Enabled = false
           end)
         end
+
+        -- Destroy in PlayerGui
+        destroySurfaceGui(model:GetAttribute(consumerClass.UID_ATTRIBUTE_NAME))
       end
     end
   end
@@ -153,7 +181,7 @@ end
 UpdateOverheadBillboardEvent.OnClientEvent:Connect(updateRequestInputGui)
 
 -- This is triggered when a consumer receives its input
-local function onConsumerInputReceived(model)
+local function onConsumerInputReceived(model, isCorrectInput)
   --print("In onConsumerInputReceived")
   if model then
     local attachmentPart = consumerClass.GetRequestInputGuiAttachmentPart(model)
@@ -161,9 +189,34 @@ local function onConsumerInputReceived(model)
       local billboardPart = attachmentPart:FindFirstChild(REQUEST_INPUT_GUI_BILLBOARD_PART_NAME)
       if billboardPart then
         SoundModule.PlayAssetIdStr(attachmentPart, consumerClass.INPUT_REQUEST_RECEIVED_SOUND, 1)
-        billboardPart:Destroy()
+
+        -- Destroy any existing gui in billboardPart
+        for _, child in pairs(billboardPart:GetChildren()) do
+          child:Destroy()
+        end
+
+        -- Show new image
+        local image = CONSUMER_RECEIVED_NIL_DECAL
+        if isCorrectInput then
+          image = DecalFactory.GetImage(CONSUMER_RECEIVED_CORRECT_INPUT_DECAL)
+        else
+          image = DecalFactory.GetImage(CONSUMER_RECEIVED_INCORRECT_INPUT_DECAL)
+        end
+        image.Parent = billboardPart
+        billboardPart.Color = Color3.new(1, 1, 1)  -- Make it white
+        -- Bounce gui
+        billboardPart.Position = billboardPart.Position + Vector3.new(0, -1, 0)
+        local goalPosition = billboardPart.Position + Vector3.new(0, 1, 0)
+        TweenGuiFactory.SpringUpPart(goalPosition, billboardPart)
+
+        Promise.delay(1):andThen(function()
+          billboardPart:Destroy()
+        end)
       end
     end
+
+    -- Destroy in PlayerGui
+    destroySurfaceGui(model:GetAttribute(consumerClass.UID_ATTRIBUTE_NAME))
   end
 end
 ConsumerInputReceivedEvent.OnClientEvent:Connect(onConsumerInputReceived)
@@ -182,13 +235,13 @@ local function showTransformInProgress(attachmentPart, durationSec)
   if billboardGui then
     local billboardPart = Util:GetChildWithName(attachmentPart, TRANSFORMER_BILLBOARD_PART_NAME)
     if not billboardPart  then
-      billboardPart = Instance.new("Part", attachmentPart)
-      billboardPart.Name = TRANSFORMER_BILLBOARD_PART_NAME
-      billboardPart.Position = attachmentPart.Position + Vector3.new(0, PROGRESS_BAR_HEIGHT_ABOVE_PART, 0)
-      billboardPart.CFrame = billboardPart.CFrame
-      billboardPart.Anchored = true
-      billboardPart.CanCollide = false
-      billboardPart.Transparency = 1.0
+      billboardPart = Util:CreateInstance("Part", {
+          Name = TRANSFORMER_BILLBOARD_PART_NAME,
+          Position = attachmentPart.Position + Vector3.new(0, PROGRESS_BAR_HEIGHT_ABOVE_PART, 0),
+          Anchored = true,
+          CanCollide = false,
+          Transparency = 1.0,
+        }, attachmentPart)
     end
     billboardGui.Adornee = billboardPart
     billboardGui.Parent = billboardPart
