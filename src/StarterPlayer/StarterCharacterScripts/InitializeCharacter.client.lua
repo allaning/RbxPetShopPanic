@@ -27,11 +27,6 @@ local character = Player.Character or Player.CharacterAdded:wait()
 local Humanoid = character:WaitForChild("Humanoid");
 
 
-local CONSUMER_RECEIVED_NIL_DECAL = "http://www.roblox.com/asset/?id=15637705" -- https://www.roblox.com/catalog/15637848/unnamed
-local CONSUMER_RECEIVED_CORRECT_INPUT_DECAL = "http://www.roblox.com/asset/?id=209713384" -- https://www.roblox.com/catalog/209995366/Joyful-Smile
-local CONSUMER_RECEIVED_INCORRECT_INPUT_DECAL = "http://www.roblox.com/asset/?id=8560912" -- https://www.roblox.com/catalog/8560975/Anguished
-
-
 Promise.try(function()
   -- Update things in Workspace
   local baseplate = Workspace:WaitForChild("Baseplate", 8)
@@ -188,19 +183,19 @@ local function onConsumerInputReceived(model, isCorrectInput)
     if attachmentPart then
       local billboardPart = attachmentPart:FindFirstChild(REQUEST_INPUT_GUI_BILLBOARD_PART_NAME)
       if billboardPart then
-        SoundModule.PlayAssetIdStr(attachmentPart, consumerClass.INPUT_REQUEST_RECEIVED_SOUND, 1)
-
         -- Destroy any existing gui in billboardPart
         for _, child in pairs(billboardPart:GetChildren()) do
           child:Destroy()
         end
 
         -- Show new image
-        local image = CONSUMER_RECEIVED_NIL_DECAL
+        local image = DecalFactory.CONSUMER_RECEIVED_NIL_DECAL
         if isCorrectInput then
-          image = DecalFactory.GetImage(CONSUMER_RECEIVED_CORRECT_INPUT_DECAL)
+          image = DecalFactory.GetImage(DecalFactory.CONSUMER_RECEIVED_CORRECT_INPUT_DECAL)
+          SoundModule.PlayAssetIdStr(attachmentPart, consumerClass.INPUT_REQUEST_RECEIVED_SOUND, 1)
         else
-          image = DecalFactory.GetImage(CONSUMER_RECEIVED_INCORRECT_INPUT_DECAL)
+          image = DecalFactory.GetImage(DecalFactory.CONSUMER_RECEIVED_INCORRECT_INPUT_DECAL)
+          SoundModule.PlayAssetIdStr(attachmentPart, consumerClass.INPUT_REQUEST_EXPIRED_SOUND, 1)
         end
         image.Parent = billboardPart
         billboardPart.Color = Color3.new(1, 1, 1)  -- Make it white
