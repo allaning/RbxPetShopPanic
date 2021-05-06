@@ -156,6 +156,15 @@ function Util:GetChildWithName(parent, childName)
 end
 
 
+function Util:GetDescendantWithName(parent, childName)
+  for _, obj in ipairs(parent:GetDescendants()) do
+    if obj.Name == childName then
+      return obj
+    end
+  end
+end
+
+
 -- Create an instance of a class and set properties
 function Util:CreateInstance(className, properties, parent)
   local instance = Instance.new(className)

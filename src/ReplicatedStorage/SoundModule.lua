@@ -63,10 +63,13 @@ local function playSound(parentObject, soundId, volume)
 
   -- Run in new thread
   Promise.try(function()
-    local mouseClickSound = Instance.new("Sound")
-    mouseClickSound.SoundId = soundId
-    mouseClickSound.Volume = volume
-    mouseClickSound.Parent = parentObject
+    local mouseClickSound = Util:CreateInstance("Sound", {
+        SoundId = soundId,
+        Volume = volume,
+        EmitterSize = 80,
+        RollOffMode = Enum.RollOffMode.InverseTapered,
+      }, parentObject)
+
     mouseClickSound:Play()
     Util:RealWait(2)
     mouseClickSound:Destroy()

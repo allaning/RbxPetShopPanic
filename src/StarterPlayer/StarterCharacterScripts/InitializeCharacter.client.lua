@@ -9,6 +9,7 @@ local TweenGuiFactory = require(ReplicatedStorage.Gui.TweenGuiFactory)
 local ParticleEmitterFactory = require(ReplicatedStorage.Gui.ParticleEmitterFactory)
 local Settings = require(ReplicatedStorage.Settings)
 local SoundModule = require(ReplicatedStorage.SoundModule)
+local AnimationModule = require(ReplicatedStorage.AnimationModule)
 
 local consumerClass = require(ReplicatedStorage.Consumers.Consumer)
 
@@ -69,6 +70,22 @@ local function destroySurfaceGui(uid)
     gui:Destroy()
   end
 end
+
+
+local function playVictoryAnimation(model)
+  local human = Util:GetDescendantWithName(model, "Humanoid")
+  if human then
+    AnimationModule.PlayAssetIdStr(human, AnimationModule.ANIM_ID_VICTORY_IDLE, false)
+  end
+end
+
+local function playDefeatAnimation(model)
+  local human = Util:GetDescendantWithName(model, "Humanoid")
+  if human then
+    AnimationModule.PlayAssetIdStr(human, AnimationModule.ANIM_ID_DEFEAT, false)
+  end
+end
+
 
 local REQUEST_INPUT_GUI_BILLBOARD_PART_NAME = "RequestInputGuiBillboardPart"
 local REQUEST_INPUT_GUI_HEIGHT_ABOVE_PART = -1 -- Start lower since tweening up
@@ -159,6 +176,7 @@ local function updateRequestInputGui(model, attachmentPart, color)
         -- Remove the gui, e.g. time expired
         billboardPart:Destroy()
         SoundModule.PlayAssetIdStr(attachmentPart, consumerClass.INPUT_REQUEST_EXPIRED_SOUND)
+        playDefeatAnimation(model)
 
         if emitter then
           emitter.Enabled = true
@@ -193,9 +211,11 @@ local function onConsumerInputReceived(model, isCorrectInput)
         if isCorrectInput then
           image = DecalFactory.GetImage(DecalFactory.CONSUMER_RECEIVED_CORRECT_INPUT_DECAL)
           SoundModule.PlayAssetIdStr(attachmentPart, consumerClass.INPUT_REQUEST_RECEIVED_SOUND, 1)
+          playVictoryAnimation(model)
         else
           image = DecalFactory.GetImage(DecalFactory.CONSUMER_RECEIVED_INCORRECT_INPUT_DECAL)
           SoundModule.PlayAssetIdStr(attachmentPart, consumerClass.INPUT_REQUEST_EXPIRED_SOUND, 1)
+          playDefeatAnimation(model)
         end
         image.Parent = billboardPart
         billboardPart.Color = Color3.new(1, 1, 1)  -- Make it white

@@ -37,7 +37,7 @@ Consumer.__index = Consumer
 
 
 -- Default time after requesting an input before quitting
-Consumer.DEFAULT_EXPIRE_TIME_SEC = 60
+Consumer.DEFAULT_EXPIRE_TIME_SEC = 50
 
 -- Show first warning when this much time left
 Consumer.YELLOW_WARNING_TIME_SEC_BEFORE_EXPIRING = 20
