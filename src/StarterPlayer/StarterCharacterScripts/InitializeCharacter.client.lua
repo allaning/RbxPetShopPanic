@@ -152,10 +152,7 @@ local function updateRequestInputGui(model, attachmentPart, color)
 
       if color then
         billboardPart.Color = color
-        -- Bounce
-        billboardPart.Position = billboardPart.Position + Vector3.new(0, -1, 0)
-        local goalPosition = billboardPart.Position + Vector3.new(0, 1, 0)
-        TweenGuiFactory.SpringUpPart(goalPosition , billboardPart)
+        TweenGuiFactory.BouncePart(billboardPart)
       else
         -- Remove the gui, e.g. time expired
         billboardPart:Destroy()
@@ -200,10 +197,7 @@ local function onConsumerInputReceived(model, isCorrectInput)
         end
         image.Parent = billboardPart
         billboardPart.Color = Color3.new(1, 1, 1)  -- Make it white
-        -- Bounce gui
-        billboardPart.Position = billboardPart.Position + Vector3.new(0, -1, 0)
-        local goalPosition = billboardPart.Position + Vector3.new(0, 1, 0)
-        TweenGuiFactory.SpringUpPart(goalPosition, billboardPart)
+        TweenGuiFactory.BouncePart(billboardPart)
 
         Promise.delay(1):andThen(function()
           billboardPart:Destroy()

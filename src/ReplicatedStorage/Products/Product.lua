@@ -43,6 +43,7 @@ function Product:SetModel(model)
   self.itsModel = model
 end
 
+local PROXIMITY_PROMPT_DISTANCE = 7.5
 function Product:SetProximityPrompt(model)
   if model then
     -- Check if model already has an attachment for the prompt
@@ -58,7 +59,7 @@ function Product:SetProximityPrompt(model)
       -- Create the prompt
       local prompt = ProximityPromptFactory.GetDefaultProximityPrompt(self:GetName(), "Pick Up")
       if prompt then
-        ProximityPromptFactory.SetMaxDistance(prompt, 7)
+        ProximityPromptFactory.SetMaxDistance(prompt, PROXIMITY_PROMPT_DISTANCE)
         prompt.Parent = attachment
       end
     end

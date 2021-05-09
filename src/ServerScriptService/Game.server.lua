@@ -4,6 +4,7 @@ local ServerStorage = game:GetService("ServerStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ProximityPromptService = game:GetService("ProximityPromptService")
 local AnimationModule = require(ReplicatedStorage.AnimationModule)
+local Players = game:GetService("Players")
 
 local Util = require(ReplicatedStorage.Util)
 local SoundModule = require(ReplicatedStorage.SoundModule)
@@ -35,13 +36,12 @@ local function getCharacterProduct(character)
 end
 
 local function getPlayersCharacterAndCurrentProduct(player)
+  local currentProduct = nil
   local character = Util:GetCharacterFromPlayer(player)
   if character then
-    local currentProduct = getCharacterProduct(character)
-    if currentProduct then
-      return character, currentProduct
-    end
+    currentProduct = getCharacterProduct(character)
   end
+  return character, currentProduct
 end
 
 local function getProductAttachmentPart(model)
@@ -296,9 +296,9 @@ local function onPromptHoldBegan(promptObject, player)
       if promptModelTypeName == "Transformers" then
         -- Check if player is holding the right input
         local character, currentProduct = getPlayersCharacterAndCurrentProduct(player)
-        if character and currentProduct then
+        if character then
           local transformerInputStr = promptModel:GetAttribute(transformerClass.INPUT_ATTR_NAME)
-          if currentProduct.Name ~= transformerInputStr then
+          if not currentProduct or currentProduct.Name ~= transformerInputStr then
             -- Wrong input type
             SoundModule.PlayAssetIdStr(character, SoundModule.SOUND_ID_ERROR, 0.2)
             return
@@ -349,6 +349,33 @@ local function onGameStart()
   -- Select a map
   local map = MapManager.InitializeMap()
 
+  Util:RealWait(5)
+
+  -- Spawn players
+  local spawns = MapManager.GetSpawns()
+  if spawns and #spawns > 0 then
+    print("aing  -- if spawns and #spawns > 0 then")
+    local playerList = Players:GetPlayers()
+    for idx, spawn in pairs(spawns) do
+      print("aing  -- for idx, spawn in pairs(spawns) do")
+      if playerList[idx] then
+        print("Spawning ".. playerList[idx].Name)
+        local torso = Util:GetTorsoFromPlayer(playerList[idx])
+        if torso then
+          local yOffset = 1
+          local humanoid = Util:GetHumanoid(playerList[idx])
+          if humanoid then
+            yOffset = humanoid.HipHeight
+          end
+          torso.CFrame = CFrame.new(spawn.Position + Vector3.new(0, yOffset, 0))
+        else
+          error("Unable to find torso for ".. playerList[idx].Name)
+        end
+      end
+    end
+  else
+    error("Unable to get spawn plots from MapManager")
+  end
 end
 
 onGameStart()

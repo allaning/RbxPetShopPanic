@@ -31,4 +31,10 @@ function TweenGuiFactory.SpringUpPart(goalPosition, tweenPart)
   })
 end
 
+function TweenGuiFactory.BouncePart(tweenPart)
+  local goalPosition = tweenPart.Position
+  tweenPart.Position = tweenPart.Position + Vector3.new(0, -1, 0)
+  TweenGuiFactory.SpringUpPart(goalPosition, tweenPart)
+end
+
 return TweenGuiFactory

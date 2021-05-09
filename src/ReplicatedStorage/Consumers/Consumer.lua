@@ -329,7 +329,7 @@ function Consumer:ShowInputRequest(model, productModel)
   end
 end
 
-local PROXIMITY_PROMPT_DISTANCE = 6
+local PROXIMITY_PROMPT_DISTANCE = 7
 function Consumer:SetProximityPrompt(model, actionText)
   if model then
     local attachment = self:GetProximityPromptAttachment(model)

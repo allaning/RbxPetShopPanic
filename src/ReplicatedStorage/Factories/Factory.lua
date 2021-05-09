@@ -45,6 +45,10 @@ function Factory:GetProductName()
   return self.itsModel.Name
 end
 
+function Factory:GetName()
+  return self:GetProductName()
+end
+
 function Factory:GetModel()
   return self.itsModel
 end

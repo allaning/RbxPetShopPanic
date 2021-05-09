@@ -157,6 +157,7 @@ local function clearAttachment(attachment)
   end
 end
 
+local PROXIMITY_PROMPT_DISTANCE = 7.5
 function Transformer:SetProximityPrompt(model, actionText)
   if model then
     local attachment = self:GetProximityPromptAttachment(model)
@@ -165,7 +166,7 @@ function Transformer:SetProximityPrompt(model, actionText)
     -- Create the prompt
     local prompt = ProximityPromptFactory.GetDefaultProximityPrompt(self:GetName(), actionText)
     if prompt then
-      ProximityPromptFactory.SetMaxDistance(prompt, 7)
+      ProximityPromptFactory.SetMaxDistance(prompt, PROXIMITY_PROMPT_DISTANCE)
 
       -- Check if player must hold key during transform
       local isAutomatic = model:GetAttribute(Transformer.IS_AUTOMATIC_ATTR_NAME)

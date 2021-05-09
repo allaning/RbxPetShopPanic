@@ -35,6 +35,9 @@ local MAX_SEARCH_FOR_PLOTS = 1000
 local MapManager = {}
 
 
+-- List of inputs
+local inputs = {}
+
 -- List of consumer instances
 local consumers = {}
 
@@ -52,6 +55,22 @@ local trashBins = {}
 
 -- List of table models
 local tableModels = {}
+
+-- List of spawn plot parts
+local spawnPlotParts = {}
+
+
+-- Iterate over table and return true if it contains an object with object:GetName() matching name
+local function containsInstanceNamed(tab, name)
+  if Util:TableLength(tab) > 0 then
+    for index, instance in pairs(tab) do
+      if instance:GetName() == name then
+        return true, index
+      end
+    end
+  end
+  return false, 0
+end
 
 
 -- Find random available plot on map
@@ -213,12 +232,18 @@ local function createTableAtPlot(tableModel, plot)
   return tableClone
 end
 
+function MapManager.GetSpawns()
+  if #spawnPlotParts > 0 then
+    return spawnPlotParts
+  end
+end
+
 function MapManager.InitializeMap()
   -- aing Hardcoded for now
   local map = serverMapsFolder:WaitForChild("Level1"):WaitForChild("1.1")
   -- Make plots transparent
   for _, obj in pairs(map:GetDescendants()) do
-    if obj.Name == "ConsumerPlot" or obj.Name == "ProducerPlot" or obj.Name == "TrashBinPlot" or obj.Name == "TablePlot" then
+    if obj.Name == "ConsumerPlot" or obj.Name == "ProducerPlot" or obj.Name == "TrashBinPlot" or obj.Name == "TablePlot" or obj.Name == "SpawnPlot" then
       obj.Transparency = 1
     end
   end
@@ -237,8 +262,8 @@ function MapManager.InitializeMap()
 
     -- Process multiple inputs
     -- TODO: Make sure it creats all product factories
-    local inputs = string.split(inputAttribute, consumerClass.INPUT_DELIMITER_STR)
-    for _, inputStr in ipairs(inputs) do
+    local consumerInputs = string.split(inputAttribute, consumerClass.INPUT_DELIMITER_STR)
+    for _, inputStr in ipairs(consumerInputs) do
       inputStr = Util:Trim(inputStr)
       print("In MapManager.InitializeMap() inputStr=".. inputStr)
 
@@ -251,29 +276,51 @@ function MapManager.InitializeMap()
           -- Note that for Transformers, the Transformer name is the name of the output product
           if transformerModel.Name == inputStr then
             -- Found Transformer that outputs product named inputStr
-            local transformerInstance, productInstance, newInputStr = createTransformer(transformerModel, inputStr, map)
-            if transformerInstance and productInstance and newInputStr then
-              -- Update current Consumer with the product info
-              consumerInstance:SetInput(inputStr)
-              consumerInstance:SetInputModel(productInstance:GetModel()) -- TODO: refactor
-              print("consumerInstance:SetInputModel(productInstance:GetModel() ".. productInstance:GetName())
 
-              table.insert(transformers, transformerInstance)
-              table.insert(products, productInstance)
-              inputStr = newInputStr
-              break
+            -- Check if this is a new Transformer or a repeat
+            if not containsInstanceNamed(transformers, inputStr) then
+              -- This is a new Transformer
+              local transformerInstance, productInstance, newInputStr = createTransformer(transformerModel, inputStr, map)
+              if transformerInstance and productInstance and newInputStr then
+                -- Update current Consumer with the product info
+                consumerInstance:SetInput(inputStr)
+                consumerInstance:SetInputModel(productInstance:GetModel()) -- TODO: refactor
+                print("consumerInstance:SetInputModel(productInstance:GetModel() ".. productInstance:GetName())
+
+                table.insert(transformers, transformerInstance)
+                table.insert(products, productInstance)
+                table.insert(inputs, inputStr)
+                inputStr = newInputStr
+                break
+              end
+            else
+              -- This Transformer was already processed
+              -- Get its input to follow the chain all the way back to the factory
+              local transformerInputStr = transformerModel:GetAttribute(consumerClass.INPUT_ATTR_NAME)
+              if transformerInputStr then
+                inputStr = transformerInputStr
+                break
+              end
             end
           end
         end
         for _, factoryModel in pairs(serverFactoriesFolder:GetChildren()) do
           if factoryModel.Name == inputStr then
-            local factoryInstance, productInstance = createFactory(factoryModel, inputStr, map)
-            if factoryInstance and productInstance then
-              table.insert(factories, factoryInstance)
-              table.insert(products, productInstance)
+            -- Check if this is a new Factory or a repeat
+            if not containsInstanceNamed(factories, inputStr) then
+              -- This is a new Factory
+              local factoryInstance, productInstance = createFactory(factoryModel, inputStr, map)
+              if factoryInstance and productInstance then
+                table.insert(factories, factoryInstance)
+                table.insert(products, productInstance)
+                table.insert(inputs, inputStr)
 
-              isDoneFindingFactory = true
-              break
+                isDoneFindingFactory = true
+                break
+              end
+            else
+              -- This Factory was already processed
+              -- Do nothing
             end
           end
         end
@@ -319,10 +366,18 @@ function MapManager.InitializeMap()
     local tableClone = serverTablesFolder:FindFirstChild("Table"):Clone()
 
     -- Move to workspace
-    tableClone:SetPrimaryPartCFrame(emptyConsumerPlot .CFrame)
+    tableClone:SetPrimaryPartCFrame(emptyConsumerPlot.CFrame)
     tableClone.Parent = wsTablesFolder
 
     emptyConsumerPlot = getAvailableProducerPlot(map)
+  end
+
+  -- Put spawn plots in table
+  local mapObjects = map:GetChildren()
+  for idx, object in pairs(mapObjects) do
+    if object.Name == "SpawnPlot" then
+      table.insert(spawnPlotParts, object)
+    end
   end
 
   MapManager.ColorizeMap(map)
