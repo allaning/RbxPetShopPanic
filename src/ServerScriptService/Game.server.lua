@@ -3,6 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ProximityPromptService = game:GetService("ProximityPromptService")
+local AnimationModule = require(ReplicatedStorage.AnimationModule)
 
 local Util = require(ReplicatedStorage.Util)
 local SoundModule = require(ReplicatedStorage.SoundModule)
@@ -105,9 +106,11 @@ local function handleConsumerPrompt(consumerModel, player)
           if currentProduct.Name == consumerInputStr then
             -- Correct input
             ConsumerInputReceivedEvent:FireAllClients(consumerModel, true)
+            AnimationModule.PlayVictoryAnimation(consumerModel)
           else
             -- Wrong input
             ConsumerInputReceivedEvent:FireAllClients(consumerModel, false)
+            AnimationModule.PlayDefeatAnimation(consumerModel)
           end
         end -- currentProduct
       end -- primaryPart
@@ -279,6 +282,49 @@ local function onPromptTriggered(promptObject, player)
 end
 -- Connect prompt events to handling functions
 ProximityPromptService.PromptTriggered:Connect(onPromptTriggered)
+
+
+local function onPromptHoldBegan(promptObject, player)
+  local promptModel = promptObject.Parent.Parent.Parent -- Get the product Model
+  if promptModel then
+    -- TODO: Determine type of object, e.g. Consumer, etc.
+    local holdAnimId = promptModel:GetAttribute(consumerClass.PROXIMITY_HOLD_ANIMATION_ATTR_NAME)
+    if holdAnimId then
+      local human = Util:GetHumanoid(player)
+      if human then
+        -- Face player toward ProximityHoldTargetPart, if exists
+        local humanoidRootPart = Util:GetHumanoidRootPart(player)
+        if humanoidRootPart then
+          local targetPart = Util:GetDescendantWithName(promptModel, consumerClass.PROXIMITY_HOLD_TARGET_PART_NAME)
+          if targetPart then
+            print("aing if targetPart then")
+            local targetPos = Vector3.new(targetPart.Position.X, humanoidRootPart.Position.Y, targetPart.Position.Z)
+            humanoidRootPart.CFrame = CFrame.new(humanoidRootPart.Position, targetPos)
+          end
+        end
+
+        -- Play animation
+        AnimationModule.PlayAssetIdStr(human, holdAnimId, AnimationModule.IS_LOOPED)
+      end
+    end
+  end
+end
+ProximityPromptService.PromptButtonHoldBegan:Connect(onPromptHoldBegan)
+
+
+local function onPromptHoldEnded(promptObject, player)
+  local promptModel = promptObject.Parent.Parent.Parent -- Get the product Model
+  if promptModel then
+    local holdAnimId = promptModel:GetAttribute(consumerClass.PROXIMITY_HOLD_ANIMATION_ATTR_NAME)
+    if holdAnimId then
+      local human = Util:GetHumanoid(player)
+      if human then
+        AnimationModule.Stop(human)
+      end
+    end
+  end
+end
+ProximityPromptService.PromptButtonHoldEnded:Connect(onPromptHoldEnded)
 
 
 local function onGameStart()

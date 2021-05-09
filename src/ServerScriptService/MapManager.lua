@@ -132,7 +132,7 @@ local function createTransformer(transformerModel, outputProductStr, map)
     plot:SetAttribute("AssetName", outputProductStr)
     local transformerClone = transformerModel:Clone()
     local transformTimeSec = transformerClone:GetAttribute("TransformTimeSec")
-    local transformerName = transformerClone:GetAttribute("TransformerName")
+    local transformerName = transformerClone:GetAttribute("TransformerName") or transformerClone.Name
 
     -- Create product
     local productModel = serverProductsFolder:FindFirstChild(outputProductStr)

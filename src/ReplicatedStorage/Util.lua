@@ -138,7 +138,7 @@ end
 
 
 function Util:IsChild(parent, childName)
-  for _, obj in ipairs(parent:GetChildren()) do
+  for _, obj in pairs(parent:GetChildren()) do
     if obj.Name == childName then
       return true
     end
@@ -148,7 +148,7 @@ end
 
 
 function Util:GetChildWithName(parent, childName)
-  for _, obj in ipairs(parent:GetChildren()) do
+  for _, obj in pairs(parent:GetChildren()) do
     if obj.Name == childName then
       return obj
     end
@@ -157,7 +157,7 @@ end
 
 
 function Util:GetDescendantWithName(parent, childName)
-  for _, obj in ipairs(parent:GetDescendants()) do
+  for _, obj in pairs(parent:GetDescendants()) do
     if obj.Name == childName then
       return obj
     end
@@ -327,7 +327,16 @@ end
 function Util:MakeModelCanCollide(model, canCollide)
   for _, obj in ipairs(model:GetDescendants()) do
     if obj:IsA("BasePart") or obj:IsA("MeshPart") then
-      obj.CanCollide = false
+      obj.CanCollide = canCollide
+    end
+  end
+end
+
+
+function Util:MakeModelAnchored(model, anchored)
+  for _, obj in ipairs(model:GetDescendants()) do
+    if obj:IsA("BasePart") or obj:IsA("MeshPart") then
+      obj.Anchored = anchored
     end
   end
 end
@@ -452,6 +461,14 @@ end
 function Util:GetHumanoidRootPart(player)
   local character = player.Character or player.CharacterAdded:wait()
   return character:WaitForChild("HumanoidRootPart")
+end
+
+function Util:GetHumanoid(player)
+  local character = player.Character or player.CharacterAdded:wait()
+  local human = character:FindFirstChildOfClass("Humanoid")
+  if human then
+    return human
+  end
 end
 
 function Util:ServerGetPlayerByName(playerName)

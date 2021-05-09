@@ -16,7 +16,9 @@ Consumer rules:
   - Optional: Add an Attribute named ConsumeTimeSec to specify non-default time it takes to consume product
   - Optional: Add an Attribute named ExpireTimeSec to specify non-default time it takes to quit waiting for input
   - Optional: Add an Attribute named ExtraInputRequestDelaySec to specify additional time to wait before requesting input
-  - Optional: Add Vector3 Attribute named PrimaryPartPositionOffset to specify custom position offset for PrimaryPart
+  - Optional: Add an Attribute named ProximityHoldAnimationId (string) to specify animation ID to play during HoldDuration
+  - Optional: Add a Part named ProximityHoldTargetPart to specify direction player sould face during HoldDuration
+  - Optional: Add Vector3 Attribute named PrimaryPartPositionOffset to specify custom position offset for PrimaryPart vs. plot
 ]]--
 
 
@@ -25,6 +27,7 @@ local ProximityPromptFactory = require(ReplicatedStorage.Gui.ProximityPromptFact
 local Util = require(ReplicatedStorage.Util)
 local Promise = require(ReplicatedStorage.Vendor.Promise)
 local SoundModule = require(ReplicatedStorage.SoundModule)
+local AnimationModule = require(ReplicatedStorage.AnimationModule)
 local productFactory = require(ReplicatedStorage.Products.ProductFactory)
 
 local ShowOverheadBillboardEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ShowOverheadBillboard")
@@ -37,7 +40,7 @@ Consumer.__index = Consumer
 
 
 -- Default time after requesting an input before quitting
-Consumer.DEFAULT_EXPIRE_TIME_SEC = 50
+Consumer.DEFAULT_EXPIRE_TIME_SEC = 21--aing 50
 
 -- Show first warning when this much time left
 Consumer.YELLOW_WARNING_TIME_SEC_BEFORE_EXPIRING = 20
@@ -57,13 +60,13 @@ Consumer.INPUT_REQUEST_RECEIVED_SOUND = SoundModule.SOUND_ID_LEVEL_UP_HIGH
 Consumer.INPUT_REQUEST_EXPIRED_SOUND = SoundModule.SOUND_ID_WAH
 
 -- Additional delay time before requesting first input
-Consumer.INITIAL_INPUT_REQUEST_DELAY_SEC = 5.0
+Consumer.INITIAL_INPUT_REQUEST_DELAY_SEC = 1--aing 5.0
 
 -- Min delay time before requesting input
-Consumer.MIN_INPUT_REQUEST_DELAY_SEC = 5.0
+Consumer.MIN_INPUT_REQUEST_DELAY_SEC = 1--aing 5.0
 
 -- Max delay time before requesting input
-Consumer.MAX_INPUT_REQUEST_DELAY_SEC = 15.0
+Consumer.MAX_INPUT_REQUEST_DELAY_SEC = 1--aing 15.0
 
 -- Model Attribute override: ConsumeTimeSec [number]
 Consumer.DEFAULT_CONSUME_TIME_SEC = 2.0
@@ -88,6 +91,12 @@ Consumer.IS_REQUESTING_INPUT_ATTR_NAME = "IsRequestingInput"
 
 -- Name of string Attribute that indicates input currently being requested
 Consumer.CURRENT_REQUESTED_INPUT_ATTR_NAME = "CurrentRequestedInput"
+
+-- Name of string Attribute indicating animation ID during Proximity HoldDuration
+Consumer.PROXIMITY_HOLD_ANIMATION_ATTR_NAME = "ProximityHoldAnimationId"
+
+-- Part that player should face during Proximity HoldDuration
+Consumer.PROXIMITY_HOLD_TARGET_PART_NAME = "ProximityHoldTargetPart"
 
 -- Name of UID Attribute
 -- This can be used to identify the consumer on the client side, etc.
@@ -272,6 +281,11 @@ local function runTimer(itself, delaySec, model, attachmentPart, color)
 
     -- Listener will check if color is nil and act accordingly
     UpdateOverheadBillboardEvent:FireAllClients(model, attachmentPart, color)
+
+    -- Play time expired animation
+    if color == nil then
+      AnimationModule.PlayDefeatAnimation(model)
+    end
 
     if not color then
       -- Reset consumer
