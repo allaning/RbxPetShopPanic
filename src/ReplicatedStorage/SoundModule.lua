@@ -27,6 +27,9 @@ SoundModule.SOUND_ID_CORRECT_ANSWER_2 = "rbxassetid://1839997929"  -- https://ww
 -- Drip
 SoundModule.SOUND_ID_DRIP = "rbxassetid://2676723649"  -- https://www.roblox.com/library/2676723649/Drip
 
+-- Error
+SoundModule.SOUND_ID_ERROR = "rbxassetid://138090596"  -- https://www.roblox.com/library/138090596/Error-Beep
+
 -- Kerplunk
 SoundModule.SOUND_ID_KERPLUNK = "rbxassetid://12222054"  -- https://www.roblox.com/library/12222054/Kerplunk-wav
 

@@ -10,6 +10,9 @@ Transformer rules:
   - Recommended: Add a descendant Part named ProductAttachmentPart where the Product received will be welded
   - Optional: Add an Attribute named PromptActionText to specify non-default ActionText for ProximityPrompt
   - Optional: Add an Attribute named TransformTimeSec to specify non-default transformation duration time
+  - Optional: Add an Attribute (boolean) named IsAutomatic to specify whether player must hold key during transformation
+  - Optional: Add an Attribute named ProximityHoldAnimationId (string) to specify animation ID to play during HoldDuration
+  - Optional: Add a Part named ProximityHoldTargetPart to specify direction player sould face during HoldDuration
 ]]--
 
 
@@ -31,8 +34,20 @@ Transformer.__index = Transformer
 -- Sound when transformer done
 Transformer.TRANSFORM_COMPLETE_SOUND = SoundModule.SOUND_ID_CHIME_2
 
+-- Name of string Attribute indicating input(s)
+Transformer.INPUT_ATTR_NAME = "Input"
+
 -- Model Attribute override: TransformTimeSec [number]
 Transformer.DEFAULT_TRANSFORM_TIME_SEC = 5.0
+
+-- Model Attribute IsAutomatic name
+Transformer.IS_AUTOMATIC_ATTR_NAME = "IsAutomatic"
+
+-- Name of string Attribute indicating animation ID during Proximity HoldDuration
+Transformer.PROXIMITY_HOLD_ANIMATION_ATTR_NAME = "ProximityHoldAnimationId"
+
+-- Part that player should face during Proximity HoldDuration
+Transformer.PROXIMITY_HOLD_TARGET_PART_NAME = "ProximityHoldTargetPart"
 
 
 function Transformer.new()
@@ -151,6 +166,13 @@ function Transformer:SetProximityPrompt(model, actionText)
     local prompt = ProximityPromptFactory.GetDefaultProximityPrompt(self:GetName(), actionText)
     if prompt then
       ProximityPromptFactory.SetMaxDistance(prompt, 7)
+
+      -- Check if player must hold key during transform
+      local isAutomatic = model:GetAttribute(Transformer.IS_AUTOMATIC_ATTR_NAME)
+      if not isAutomatic or isAutomatic == false then
+        ProximityPromptFactory.SetHoldDuration(prompt, self:GetTransformTimeSec())
+      end
+
       prompt.Parent = attachment
     end
   end
@@ -166,12 +188,20 @@ function Transformer:TransformProduct(productInstance)
     local transformerModel = self:GetModel()
     if transformerModel then
       local spawnPart = transformerModel:WaitForChild("ProductAttachmentPart")
+      local transformTimeSec = self:GetTransformTimeSec()
 
-      -- Tell client to show transform progress
-      TransformBeginEvent:FireAllClients(spawnPart, self:GetTransformTimeSec())
+      -- Check if player must hold key during transform
+      local isAutomatic = transformerModel:GetAttribute(Transformer.IS_AUTOMATIC_ATTR_NAME)
+      if not isAutomatic or isAutomatic == false then
+        -- Do not transform automatically, so don't show progress bar
+        transformTimeSec = 0.05
+      else
+        -- Tell client to show transform progress
+        TransformBeginEvent:FireAllClients(spawnPart, transformTimeSec)
+      end
 
-      -- Delay for the transform
-      Promise.delay(self:GetTransformTimeSec()):andThen(function()
+      -- Delay for the transform, if any
+      Promise.delay(transformTimeSec):andThen(function()
         local productFolder = self.itsProductFolder
         if productFolder then
           local inputObj = productFolder:FindFirstChild(self:GetInput())
