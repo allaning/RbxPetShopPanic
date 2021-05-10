@@ -1,0 +1,4 @@
+{
+  "Name": "SessionEnded",
+  "ClassName": "RemoteEvent"
+}

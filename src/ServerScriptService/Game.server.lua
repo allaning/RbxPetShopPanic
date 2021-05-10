@@ -11,13 +11,21 @@ local SoundModule = require(ReplicatedStorage.SoundModule)
 local Promise = require(ReplicatedStorage.Vendor.Promise)
 
 local MapManager = require(ServerScriptService.MapManager)
-local consumerClass = require(ReplicatedStorage.Consumers.Consumer)
-local transformerClass = require(ReplicatedStorage.Transformers.Transformer)
+local ProductClass = require(ReplicatedStorage.Products.Product)
+local ConsumerClass = require(ReplicatedStorage.Consumers.Consumer)
+local TransformerClass = require(ReplicatedStorage.Transformers.Transformer)
+local Session = require(ReplicatedStorage.Session)
 
 local ConsumerInputReceivedEvent = ReplicatedStorage.Events.ConsumerInputReceived
+local SessionCountdownBeginEvent = ReplicatedStorage.Events.SessionCountdownBegin
+local SessionEndedEvent = ReplicatedStorage.Events.SessionEnded
+local SessionScoreEvent = ReplicatedStorage.Events.SessionScore
 
 
 local PRODUCT_PLAYER_WELD_NAME = "ProductPlayerWeld"
+
+
+local session = nil
 
 
 local function getCharacterProduct(character)
@@ -47,7 +55,7 @@ end
 local function getProductAttachmentPart(model)
   -- Check if model has an attachment Part for the product
   for ___, currentModelPart in pairs(model:GetDescendants()) do
-    if currentModelPart.Name == consumerClass.PRODUCT_ATTACHMENT_PART_NAME and currentModelPart:IsA("BasePart") then
+    if currentModelPart.Name == ConsumerClass.PRODUCT_ATTACHMENT_PART_NAME and currentModelPart:IsA("BasePart") then
       return currentModelPart
     end
   end
@@ -58,10 +66,10 @@ local function getProductAttachmentPart(model)
   local primaryPart = model.PrimaryPart
   if primaryPart then
     attachmentPart = Instance.new("Part", primaryPart)
-    attachmentPart.Name = consumerClass.PRODUCT_ATTACHMENT_PART_NAME
+    attachmentPart.Name = ConsumerClass.PRODUCT_ATTACHMENT_PART_NAME
     attachmentPart.Position = primaryPart.Position + Vector3.new(0, 6, 0)
     attachmentPart.Size = Vector3.new(0.5, 0.5, 0.5)
-    Util:WeldModelToPart(attachmentPart, primaryPart, consumerClass.PRODUCT_ATTACHMENT_PART_NAME.."Weld")
+    Util:WeldModelToPart(attachmentPart, primaryPart, ConsumerClass.PRODUCT_ATTACHMENT_PART_NAME.."Weld")
     attachmentPart.Transparency = 1.0
     attachmentPart.CanCollide = false
     attachmentPart.CastShadow = false
@@ -71,11 +79,11 @@ end
 
 local function handleConsumerPrompt(consumerModel, player)
   if consumerModel and consumerModel:IsA("Model") then
-    local consumerInputStr = consumerModel:GetAttribute(consumerClass.CURRENT_REQUESTED_INPUT_ATTR_NAME)
-    print("Consumer: ".. consumerModel.Name.. "; Input=".. consumerInputStr)
+    local consumerInputStr = consumerModel:GetAttribute(ConsumerClass.CURRENT_REQUESTED_INPUT_ATTR_NAME)
+    --print("Consumer: ".. consumerModel.Name.. "; Input=".. consumerInputStr)
 
     -- Check if consumer is currently requesting an input
-    local isRequestingInput = consumerModel:GetAttribute(consumerClass.IS_REQUESTING_INPUT_ATTR_NAME)
+    local isRequestingInput = consumerModel:GetAttribute(ConsumerClass.IS_REQUESTING_INPUT_ATTR_NAME)
     if isRequestingInput then
       local character, currentProduct = getPlayersCharacterAndCurrentProduct(player)
       if character and currentProduct then
@@ -105,7 +113,7 @@ local function handleConsumerPrompt(consumerModel, player)
         currentProduct.Parent = consumerProductsFolder
 
         -- Remove product after delay (non-blocking)
-        Promise.delay(consumerClass.DEFAULT_CONSUME_TIME_SEC):andThen(function()
+        Promise.delay(ConsumerClass.DEFAULT_CONSUME_TIME_SEC):andThen(function()
           currentProduct:Destroy()
         end)
 
@@ -113,6 +121,9 @@ local function handleConsumerPrompt(consumerModel, player)
           -- Correct input
           ConsumerInputReceivedEvent:FireAllClients(consumerModel, true)
           AnimationModule.PlayVictoryAnimation(consumerModel)
+          session:IncrementScore(ProductClass.DEFAULT_POINTS)
+          SessionScoreEvent:FireAllClients(session:GetScore())
+          print("Score=".. tostring(session:GetScore()))
         else
           -- Wrong input
           ConsumerInputReceivedEvent:FireAllClients(consumerModel, false)
@@ -172,8 +183,8 @@ end
 
 local function handleTransformerPrompt(transformerModel, player)
   if transformerModel and transformerModel:IsA("Model") then
-    local transformerInputStr = transformerModel:GetAttribute(transformerClass.INPUT_ATTR_NAME)
-    print("Transformer: ".. transformerModel.Name.. "; Input=".. transformerInputStr)
+    local transformerInputStr = transformerModel:GetAttribute(TransformerClass.INPUT_ATTR_NAME)
+    --print("Transformer: ".. transformerModel.Name.. "; Input=".. transformerInputStr)
 
     -- Check if player is holding the right input
     local character, currentProduct = getPlayersCharacterAndCurrentProduct(player)
@@ -270,7 +281,7 @@ end
 -- This happens after HoldDuration is met, if any
 local function onPromptTriggered(promptObject, player)
   local promptModel, promptModelTypeName = getElementModelAndType(promptObject)
-  print("onPromptTriggered: Folder=".. promptModelTypeName)
+  --print("onPromptTriggered: Folder=".. promptModelTypeName)
 
   -- Invoke the appropriate handler
   if promptModelTypeName == "Products" then
@@ -297,7 +308,7 @@ local function onPromptHoldBegan(promptObject, player)
         -- Check if player is holding the right input
         local character, currentProduct = getPlayersCharacterAndCurrentProduct(player)
         if character then
-          local transformerInputStr = promptModel:GetAttribute(transformerClass.INPUT_ATTR_NAME)
+          local transformerInputStr = promptModel:GetAttribute(TransformerClass.INPUT_ATTR_NAME)
           if not currentProduct or currentProduct.Name ~= transformerInputStr then
             -- Wrong input type
             SoundModule.PlayAssetIdStr(character, SoundModule.SOUND_ID_ERROR, 0.2)
@@ -306,14 +317,14 @@ local function onPromptHoldBegan(promptObject, player)
         end
       end
 
-      local holdAnimId = promptModel:GetAttribute(consumerClass.PROXIMITY_HOLD_ANIMATION_ATTR_NAME)
+      local holdAnimId = promptModel:GetAttribute(ConsumerClass.PROXIMITY_HOLD_ANIMATION_ATTR_NAME)
       if holdAnimId then
         local human = Util:GetHumanoid(player)
         if human then
           -- Face player toward ProximityHoldTargetPart, if exists
           local humanoidRootPart = Util:GetHumanoidRootPart(player)
           if humanoidRootPart then
-            local targetPart = Util:GetDescendantWithName(promptModel, consumerClass.PROXIMITY_HOLD_TARGET_PART_NAME)
+            local targetPart = Util:GetDescendantWithName(promptModel, ConsumerClass.PROXIMITY_HOLD_TARGET_PART_NAME)
             if targetPart then
               local targetPos = Vector3.new(targetPart.Position.X, humanoidRootPart.Position.Y, targetPart.Position.Z)
               humanoidRootPart.CFrame = CFrame.new(humanoidRootPart.Position, targetPos)
@@ -333,7 +344,7 @@ ProximityPromptService.PromptButtonHoldBegan:Connect(onPromptHoldBegan)
 local function onPromptHoldEnded(promptObject, player)
   local promptModel = promptObject.Parent.Parent.Parent -- Get the product Model
   if promptModel then
-    local holdAnimId = promptModel:GetAttribute(consumerClass.PROXIMITY_HOLD_ANIMATION_ATTR_NAME)
+    local holdAnimId = promptModel:GetAttribute(ConsumerClass.PROXIMITY_HOLD_ANIMATION_ATTR_NAME)
     if holdAnimId then
       local human = Util:GetHumanoid(player)
       if human then
@@ -354,12 +365,10 @@ local function onGameStart()
   -- Spawn players
   local spawns = MapManager.GetSpawns()
   if spawns and #spawns > 0 then
-    print("aing  -- if spawns and #spawns > 0 then")
     local playerList = Players:GetPlayers()
     for idx, spawn in pairs(spawns) do
-      print("aing  -- for idx, spawn in pairs(spawns) do")
       if playerList[idx] then
-        print("Spawning ".. playerList[idx].Name)
+        --print("Spawning ".. playerList[idx].Name)
         local torso = Util:GetTorsoFromPlayer(playerList[idx])
         if torso then
           local yOffset = 1
@@ -376,6 +385,19 @@ local function onGameStart()
   else
     error("Unable to get spawn plots from MapManager")
   end
+
+  session = Session.new()
+  session:SetStartTime(os.time())
+  SessionCountdownBeginEvent:FireAllClients(session:GetStartTime())
+
+  Promise.try(function()
+    while not session:IsDone() do
+      Util:RealWait(1)
+      print("Elapsed Time: ".. tostring(session:GetElapsedTime()))
+    end
+    print("DONE")
+    SessionEndedEvent:FireAllClients(session:GetScore())
+  end)
 end
 
 onGameStart()

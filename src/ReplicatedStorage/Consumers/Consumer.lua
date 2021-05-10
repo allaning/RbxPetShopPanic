@@ -40,7 +40,7 @@ Consumer.__index = Consumer
 
 
 -- Default time after requesting an input before quitting
-Consumer.DEFAULT_EXPIRE_TIME_SEC = 21--aing 50
+Consumer.DEFAULT_EXPIRE_TIME_SEC = 50
 
 -- Show first warning when this much time left
 Consumer.YELLOW_WARNING_TIME_SEC_BEFORE_EXPIRING = 20
@@ -60,13 +60,13 @@ Consumer.INPUT_REQUEST_RECEIVED_SOUND = SoundModule.SOUND_ID_LEVEL_UP_HIGH
 Consumer.INPUT_REQUEST_EXPIRED_SOUND = SoundModule.SOUND_ID_WAH
 
 -- Additional delay time before requesting first input
-Consumer.INITIAL_INPUT_REQUEST_DELAY_SEC = 1--aing 5.0
+Consumer.INITIAL_INPUT_REQUEST_DELAY_SEC = 5.0
 
 -- Min delay time before requesting input
-Consumer.MIN_INPUT_REQUEST_DELAY_SEC = 1--aing 5.0
+Consumer.MIN_INPUT_REQUEST_DELAY_SEC = 5.0
 
 -- Max delay time before requesting input
-Consumer.MAX_INPUT_REQUEST_DELAY_SEC = 1--aing 15.0
+Consumer.MAX_INPUT_REQUEST_DELAY_SEC = 15.0
 
 -- Model Attribute override: ConsumeTimeSec [number]
 Consumer.DEFAULT_CONSUME_TIME_SEC = 2.0
@@ -169,9 +169,6 @@ function Consumer:GetProductModel()
       -- Check if more than one input option
       print(self:GetName().. " Consumer:GetProductModel()  inputs:".. inputAttribute)
       local inputs = string.split(inputAttribute, Consumer.INPUT_DELIMITER_STR)
-      for _, input in ipairs(inputs) do
-        print("  ".. self:GetName().. " input:".. input)
-      end
       local inputIdx = 1
       if #inputs > 1 then
         -- Choose random input
@@ -179,7 +176,7 @@ function Consumer:GetProductModel()
         inputIdx = rand:NextInteger(1, #inputs)
       end
       local inputName = Util:Trim(inputs[inputIdx])
-      print(self:GetName().. " request: ".. inputName)
+      --print(self:GetName().. " request: ".. inputName)
 
       -- TODO Check if aggregate input
 

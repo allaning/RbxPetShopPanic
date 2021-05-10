@@ -20,6 +20,10 @@ local Product = {}
 Product.__index = Product
 
 
+-- Default points earned for success
+Product.DEFAULT_POINTS = 10
+
+
 function Product.new()
   local self = {}
   setmetatable(self, Product)
