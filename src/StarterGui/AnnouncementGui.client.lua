@@ -16,6 +16,9 @@ local PlayerGui = Player:WaitForChild("PlayerGui")
 local Character = Player.Character or Player.CharacterAdded:wait()
 
 
+local FONT_COLOR_DEFAULT = Color3.fromRGB(255, 255, 0)
+local FONT_BORDER_COLOR_DEFAULT = Color3.fromRGB(170, 170, 0)
+
 local function getAnnouncementTextLabel(screenGui, message, backgroundTransparency, scale)
   local textLabel = Util:CreateInstance("TextLabel", {
       Text = message,
@@ -24,7 +27,9 @@ local function getAnnouncementTextLabel(screenGui, message, backgroundTransparen
       AnchorPoint = Vector2.new(0.5, 0.5),
       Position = UDim2.new(0.5, 0, 0.8, 0),
       Size = UDim2.new(0.3, 0, 0.07, 0),
-      TextColor3 = Color3.fromRGB(255, 255, 0),
+      TextColor3 = FONT_COLOR_DEFAULT,
+      TextStrokeColor3 = FONT_BORDER_COLOR_DEFAULT,
+      TextStrokeTransparency = 0.0,
       TextScaled = true,
       BackgroundTransparency = backgroundTransparency,
     }, screenGui)
@@ -42,6 +47,7 @@ local function showAnnouncement(message, isBackgroundTransparent, durationSec)
   local duration = durationSec or 3.0
 
   local announceGui = Util:CreateInstance("ScreenGui", {
+      Name = "AnnouncementGui",
     }, PlayerGui)
 
   local textLabel, scale = getAnnouncementTextLabel(announceGui, message, 1.0, 0.0)
@@ -56,7 +62,6 @@ end
 
 
 local function showSessionCountdownBeginAnnouncement()
-  print("In showSessionCountdownBeginAnnouncement()")
   showAnnouncement("Ready", true, 0.9)
   Util:RealWait(1.0)
   showAnnouncement("3", true, 0.9)
@@ -68,4 +73,9 @@ local function showSessionCountdownBeginAnnouncement()
   showAnnouncement("Go!", true, 0.9)
 end
 SessionCountdownBeginEvent.OnClientEvent:Connect(showSessionCountdownBeginAnnouncement)
+
+local function showSessionEndedAnnouncement()
+  showAnnouncement("Time's Up", true, 1.5)
+end
+SessionEndedEvent.OnClientEvent:Connect(showSessionEndedAnnouncement)
 

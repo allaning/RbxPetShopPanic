@@ -3,6 +3,7 @@ local Util = require(ReplicatedStorage.Util)
 local Promise = require(ReplicatedStorage.Vendor.Promise)
 
 local SessionCountdownBeginEvent = ReplicatedStorage.Events.SessionCountdownBegin
+local SessionEndedEvent = ReplicatedStorage.Events.SessionEnded
 
 local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
@@ -26,6 +27,7 @@ local function playMusic(parentObject, soundId, volume)
         Volume = volume,
         EmitterSize = 80,
         RollOffMode = Enum.RollOffMode.InverseTapered,
+        Looped = true,
       }, parentObject)
 
     currentMusic:Play()
@@ -34,8 +36,21 @@ local function playMusic(parentObject, soundId, volume)
   end)
 end 
 
+local function stopMusic()
+  if currentMusic and currentMusic.IsPlaying then
+    currentMusic:Stop()
+  end
+end
+
 
 local function playSessionMusic()
+  -- TODO: Choose music
   playMusic(PlayerGui, MUSIC_ID_SWING_IT)
 end
 SessionCountdownBeginEvent.OnClientEvent:Connect(playSessionMusic)
+
+local function stopSessionMusic()
+  stopMusic()
+end
+SessionEndedEvent.OnClientEvent:Connect(stopSessionMusic)
+
