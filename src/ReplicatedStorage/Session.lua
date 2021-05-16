@@ -32,6 +32,10 @@ function Session:SetScore(newScore)
   self.Score = newScore
 end
 
+function Session:Start()
+  self.StartTime = os.time()
+end
+
 function Session:GetStartTime()
   return self.StartTime
 end

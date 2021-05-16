@@ -360,7 +360,7 @@ local function onGameStart()
   -- Select a map
   local map = MapManager.InitializeMap()
 
-  Util:RealWait(5)
+  Util:RealWait(8)
 
   -- Spawn players
   local spawns = MapManager.GetSpawns()
@@ -387,7 +387,7 @@ local function onGameStart()
   end
 
   session = Session.new()
-  session:SetStartTime(os.time())
+  session:Start()
   SessionCountdownBeginEvent:FireAllClients(session:GetStartTime())
 
   Promise.try(function()

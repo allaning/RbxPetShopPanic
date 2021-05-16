@@ -22,9 +22,8 @@ local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
-
-local character = Player.Character or Player.CharacterAdded:wait()
-local Humanoid = character:WaitForChild("Humanoid");
+local Character = Player.Character or Player.CharacterAdded:wait()
+local Humanoid = Character:WaitForChild("Humanoid");
 
 
 Promise.try(function()
