@@ -18,7 +18,7 @@ local currentMusic = nil
 
 
 local function playMusic(parentObject, soundId, volume)
-  local volume = volume or 0.4
+  local volume = volume or 0.3
 
   -- Run in new thread
   Promise.try(function()

@@ -20,6 +20,7 @@ local ConsumerInputReceivedEvent = ReplicatedStorage.Events.ConsumerInputReceive
 local SessionCountdownBeginEvent = ReplicatedStorage.Events.SessionCountdownBegin
 local SessionEndedEvent = ReplicatedStorage.Events.SessionEnded
 local SessionScoreEvent = ReplicatedStorage.Events.SessionScore
+local ShowMessagePopupEvent = ReplicatedStorage.Events.ShowMessagePopup
 
 
 local PRODUCT_PLAYER_WELD_NAME = "ProductPlayerWeld"
@@ -187,10 +188,12 @@ local function handleTransformerPrompt(transformerModel, player)
     --print("Transformer: ".. transformerModel.Name.. "; Input=".. transformerInputStr)
 
     -- Check if player is holding the right input
+    local showInputNeededMessage = true
     local character, currentProduct = getPlayersCharacterAndCurrentProduct(player)
     if character and currentProduct then
       if currentProduct.Name == transformerInputStr then
         SoundModule.PlaySwitch3(character)
+        showInputNeededMessage = false
 
         -- Break welds between product and player
         local hand = Util:GetRightHandFromPlayer(player)
@@ -215,6 +218,10 @@ local function handleTransformerPrompt(transformerModel, player)
         end
         currentProduct.Parent = transformerProductsFolder
       end
+    end
+
+    if showInputNeededMessage then
+      ShowMessagePopupEvent:FireClient(player, "Need ".. transformerInputStr.. "!", 1.8)
     end
   end
 end
@@ -311,7 +318,7 @@ local function onPromptHoldBegan(promptObject, player)
           local transformerInputStr = promptModel:GetAttribute(TransformerClass.INPUT_ATTR_NAME)
           if not currentProduct or currentProduct.Name ~= transformerInputStr then
             -- Wrong input type
-            SoundModule.PlayAssetIdStr(character, SoundModule.SOUND_ID_ERROR, 0.2)
+            ShowMessagePopupEvent:FireClient(player, "Need ".. transformerInputStr.. "!", 1.8)
             return
           end
         end

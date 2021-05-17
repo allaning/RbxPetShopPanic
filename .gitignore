@@ -1,8 +1,9 @@
 # Archived files
 /archive
 
-# Project place file
+# Project place files
 /PetShopPanic.rbxlx
+/*.rbxlx
 
 # Roblox Studio lock files
 /*.rbxlx.lock

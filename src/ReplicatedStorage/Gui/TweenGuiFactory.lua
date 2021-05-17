@@ -7,6 +7,8 @@ local Flipper = require(ReplicatedStorage.Vendor.Flipper)
 
 local TweenGuiFactory = {}
 
+-- Tween Parts
+
 local springProps = {
   frequency = 3.5,
   dampingRatio = 0.3, -- The lower the number, the more bounce before settling
@@ -36,6 +38,34 @@ function TweenGuiFactory.BouncePart(tweenPart)
   tweenPart.Position = tweenPart.Position + Vector3.new(0, -1, 0)
   TweenGuiFactory.SpringUpPart(goalPosition, tweenPart)
 end
+
+
+-- Tween Frame
+
+local frameSpringProps = {
+  frequency = 8.0,
+  dampingRatio = 0.3, -- The lower the number, the more bounce before settling
+}
+
+function TweenGuiFactory.SpringUpFrame(tweenFrame)
+  local motor = Flipper.GroupMotor.new({
+    X = tweenFrame.Position.X.Scale,
+    Y = tweenFrame.Position.Y.Scale,
+  })
+  motor:onStep(function(values)
+    tweenFrame.Position = UDim2.new(values.X, 0, values.Y, 0)
+  end)
+  motor:onComplete(function()
+    --print("Motor completed")
+  end)
+  motor:setGoal({
+    X = Flipper.Spring.new(tweenFrame.Position.X.Scale, frameSpringProps),
+    Y = Flipper.Spring.new(tweenFrame.Position.Y.Scale - 0.02, frameSpringProps),
+  })
+end
+
+
+-- Tween UIScale
 
 function TweenGuiFactory.ScaleIn(uiScale, duration, style, direction, isBlocking)
   style = style or Enum.EasingStyle.Quad

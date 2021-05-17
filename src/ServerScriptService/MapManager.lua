@@ -332,12 +332,6 @@ function MapManager.InitializeMap()
       end -- while
     end
 
-    -- Update current Consumer with the product info if not already set
-    if consumerInstance:GetInput() == "" then
-      consumerInstance:SetInput(inputStr)
-      consumerInstance:SetInputModel(productInstance:GetModel())
-      print("consumerInstance:SetInputModel(productInstance:GetModel() ".. productInstance:GetName())
-    end
     -- Start the consumer
     consumerInstance:Run()
 
