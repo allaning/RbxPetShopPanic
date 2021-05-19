@@ -367,7 +367,7 @@ local function onGameStart()
   -- Select a map
   local map = MapManager.InitializeMap()
 
-  Util:RealWait(8)
+  Util:RealWait(12)
 
   -- Spawn players
   local spawns = MapManager.GetSpawns()

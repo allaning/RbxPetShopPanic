@@ -22,57 +22,66 @@ local FONT_BORDER_COLOR_DEFAULT = Color3.fromRGB(170, 170, 0)
 
 
 local scoreGui = nil
+local scoreFrame = nil
 local textLabel = nil
 
 
-local function getScoreTitleTextLabel(screenGui)
+local function getScoreTitleTextLabel(parent)
   local textLabel = Util:CreateInstance("TextLabel", {
+      Name = "Title",
       Text = "Score:",
       Font = Enum.Font.Bangers,
       --Font = Enum.Font.LuckiestGuy,
-      AnchorPoint = Vector2.new(0.5, 0.5),
-      Position = UDim2.new(0.05, 0, 0.43, 0),
-      Size = UDim2.new(0.1, 0, 0.07, 0),
+      Position = UDim2.new(0.0, 0, 0.0, 0),
+      Size = UDim2.new(1.0, 0, 0.5, 0),
       TextColor3 = FONT_COLOR_DEFAULT,
       TextStrokeColor3 = FONT_BORDER_COLOR_DEFAULT,
       TextStrokeTransparency = 0.0,
       TextScaled = true,
       BackgroundColor3 = Color3.new(1, 1, 1),
-      BackgroundTransparency = 0.0,
-      BorderSizePixel = 5,
-      BorderColor3 = Color3.new(1, 1, 1),
+      BackgroundTransparency = 1.0,
+      BorderSizePixel = 0,
       ZIndex = 2,
-    }, screenGui)
+    }, parent)
   return textLabel
 end
 
-local function getScoreTextLabel(screenGui, score)
+local function getScoreTextLabel(parent, score)
   local textLabel = Util:CreateInstance("TextLabel", {
+      Name = "Value",
       Text = score,
-      Font = Enum.Font.Bangers,
-      --Font = Enum.Font.LuckiestGuy,
-      AnchorPoint = Vector2.new(0.5, 0.5),
-      Position = UDim2.new(0.05, 0, 0.5, 0),
-      Size = UDim2.new(0.1, 0, 0.07, 0),
+      --Font = Enum.Font.Bangers,
+      Font = Enum.Font.LuckiestGuy,
+      Position = UDim2.new(0.0, 0, 0.5, 0),
+      Size = UDim2.new(1.0, 0, 0.5, 0),
       TextColor3 = FONT_COLOR_DEFAULT,
       TextStrokeColor3 = FONT_BORDER_COLOR_DEFAULT,
       TextStrokeTransparency = 0.0,
       TextScaled = true,
       BackgroundColor3 = Color3.new(1, 1, 1),
-      BackgroundTransparency = 0.0,
-      BorderSizePixel = 5,
-      BorderColor3 = Color3.new(1, 1, 1),
-    }, screenGui)
+      BackgroundTransparency = 1.0,
+      BorderSizePixel = 0,
+    }, parent)
   return textLabel
 end
 
 local function initializeScoreGui(score)
   scoreGui = Util:CreateInstance("ScreenGui", {
-      Name = "ScoreGui",
-    }, PlayerGui)
+        Name = "ScoreGui",
+      }, PlayerGui)
+  scoreFrame = Util:CreateInstance("Frame", {
+      Position = UDim2.new(0.0, 0, 0.4, 0),
+      Size = UDim2.new(0.12, 0, 0.16, 0),
+      BackgroundColor3 = Color3.new(1, 1, 1),
+      BorderSizePixel = 8,
+      BorderColor3 = Color3.new(1, 1, 1),
+    }, scoreGui)
+  local uiCorner = Util:CreateInstance("UICorner", {
+      CornerRadius = UDim.new(0, 20),
+    }, scoreFrame)
 
-  getScoreTitleTextLabel(scoreGui)
-  textLabel = getScoreTextLabel(scoreGui, score)
+  getScoreTitleTextLabel(scoreFrame)
+  textLabel = getScoreTextLabel(scoreFrame, score)
 end
 
 

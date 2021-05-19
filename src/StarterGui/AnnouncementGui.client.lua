@@ -31,12 +31,16 @@ local function showMessagePopup(message, duration)
       BackgroundColor3 = Color3.new(1, 1, 1),
       BorderSizePixel = 5,
       BorderColor3 = Color3.new(1, 1, 1),
-      Position = UDim2.new(0.5, 0, 0.8, 0),
+      Position = UDim2.new(0.5, 0, 0.85, 0),
       Size = UDim2.new(0.2, 0, 0.04, 0),
       AnchorPoint = Vector2.new(0.5, 0.5),
     }, screenGui)
+  local uiCorner = Util:CreateInstance("UICorner", {
+      CornerRadius = UDim.new(0, 10),
+    }, frame)
   local textLabel = Util:CreateInstance("TextLabel", {
       Text = message,
+      Font = Enum.Font.SourceSansSemibold,
       Position = UDim2.new(0.0, 0, 0.0, 0),
       Size = UDim2.new(1.0, 0, 1.0, 0),
       BackgroundTransparency = 1.0,
@@ -58,8 +62,8 @@ local function getAnnouncementTextLabel(screenGui, message, backgroundTransparen
       Font = Enum.Font.Bangers,
       --Font = Enum.Font.LuckiestGuy,
       AnchorPoint = Vector2.new(0.5, 0.5),
-      Position = UDim2.new(0.5, 0, 0.8, 0),
-      Size = UDim2.new(0.3, 0, 0.07, 0),
+      Position = UDim2.new(0.5, 0, 0.6, 0),
+      Size = UDim2.new(0.4, 0, 0.1, 0),
       TextColor3 = FONT_COLOR_DEFAULT,
       TextStrokeColor3 = FONT_BORDER_COLOR_DEFAULT,
       TextStrokeTransparency = 0.0,

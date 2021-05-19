@@ -44,7 +44,7 @@ end
 
 local frameSpringProps = {
   frequency = 8.0,
-  dampingRatio = 0.3, -- The lower the number, the more bounce before settling
+  dampingRatio = 0.15, -- The lower the number, the more bounce before settling
 }
 
 function TweenGuiFactory.SpringUpFrame(tweenFrame)

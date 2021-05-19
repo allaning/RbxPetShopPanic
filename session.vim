@@ -106,7 +106,7 @@ endif
 set shortmess=aoO
 argglobal
 %argdel
-$argadd src\ReplicatedStorage\Gui\SessionGui.lua
+$argadd src\StarterGui\ScoreGui.client.lua
 tabnew
 tabrewind
 edit C:\Data\Roblox\Places\PetShopPanic\default.project.json
@@ -258,12 +258,12 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 90 - ((13 * winheight(0) + 14) / 29)
+let s:l = 83 - ((28 * winheight(0) + 14) / 29)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-90
-normal! 011|
+83
+normal! 0
 wincmd w
 argglobal
 if bufexists("C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Consumers\Consumer.lua") | buffer C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Consumers\Consumer.lua | else | edit C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Consumers\Consumer.lua | endif
@@ -560,7 +560,7 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 69 - ((28 * winheight(0) + 29) / 58)
+let s:l = 69 - ((1 * winheight(0) + 29) / 58)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -731,15 +731,15 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 399 - ((52 * winheight(0) + 29) / 58)
+let s:l = 23 - ((22 * winheight(0) + 29) / 58)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-399
-normal! 021|
+23
+normal! 07|
 wincmd w
 argglobal
-if bufexists("C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Gui\SessionGui.lua") | buffer C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Gui\SessionGui.lua | else | edit C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Gui\SessionGui.lua | endif
+if bufexists("C:\Data\Roblox\Places\PetShopPanic\src\StarterGui\ScoreGui.client.lua") | buffer C:\Data\Roblox\Places\PetShopPanic\src\StarterGui\ScoreGui.client.lua | else | edit C:\Data\Roblox\Places\PetShopPanic\src\StarterGui\ScoreGui.client.lua | endif
 let s:cpo_save=&cpo
 set cpo&vim
 imap <buffer> <F1> :call xolox#lua#help()
@@ -882,21 +882,21 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 12 - ((11 * winheight(0) + 29) / 58)
+let s:l = 48 - ((27 * winheight(0) + 29) / 58)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-12
-normal! 017|
+48
+normal! 0
 wincmd w
 exe 'vert 1resize ' . ((&columns * 134 + 134) / 269)
 exe 'vert 2resize ' . ((&columns * 134 + 134) / 269)
 tabnext 1
-badd +98 C:\Data\Roblox\Places\PetShopPanic\default.project.json
-badd +1 C:\Data\Roblox\Places\PetShopPanic\src\StarterPlayer\StarterPlayerScripts\InitializePlayer.client.lua
-badd +352 C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\Game.server.lua
-badd +231 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Util.lua
+badd +1 C:\Data\Roblox\Places\PetShopPanic\default.project.json
+badd +23 C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\Game.server.lua
 badd +99 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Consumers\Consumer.lua
+badd +1 C:\Data\Roblox\Places\PetShopPanic\src\StarterPlayer\StarterPlayerScripts\InitializePlayer.client.lua
+badd +231 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Util.lua
 badd +23 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Products\Product.lua
 badd +77 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\AnimationModule.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Gui\ViewportFrameFactory.lua
@@ -923,7 +923,8 @@ badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Settings.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Gui\RadialBackgroundFactory.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Gui\DecalFactory.lua
 badd +13 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Session.lua
-badd +0 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Gui\SessionGui.lua
+badd +34 C:\Data\Roblox\Places\PetShopPanic\src\StarterGui\AnnouncementGui.client.lua
+badd +0 C:\Data\Roblox\Places\PetShopPanic\src\StarterGui\ScoreGui.client.lua
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0
   silent exe 'bwipe ' . s:wipebuf
 endif
