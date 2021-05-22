@@ -29,6 +29,17 @@ local PRODUCT_PLAYER_WELD_NAME = "ProductPlayerWeld"
 local session = nil
 
 
+-- Remove Player ForceField
+Promise.try(function()
+  for _, obj in ipairs(Workspace:GetDescendants()) do
+    if obj.Name == "SpawnLocation" then
+      obj.Duration = 0
+      break
+    end
+  end
+end)
+
+
 local function getCharacterProduct(character)
   if character then
     --print("getPlayerProduct for ".. character.Name)

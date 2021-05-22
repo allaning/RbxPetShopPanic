@@ -1,4 +1,4 @@
--- Show score
+-- Show session gui, e.g. score
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenGuiFactory = require(ReplicatedStorage.Gui.TweenGuiFactory)
@@ -66,21 +66,24 @@ local function getScoreTextLabel(parent, score)
 end
 
 local function initializeScoreGui(score)
-  scoreGui = Util:CreateInstance("ScreenGui", {
-        Name = "ScoreGui",
-      }, PlayerGui)
-  scoreFrame = Util:CreateInstance("Frame", {
-      Position = UDim2.new(0.0, 0, 0.4, 0),
-      Size = UDim2.new(0.12, 0, 0.16, 0),
-      BackgroundColor3 = Color3.new(1, 1, 1),
-      BorderSizePixel = 8,
-      BorderColor3 = Color3.new(1, 1, 1),
-    }, scoreGui)
-  local uiCorner = Util:CreateInstance("UICorner", {
-      CornerRadius = UDim.new(0, 20),
-    }, scoreFrame)
+  if not scoreGui then
+    scoreGui = Util:CreateInstance("ScreenGui", {
+          Name = "ScoreGui",
+        }, PlayerGui)
+    scoreFrame = Util:CreateInstance("Frame", {
+        Position = UDim2.new(0.0, 0, 0.4, 0),
+        Size = UDim2.new(0.12, 0, 0.16, 0),
+        BackgroundColor3 = Color3.new(1, 1, 1),
+        BorderSizePixel = 8,
+        BorderColor3 = Color3.new(1, 1, 1),
+      }, scoreGui)
+    local uiCorner = Util:CreateInstance("UICorner", {
+        CornerRadius = UDim.new(0, 20),
+      }, scoreFrame)
 
-  getScoreTitleTextLabel(scoreFrame)
+    getScoreTitleTextLabel(scoreFrame)
+  end
+
   textLabel = getScoreTextLabel(scoreFrame, score)
 end
 

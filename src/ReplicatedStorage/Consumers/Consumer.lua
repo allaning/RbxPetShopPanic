@@ -360,9 +360,9 @@ function Consumer:RunIdleAnimation(model)
       if idleAnimationId then
         local animationController = model:WaitForChild("AnimationController", 2)
         if animationController then
-          idleAnimation = Instance.new("Animation")
+          local idleAnimation = Instance.new("Animation")
           idleAnimation.AnimationId = idleAnimationId.Value
-          idleAnimationTrack = animationController:LoadAnimation(idleAnimation)
+          local idleAnimationTrack = animationController:LoadAnimation(idleAnimation)
           if idleAnimationTrack and not idleAnimationTrack.IsPlaying then
             idleAnimationTrack:Play()
           end

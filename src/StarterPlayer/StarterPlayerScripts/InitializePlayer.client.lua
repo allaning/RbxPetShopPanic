@@ -2,6 +2,15 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Promise = require(ReplicatedStorage.Vendor.Promise)
 local StarterGui = game:GetService("StarterGui")
 local RunService = game:GetService("RunService")
+local Util = require(ReplicatedStorage.Util)
+
+local UpdateCharacterEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("UpdateCharacter")
+
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+
+local Character = Util:GetCharacterFromPlayer(Player)
+local Humanoid = Character:WaitForChild("Humanoid");
 
 
 -- Ref: https://developer.roblox.com/en-us/api-reference/function/Chat/SetBubbleChatSettings
@@ -13,9 +22,22 @@ ChatService:SetBubbleChatSettings({
     BubbleDuration = 5,
     VerticalStudsOffset = 0.5,
     BubblesSpacing = 4,
-    Transparency = 0.2,
+    Transparency = 0.0,
   })
 ChatService.BubbleChatEnabled = true
+
+
+-- Morph
+-- https://devforum.roblox.com/t/character-morph-script/1199389
+local function updateCharacter(hipHeight)
+  Promise.try(function()
+    for i=1,120 do
+      Humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+      RunService.Heartbeat:wait()
+    end
+  end)
+end
+UpdateCharacterEvent.OnClientEvent:Connect(updateCharacter)
 
 
 local coreCall do
