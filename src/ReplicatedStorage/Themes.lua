@@ -2,6 +2,23 @@
 -- Ideas from https://www.schemecolor.com/
 
 local Themes = {
+  ['CurrentTheme'] = "Light",
+
+  -- GUI
+  ['Light'] = {
+    ['BorderColor'] = Color3.fromRGB(19, 153, 255),
+    ['Color'] = Color3.fromRGB(206, 237, 255),
+    ['InnerFrameColor'] = Color3.fromRGB(234, 252, 255),
+    ['TextColor'] = Color3.fromRGB(19, 153, 255),
+  },
+  ['Dark'] = {
+    ['BorderColor'] = Color3.fromRGB(48, 112, 168),
+    ['Color'] = Color3.fromRGB(6, 53, 85),
+    ['InnerFrameColor'] = Color3.fromRGB(5, 5, 5),
+    ['TextColor'] = Color3.fromRGB(119, 200, 255),
+  },
+
+  -- Used for map
   ['ColorSchemes'] = {
     { -- Buttermilk / Mauve
       ['Floor'] = { R=0xfe, G=0xf3, B=0xbb },

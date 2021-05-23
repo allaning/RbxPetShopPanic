@@ -18,6 +18,8 @@ local Session = require(ReplicatedStorage.Session)
 
 local ConsumerInputReceivedEvent = ReplicatedStorage.Events.ConsumerInputReceived
 local SessionCountdownBeginEvent = ReplicatedStorage.Events.SessionCountdownBegin
+local SessionUpdateTimerCountdownEvent = ReplicatedStorage.Events.SessionUpdateTimerCountdown
+local SessionBeginEvent = ReplicatedStorage.Events.SessionBegin
 local SessionEndedEvent = ReplicatedStorage.Events.SessionEnded
 local SessionScoreEvent = ReplicatedStorage.Events.SessionScore
 local ShowMessagePopupEvent = ReplicatedStorage.Events.ShowMessagePopup
@@ -27,12 +29,14 @@ local PRODUCT_PLAYER_WELD_NAME = "ProductPlayerWeld"
 
 
 local session = nil
+local lobbySpawn = nil
 
 
 -- Remove Player ForceField
 Promise.try(function()
   for _, obj in ipairs(Workspace:GetDescendants()) do
     if obj.Name == "SpawnLocation" then
+      lobbySpawn = obj
       obj.Duration = 0
       break
     end
@@ -380,16 +384,17 @@ local function onGameStart()
 
   Util:RealWait(12)
 
-  -- Spawn players
+  -- Spawn players into map
+  local playerList = {}
   local spawns = MapManager.GetSpawns()
   if spawns and #spawns > 0 then
-    local playerList = Players:GetPlayers()
+    playerList = Players:GetPlayers()
     for idx, spawn in pairs(spawns) do
       if playerList[idx] then
-        --print("Spawning ".. playerList[idx].Name)
+        print("Spawning into game map: ".. playerList[idx].Name)
         local torso = Util:GetTorsoFromPlayer(playerList[idx])
         if torso then
-          local yOffset = 1
+          local yOffset = 3
           local humanoid = Util:GetHumanoid(playerList[idx])
           if humanoid then
             yOffset = humanoid.HipHeight
@@ -405,16 +410,46 @@ local function onGameStart()
   end
 
   session = Session.new()
-  session:Start()
-  SessionCountdownBeginEvent:FireAllClients(session:GetStartTime())
 
   Promise.try(function()
+    SessionCountdownBeginEvent:FireAllClients(session:GetDuration())
+    Util:RealWait(4)  -- Wait for "Ready" countdown
+    SessionBeginEvent:FireAllClients()
+
+    local timerUpdateIntervalSec = 1
+    session:Start()
     while not session:IsDone() do
-      Util:RealWait(1)
-      print("Elapsed Time: ".. tostring(session:GetElapsedTime()))
+      local remainingTime = math.ceil(session:GetRemainingTime())
+      if remainingTime >= 0 then
+        SessionUpdateTimerCountdownEvent:FireAllClients(remainingTime)
+        print("SessionUpdateTimerCountdownEvent:FireAllClients(): ".. tostring(math.ceil(session:GetRemainingTime())))
+        Util:RealWait(timerUpdateIntervalSec)
+        print("Elapsed Time: ".. tostring(session:GetElapsedTime()))
+      end
     end
-    print("DONE")
+
     SessionEndedEvent:FireAllClients(session:GetScore())
+    Util:RealWait(2)  -- Cooldown period
+
+    -- Spawn players into lobby
+    for idx, player in pairs(playerList) do
+      print("Spawning into lobby: ".. playerList[idx].Name)
+      local torso = Util:GetTorsoFromPlayer(playerList[idx])
+      if torso then
+        local yOffset = 3
+        local humanoid = Util:GetHumanoid(playerList[idx])
+        if humanoid then
+          yOffset = humanoid.HipHeight
+        end
+        torso.CFrame = CFrame.new(lobbySpawn.Position + Vector3.new(idx * 2, yOffset, 0))
+      else
+        error("Unable to find torso for ".. playerList[idx].Name)
+      end
+    end
+
+    -- Cleanup
+    MapManager.Cleanup(map)
+
   end)
 end
 

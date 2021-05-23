@@ -38,6 +38,9 @@ function Factory.new()
 
   self.itsModel = nil
 
+  -- Handle to object's Run() thread
+  self.runThread = nil
+
   return self
 end
 
@@ -94,7 +97,7 @@ end
 
 function Factory:Run()
   -- Run in new thread
-  Promise.try(function()
+  self.runThread = Promise.try(function()
     print("Run: ".. self:GetProductName())
 
     -- Create folder to hold product model
@@ -118,6 +121,8 @@ function Factory:Cleanup()
   self.itsProduct = nil
   self.itsModel:Destroy()
   self.itsModel = nil
+  self.runThread:cancel()
+  self = nil
 end
 
 

@@ -36,28 +36,28 @@ local MapManager = {}
 
 
 -- List of inputs
-local inputs = {}
+MapManager.inputs = {}
 
 -- List of consumer instances
-local consumers = {}
+MapManager.consumers = {}
 
 -- List of factory instances
-local factories = {}
+MapManager.factories = {}
 
 -- List of transformer instances
-local transformers = {}
+MapManager.transformers = {}
 
 -- List of product instances
-local products = {}
+MapManager.products = {}
 
 -- List of trash bin instances
-local trashBins = {}
+MapManager.trashBins = {}
 
 -- List of table models
-local tableModels = {}
+MapManager.tableModels = {}
 
 -- List of spawn plot parts
-local spawnPlotParts = {}
+MapManager.spawnPlotParts = {}
 
 
 -- Iterate over table and return true if it contains an object with object:GetName() matching name
@@ -233,14 +233,50 @@ local function createTableAtPlot(tableModel, plot)
 end
 
 function MapManager.GetSpawns()
-  if #spawnPlotParts > 0 then
-    return spawnPlotParts
+  if #(MapManager.spawnPlotParts) > 0 then
+    return MapManager.spawnPlotParts
   end
+end
+
+local function cleanup(obj)
+  if obj[Cleanup] then
+    obj:Cleanup()
+  end
+end
+
+local function cleanupList(list)
+  for idx = #list, 1, -1 do
+    cleanup(list[idx])
+  end
+end
+
+local function destroyObjectList(list)
+  for _, obj in pairs(list) do
+    obj:Destroy()
+  end
+end
+
+function MapManager.Cleanup(map)
+  map:Destroy()
+  cleanupList(MapManager.consumers)
+  cleanupList(MapManager.factories)
+  cleanupList(MapManager.transformers)
+  cleanupList(MapManager.products)
+  cleanupList(MapManager.trashBins)
+  destroyObjectList(MapManager.tableModels)
+  destroyObjectList(MapManager.spawnPlotParts)
+
+  -- Destroy objects in Workspace
+  destroyObjectList(wsConsumersFolder:GetChildren())
+  destroyObjectList(wsFactoriesFolder:GetChildren())
+  destroyObjectList(wsTransformersFolder:GetChildren())
+  destroyObjectList(wsTablesFolder:GetChildren())
+  destroyObjectList(wsTrashBinsFolder:GetChildren())
 end
 
 function MapManager.InitializeMap()
   -- aing Hardcoded for now
-  local map = serverMapsFolder:WaitForChild("Level1"):WaitForChild("1.1")
+  local map = serverMapsFolder:WaitForChild("Level1"):WaitForChild("1.1"):Clone()
   -- Make plots transparent
   for _, obj in pairs(map:GetDescendants()) do
     if obj.Name == "ConsumerPlot" or obj.Name == "ProducerPlot" or obj.Name == "TrashBinPlot" or obj.Name == "TablePlot" or obj.Name == "SpawnPlot" then
@@ -258,7 +294,7 @@ function MapManager.InitializeMap()
     -- Create consumer
     local consumerInstance = createConsumer(consumerModel, inputAttribute, map, currentConsumerUid)
     currentConsumerUid += 1
-    table.insert(consumers, consumerInstance)
+    table.insert(MapManager.consumers, consumerInstance)
 
     -- Process multiple inputs
     -- TODO: Make sure it creats all product factories
@@ -278,7 +314,7 @@ function MapManager.InitializeMap()
             -- Found Transformer that outputs product named inputStr
 
             -- Check if this is a new Transformer or a repeat
-            if not containsInstanceNamed(transformers, inputStr) then
+            if not containsInstanceNamed(MapManager.transformers, inputStr) then
               -- This is a new Transformer
               local transformerInstance, productInstance, newInputStr = createTransformer(transformerModel, inputStr, map)
               if transformerInstance and productInstance and newInputStr then
@@ -287,9 +323,9 @@ function MapManager.InitializeMap()
                 consumerInstance:SetInputModel(productInstance:GetModel()) -- TODO: refactor
                 print("consumerInstance:SetInputModel(productInstance:GetModel() ".. productInstance:GetName())
 
-                table.insert(transformers, transformerInstance)
-                table.insert(products, productInstance)
-                table.insert(inputs, inputStr)
+                table.insert(MapManager.transformers, transformerInstance)
+                table.insert(MapManager.products, productInstance)
+                table.insert(MapManager.inputs, inputStr)
                 inputStr = newInputStr
                 break
               end
@@ -307,13 +343,13 @@ function MapManager.InitializeMap()
         for _, factoryModel in pairs(serverFactoriesFolder:GetChildren()) do
           if factoryModel.Name == inputStr then
             -- Check if this is a new Factory or a repeat
-            if not containsInstanceNamed(factories, inputStr) then
+            if not containsInstanceNamed(MapManager.factories, inputStr) then
               -- This is a new Factory
               local factoryInstance, productInstance = createFactory(factoryModel, inputStr, map)
               if factoryInstance and productInstance then
-                table.insert(factories, factoryInstance)
-                table.insert(products, productInstance)
-                table.insert(inputs, inputStr)
+                table.insert(MapManager.factories, factoryInstance)
+                table.insert(MapManager.products, productInstance)
+                table.insert(MapManager.inputs, inputStr)
 
                 isDoneFindingFactory = true
                 break
@@ -344,10 +380,10 @@ function MapManager.InitializeMap()
   for _, obj in pairs(map:GetChildren()) do
     if obj.Name == "TrashBinPlot" then
       local trashBinInstance = createTrashBinAtPlot(trashBinModel, obj)
-      table.insert(trashBins, trashBinInstance)
+      table.insert(MapManager.trashBins, trashBinInstance)
     elseif obj.Name == "TablePlot" then
       local tableClone = createTableAtPlot(tableModel, obj)
-      table.insert(tableModels, tableClone)
+      table.insert(MapManager.tableModels, tableClone)
     end
   end
 
@@ -370,7 +406,7 @@ function MapManager.InitializeMap()
   local mapObjects = map:GetChildren()
   for idx, object in pairs(mapObjects) do
     if object.Name == "SpawnPlot" then
-      table.insert(spawnPlotParts, object)
+      table.insert(MapManager.spawnPlotParts, object)
     end
   end
 

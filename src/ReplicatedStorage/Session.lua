@@ -15,7 +15,7 @@ function Session.new()
 
   self.Score = 0
   self.StartTime = 0
-  self.TimePerSession = Session.DEFAULT_TIME_PER_SESSION_SEC
+  self.Duration = Session.DEFAULT_TIME_PER_SESSION_SEC
 
   return self
 end
@@ -44,12 +44,24 @@ function Session:SetStartTime(startTime)
   self.StartTime = startTime
 end
 
+function Session:GetDuration()
+  return self.Duration
+end
+
+function Session:SetDuration(duration)
+  self.Duration = duration
+end
+
 function Session:GetElapsedTime()
   return os.time() - self:GetStartTime()
 end
 
+function Session:GetRemainingTime()
+  return self:GetDuration() - self:GetElapsedTime()
+end
+
 function Session:IsDone()
-  if self:GetElapsedTime() > Session.DEFAULT_TIME_PER_SESSION_SEC then
+  if self:GetElapsedTime() > self:GetDuration() then
     return true
   else
     return false

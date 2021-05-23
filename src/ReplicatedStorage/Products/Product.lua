@@ -90,6 +90,7 @@ end
 function Product:Cleanup()
   self.itsModel:Destroy()
   self.itsModel = nil
+  self = nil
 end
 
 

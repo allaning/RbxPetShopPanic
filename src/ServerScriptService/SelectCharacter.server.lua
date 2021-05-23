@@ -5,9 +5,10 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Promise = require(ReplicatedStorage.Vendor.Promise)
 local Util = require(ReplicatedStorage.Util)
 
+local SelectCharacterRequestEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SelectCharacterRequest")
 local UpdateCharacterEvent = ReplicatedStorage.Events.UpdateCharacter
 
-local CharactersFolder = Workspace.Lobby.Characters
+local CharactersFolder = ReplicatedStorage.Characters
 
 local Players = game:GetService("Players")
 
@@ -55,23 +56,18 @@ local function transform(char, model)
   end
 end
 
-for _, part in pairs(CharactersFolder:GetChildren()) do
-  local debounce = false
-  part.Touched:Connect(function(partTouched)
-    Promise.try(function()
-      if not debounce then
-        debounce = true
-
-        local character = partTouched.Parent
-        local characterModel = part:FindFirstChildWhichIsA("Model")
-        if characterModel then
-          transform(character, characterModel)
-        end
-
-        Util:RealWait(2)
-        debounce = false
-      end
-    end)
-  end)
+local function checkSelectCharacterRequest(player, modelName)
+  --print("Received SelectCharacterRequestEvent from ".. player.Name.. " for ".. modelName)
+  local character = Util:GetCharacterFromPlayer(player)
+  if character then
+    -- Find model
+    local characterModel = CharactersFolder[modelName]
+    if characterModel then
+      transform(character, characterModel)
+      return
+    end
+  end
+  warn("Cannot get Character from ".. player.Name)
 end
+SelectCharacterRequestEvent.OnServerEvent:Connect(checkSelectCharacterRequest)
 

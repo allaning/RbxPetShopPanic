@@ -264,6 +264,7 @@ function Transformer:Cleanup()
   self.itsProduct = nil
   self.itsModel:Destroy()
   self.itsModel = nil
+  self = nil
 end
 
 

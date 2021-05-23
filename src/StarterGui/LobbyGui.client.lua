@@ -6,8 +6,9 @@ local Util = require(ReplicatedStorage.Util)
 local StarterGui = game:GetService("StarterGui")
 local AvatarGui = require(StarterGui.AvatarGui)
 
-local SessionCountdownBeginEvent = ReplicatedStorage.Events.SessionCountdownBegin
-local SessionEndedEvent = ReplicatedStorage.Events.SessionEnded
+local SessionCountdownBeginEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionCountdownBegin")
+local SessionEndedEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionEnded")
+local UpdateCharacterEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("UpdateCharacter")
 
 local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
@@ -24,9 +25,10 @@ local avatarFrame = nil
 local function initializeLobbyGui()
   if not lobbyScreenGui then
     lobbyScreenGui = Util:CreateInstance("ScreenGui", {
-        Name = "AvatarScreenGui",
+        Name = "LobbyScreenGui",
       }, PlayerGui)
     lobbyFrame = Util:CreateInstance("Frame", {
+        Name = "ButtonsFrame",
         Position = UDim2.new(0.92, 0, 0.4, 0),
         Size = UDim2.new(0.12, 0, 0.12, 0),
         BackgroundTransparency = 1.0,
@@ -63,6 +65,11 @@ local function onAvatarIconClick()
   SoundModule.PlayMouseClick(PlayerGui)
 end
 avatarIcon.Activated:Connect(onAvatarIconClick)
+
+local function hideAvatarGui()
+  AvatarGui.Close()
+end
+UpdateCharacterEvent.OnClientEvent:Connect(hideAvatarGui)
 
 
 -- Start by showing lobby gui

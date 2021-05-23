@@ -100,6 +100,7 @@ end
 function TrashBin:Cleanup()
   self.itsModel:Destroy()
   self.itsModel = nil
+  self = nil
 end
 
 

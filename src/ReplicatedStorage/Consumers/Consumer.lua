@@ -129,6 +129,9 @@ function Consumer.new()
   -- Handle to Promise waiting for consumer's input request to be fulfilled
   self.itsAwaitingInputHandler = nil
 
+  -- Handle to object's Run() thread
+  self.runThread = nil
+
   return self
 end
 
@@ -417,7 +420,7 @@ end
 
 function Consumer:Run()
   -- Run in new thread
-  Promise.try(function()
+  self.runThread = Promise.try(function()
     print("Run: ".. self:GetName())
 
     -- Create folder to hold product model
@@ -479,6 +482,8 @@ end
 function Consumer:Cleanup()
   self.itsModel:Destroy()
   self.itsModel = nil
+  self.runThread:cancel()
+  self = nil
 end
 
 

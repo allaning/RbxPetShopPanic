@@ -1,4 +1,5 @@
 -- Creates ViewportFrames
+-- Ref: https://developer.roblox.com/en-us/articles/viewportframe-gui
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Util = require(ReplicatedStorage.Util)
@@ -8,9 +9,9 @@ local ViewportFrameFactory = {}
 
 
 -- Returns ViewportFrame containing image of model
-function ViewportFrameFactory.GetViewportFrame(model)
+function ViewportFrameFactory.GetViewportFrame(model, cameraPositionOffset)
   if model then
-    local cameraPosition = model:GetAttribute("ViewportCameraPosition") or Vector3.new(0, 0.5, 1.9)
+    local cameraPosition = cameraPositionOffset or model:GetAttribute("ViewportCameraPosition") or Vector3.new(0, 0.5, 1.9)
     local targetPositionOffset = model:GetAttribute("ViewportTargetPositionOffset") or Vector3.new(0, 0, 0)
 
     local viewportFrame = Instance.new("ViewportFrame")
