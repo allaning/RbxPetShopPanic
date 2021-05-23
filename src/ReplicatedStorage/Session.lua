@@ -6,7 +6,12 @@ local Util = require(ReplicatedStorage.Util)
 local Session = {}
 Session.__index = Session
 
+
+-- Default game session length
 Session.DEFAULT_TIME_PER_SESSION_SEC = 60 * 2
+
+-- Delay that occurs when game session ends
+Session.POST_GAME_COOLDOWN_PERIOD_SEC = 2
 
 
 function Session.new()

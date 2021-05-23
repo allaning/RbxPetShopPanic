@@ -394,10 +394,10 @@ local function onGameStart()
         print("Spawning into game map: ".. playerList[idx].Name)
         local torso = Util:GetTorsoFromPlayer(playerList[idx])
         if torso then
-          local yOffset = 3
+          local yOffset = 4
           local humanoid = Util:GetHumanoid(playerList[idx])
           if humanoid then
-            yOffset = humanoid.HipHeight
+            yOffset = humanoid.HipHeight + 1
           end
           torso.CFrame = CFrame.new(spawn.Position + Vector3.new(0, yOffset, 0))
         else
@@ -429,19 +429,26 @@ local function onGameStart()
     end
 
     SessionEndedEvent:FireAllClients(session:GetScore())
-    Util:RealWait(2)  -- Cooldown period
+    Util:RealWait(Session.POST_GAME_COOLDOWN_PERIOD_SEC)
 
     -- Spawn players into lobby
     for idx, player in pairs(playerList) do
+      -- Remove any product player might be holding
+      local character, product = getPlayersCharacterAndCurrentProduct(player)
+      if product then
+        product:Destroy()
+      end
+
       print("Spawning into lobby: ".. playerList[idx].Name)
       local torso = Util:GetTorsoFromPlayer(playerList[idx])
       if torso then
-        local yOffset = 3
+        local xOffset = 6
+        local yOffset = 4
         local humanoid = Util:GetHumanoid(playerList[idx])
         if humanoid then
-          yOffset = humanoid.HipHeight
+          yOffset = humanoid.HipHeight + 1
         end
-        torso.CFrame = CFrame.new(lobbySpawn.Position + Vector3.new(idx * 2, yOffset, 0))
+        torso.CFrame = CFrame.new(lobbySpawn.Position + Vector3.new(idx * xOffset, yOffset, 0))
       else
         error("Unable to find torso for ".. playerList[idx].Name)
       end
@@ -453,5 +460,5 @@ local function onGameStart()
   end)
 end
 
-onGameStart()
+--aing onGameStart()
 

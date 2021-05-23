@@ -276,7 +276,7 @@ end
 
 function MapManager.InitializeMap()
   -- aing Hardcoded for now
-  local map = serverMapsFolder:WaitForChild("Level1"):WaitForChild("1.1"):Clone()
+  local map = serverMapsFolder:WaitForChild("Level 1"):WaitForChild("1.1"):Clone()
   -- Make plots transparent
   for _, obj in pairs(map:GetDescendants()) do
     if obj.Name == "ConsumerPlot" or obj.Name == "ProducerPlot" or obj.Name == "TrashBinPlot" or obj.Name == "TablePlot" or obj.Name == "SpawnPlot" then

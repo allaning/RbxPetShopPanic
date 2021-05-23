@@ -9,6 +9,7 @@ local TweenGuiFactory = require(ReplicatedStorage.Gui.TweenGuiFactory)
 local ParticleEmitterFactory = require(ReplicatedStorage.Gui.ParticleEmitterFactory)
 local Settings = require(ReplicatedStorage.Settings)
 local SoundModule = require(ReplicatedStorage.SoundModule)
+local Session = require(ReplicatedStorage.Session)
 
 local consumerClass = require(ReplicatedStorage.Consumers.Consumer)
 
@@ -18,12 +19,17 @@ local ShowOverheadBillboardEvent = ReplicatedStorage:WaitForChild("Events"):Wait
 local UpdateOverheadBillboardEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("UpdateOverheadBillboard")
 local ConsumerInputReceivedEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ConsumerInputReceived")
 
+local SessionCountdownBeginEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionCountdownBegin")
+local SessionBeginEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionBegin")
+local SessionEndedEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionEnded")
+
 local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
 local Character = Player.Character or Player.CharacterAdded:wait()
 local Humanoid = Character:WaitForChild("Humanoid");
+local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart");
 
 
 Promise.try(function()
@@ -264,4 +270,26 @@ local function showTransformInProgress(attachmentPart, durationSec)
   end
 end
 TransformBeginEvent.OnClientEvent:Connect(showTransformInProgress)
+
+
+local function setPlayerAnchored(isAnchored)
+  HumanoidRootPart.Anchored = isAnchored
+end
+
+local function onSessionCountdownBeginEvent()
+  setPlayerAnchored(true)
+end
+SessionCountdownBeginEvent.OnClientEvent:Connect(onSessionCountdownBeginEvent)
+
+local function onSessionBeginEvent()
+  setPlayerAnchored(false)
+end
+SessionBeginEvent.OnClientEvent:Connect(onSessionBeginEvent)
+
+local function onSessionEndedEvent()
+  setPlayerAnchored(true)
+  Util:RealWait(Session.POST_GAME_COOLDOWN_PERIOD_SEC)
+  setPlayerAnchored(false)
+end
+SessionEndedEvent.OnClientEvent:Connect(onSessionEndedEvent)
 

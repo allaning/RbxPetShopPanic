@@ -16,6 +16,11 @@
         "$path": "shared",
         "$ignoreUnknownInstances": true
       },
+      "Characters": {
+        "$className": "Folder",
+        "$path": "shared",
+        "$ignoreUnknownInstances": true
+      },
       "Vendor": {
         "$className": "Folder",
         "Promise": {

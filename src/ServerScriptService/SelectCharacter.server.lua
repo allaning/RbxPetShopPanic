@@ -5,7 +5,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Promise = require(ReplicatedStorage.Vendor.Promise)
 local Util = require(ReplicatedStorage.Util)
 
-local SelectCharacterRequestEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SelectCharacterRequest")
+local SelectCharacterRequestEvent = ReplicatedStorage.Events.SelectCharacterRequest
 local UpdateCharacterEvent = ReplicatedStorage.Events.UpdateCharacter
 
 local CharactersFolder = ReplicatedStorage.Characters

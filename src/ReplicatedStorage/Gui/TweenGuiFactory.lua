@@ -66,6 +66,7 @@ end
 
 
 -- Tween UIScale
+-- duration = how long it takes for the tween to complete
 
 function TweenGuiFactory.ScaleIn(uiScale, duration, style, direction, isBlocking)
   style = style or Enum.EasingStyle.Quad
@@ -91,6 +92,23 @@ function TweenGuiFactory.ScaleOut(uiScale, duration, style, direction, isBlockin
 
   local propertyGoals = {}
   propertyGoals["Scale"] = 0.0
+
+  local tweenInfo = TweenInfo.new(duration, style, direction)
+  local tween = game:GetService("TweenService"):Create(uiScale,tweenInfo,propertyGoals)
+  tween:Play()
+  if isBlocking then
+    tween.Completed:wait()
+  end
+  return tween
+end
+
+function TweenGuiFactory.ChangeScale(uiScale, newScale, duration, style, direction, isBlocking)
+  style = style or Enum.EasingStyle.Quad
+  direction = direction or Enum.EasingDirection.Out
+  duration = duration or 0.5
+
+  local propertyGoals = {}
+  propertyGoals["Scale"] = newScale
 
   local tweenInfo = TweenInfo.new(duration, style, direction)
   local tween = game:GetService("TweenService"):Create(uiScale,tweenInfo,propertyGoals)
