@@ -18,7 +18,7 @@ local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
 
-local LEVEL_THUMB_SIZE_Y = 60
+local LEVEL_THUMB_SIZE_SCALE_Y = 0.10
 
 local PlayGui = {}
 
@@ -39,7 +39,7 @@ function PlayGui.Initialize()
         Size = UDim2.new(0.3, 0, 0.12, 0),
         BackgroundTransparency = 1.0,
         TextScaled = true,
-        Text = "PLAY",
+        Text = "VOTE FOR LEVEL",
         TextColor3 = Themes[Themes.CurrentTheme].TextColor,
         Font = Enum.Font.FredokaOne,
       }, PlayGui.Frame)
@@ -57,7 +57,6 @@ function PlayGui.Initialize()
         ScrollBarImageColor3 = Themes[Themes.CurrentTheme].BorderColor,
       }, PlayGui.Frame)
     local uiListLayout = Util:CreateInstance("UIListLayout", {
-        --CellSize = UDim2.new(0, LEVEL_THUMB_SIZE_X, 0, LEVEL_THUMB_SIZE_Y),
       }, scrollingFrame)
 
     -- Add level buttons
@@ -73,7 +72,7 @@ function PlayGui.Initialize()
       local levelButton = Util:CreateInstance("TextButton", {
           Name = levelNames[idx].."Button",
           Position = UDim2.new(0.0, 0, 0.0, 0),
-          Size = UDim2.new(0.9, 0, 0, LEVEL_THUMB_SIZE_Y),
+          Size = UDim2.new(0.9, 0, LEVEL_THUMB_SIZE_SCALE_Y, 0),
           BackgroundTransparency = 1.0,
           TextScaled = true,
           Text = levelNames[idx],

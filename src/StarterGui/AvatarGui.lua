@@ -17,8 +17,8 @@ local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
 
-local CHARACTER_THUMB_SIZE_X = 150
-local CHARACTER_THUMB_SIZE_Y = 200
+local CHARACTER_THUMB_SIZE_SCALE_X = 0.30
+local CHARACTER_THUMB_SIZE_SCALE_Y = 0.40
 
 local AvatarGui = {}
 
@@ -50,6 +50,7 @@ function AvatarGui.Initialize()
         AnchorPoint = Vector2.new(0.5, 0.5),
         Position = UDim2.new(0.335, 0, 0.55, 0),
         Size = UDim2.new(0.58, 0, 0.7, 0),
+        CanvasSize = UDim2.new(0, 0, 2.0, 0),  -- TODO: Increase Y
         BackgroundTransparency = 0.0,
         BackgroundColor3 = Themes[Themes.CurrentTheme].InnerFrameColor,
         BorderSizePixel = 2,
@@ -57,7 +58,7 @@ function AvatarGui.Initialize()
         ScrollBarImageColor3 = Themes[Themes.CurrentTheme].BorderColor,
       }, AvatarGui.Frame)
     local uiGridLayout = Util:CreateInstance("UIGridLayout", {
-        CellSize = UDim2.new(0, CHARACTER_THUMB_SIZE_X, 0, CHARACTER_THUMB_SIZE_Y),
+        CellSize = UDim2.new(CHARACTER_THUMB_SIZE_SCALE_X, 0, CHARACTER_THUMB_SIZE_SCALE_Y, 0),
       }, scrollingFrame)
 
     -- Info frame
@@ -103,16 +104,15 @@ function AvatarGui.Initialize()
       --print("CharacterFolder: ".. model.Name)
       local charFrame = Util:CreateInstance("Frame", {
           Name = model.Name.. "Frame",
-          Size = UDim2.new(0, CHARACTER_THUMB_SIZE_X, 0, CHARACTER_THUMB_SIZE_Y),
           BackgroundTransparency = 1.0,
         }, scrollingFrame)
-      local viewport = ViewportFrameFactory.GetViewportFrame(model, Vector3.new(0, 1.0, -6.0))
+      local viewport = ViewportFrameFactory.GetViewportFrame(model, Vector3.new(0, 2.5, -6.0))
       viewport.Parent = charFrame
 
       local charButton = Util:CreateInstance("TextButton", {
           Name = "Button",
           Position = UDim2.new(0.0, 0, 0.0, 0),
-          Size = UDim2.new(0, CHARACTER_THUMB_SIZE_X, 0, CHARACTER_THUMB_SIZE_Y),
+          Size = UDim2.new(1.0, 0, 1.0, 0),
           Transparency = 1.0,
         }, charFrame)
       charButton.Activated:Connect(function()

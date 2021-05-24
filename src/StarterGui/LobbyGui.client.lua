@@ -6,9 +6,11 @@ local Util = require(ReplicatedStorage.Util)
 local StarterGui = game:GetService("StarterGui")
 local AvatarGui = require(StarterGui.AvatarGui)
 local PlayGui = require(StarterGui.PlayGui)
+local UserThumbnailGui = require(StarterGui.UserThumbnailGui)
 local TweenGuiFactory = require(ReplicatedStorage.Gui.TweenGuiFactory)
 
 local SelectLevelRequestSentEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SelectLevelRequestSent")
+local LevelRequestVotesEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("LevelRequestVotes")
 local SessionCountdownBeginEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionCountdownBegin")
 local SessionEndedEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionEnded")
 local UpdateCharacterEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("UpdateCharacter")
@@ -16,6 +18,10 @@ local UpdateCharacterEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChi
 local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
+
+-- Folder to hold UserThumbnailGui images
+local UserThumbsFolder = Instance.new("Folder", PlayerGui)
+UserThumbsFolder.Name = "UserThumbsFolder"
 
 local lobbyScreenGui = nil
 local lobbyFrame = nil
@@ -32,7 +38,7 @@ local lobbyFrames = {
 
 local function addEnlargeOnMouseHover(parent, uiScaleInstance)
   parent.MouseEnter:Connect(function()
-    TweenGuiFactory.ChangeScale(uiScaleInstance, 1.1, 0.01, Enum.EasingStyle.Linear, Enum.EasingDirection.In, false)
+    TweenGuiFactory.ChangeScale(uiScaleInstance, 1.05, 0.01, Enum.EasingStyle.Linear, Enum.EasingDirection.In, false)
   end)
   parent.MouseLeave:Connect(function()
     TweenGuiFactory.ChangeScale(uiScaleInstance, 1.0, 0.01, Enum.EasingStyle.Linear, Enum.EasingDirection.In, false)
@@ -46,16 +52,20 @@ local function initializeLobbyGui()
       }, PlayerGui)
     lobbyFrame = Util:CreateInstance("Frame", {
         Name = "ButtonsFrame",
-        Position = UDim2.new(0.92, 0, 0.4, 0),
-        Size = UDim2.new(0.12, 0, 0.12, 0),
-        BackgroundTransparency = 1.0,
+        Position = UDim2.new(0.91, 0, 0.34, 0),
+        Size = UDim2.new(0.14, 0, 0.34, 0),
+        BackgroundTransparency = 0.0,
+        BackgroundColor3 = Color3.fromRGB(65, 65, 65),
         BorderSizePixel = 0,
       }, lobbyScreenGui)
+    local uiCorner = Util:CreateInstance("UICorner", {
+        CornerRadius = UDim.new(0, 20),
+      }, lobbyFrame)
     avatarIcon = Util:CreateInstance("ImageButton", {
         Name = "AvatarIcon",
-        AnchorPoint = Vector2.new(0.5, 0, 0.5, 0),
-        Position = UDim2.new(0.25, 0, 0, 0),
-        Size = UDim2.new(1.0, 0, 1.0, 0),
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Position = UDim2.new(0.32, 0, 0.27, 0),
+        Size = UDim2.new(0.42, 0, 0.42, 0),
         SizeConstraint = Enum.SizeConstraint.RelativeYY,
         Image = avatarIconId,
         BackgroundTransparency = 1.0,
@@ -65,9 +75,9 @@ local function initializeLobbyGui()
       }, avatarIcon)
     playIcon = Util:CreateInstance("ImageButton", {
         Name = "PlayIcon",
-        AnchorPoint = Vector2.new(0.5, 0, 0.5, 0),
-        Position = UDim2.new(0.25, 0, 1.1, 0),
-        Size = UDim2.new(1.0, 0, 1.0, 0),
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Position = UDim2.new(0.32, 0, 0.72, 0),
+        Size = UDim2.new(0.42, 0, 0.42, 0),
         SizeConstraint = Enum.SizeConstraint.RelativeYY,
         Image = playIconId,
         BackgroundTransparency = 1.0,
@@ -128,4 +138,43 @@ SelectLevelRequestSentEvent.Event:Connect(hidePlayGui)
 
 -- Start by showing lobby gui
 showLobbyGui()
+
+
+
+-- See Game.server.lua for playerLevelVotes format
+local function onLevelRequestVotesEvent(playerLevelVotes)
+  print("Received LevelRequestVotesEvent")
+  if false then -- Debug
+    for _, pv in pairs(playerLevelVotes) do
+      print(string.format("  playerLevelVotes: Player %s (%d) votes for %s", pv['PlayerName'], pv['PlayerId'], pv['LevelVote']))
+    end
+  end
+
+  -- Create sorted list of player names and another list with corresponding user IDs
+  local playerNames = {}
+  for _, plr in pairs(Players:GetPlayers()) do
+    table.insert(playerNames, plr.Name)
+  end
+  table.sort(playerNames)
+
+  -- Show user vote thumbnails
+  local POS_Y = 0.7
+  local posOrderedListScaleX = { 0.4, 0.55, 0.25, 0.7 }
+  local currentPosX = 1
+  for idx, playerVote in pairs(playerLevelVotes) do
+    local plrName = playerVote['PlayerName']
+    local plrId = playerVote['PlayerId']
+    local screenGui = Util:CreateInstance("ScreenGui", {
+        Name = plrName.."UserVoteScreenGui",
+      }, UserThumbsFolder)
+    local thumb = UserThumbnailGui.GetThumbnail(plrName, plrId)
+    thumb.Parent = screenGui
+    thumb.Position = UDim2.new(posOrderedListScaleX[currentPosX], 0, POS_Y, 0)
+    currentPosX += 1
+  end
+
+  -- TODO
+
+end
+LevelRequestVotesEvent.OnClientEvent:Connect(onLevelRequestVotesEvent)
 

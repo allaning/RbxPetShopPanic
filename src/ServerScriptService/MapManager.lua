@@ -274,9 +274,15 @@ function MapManager.Cleanup(map)
   destroyObjectList(wsTrashBinsFolder:GetChildren())
 end
 
-function MapManager.InitializeMap()
-  -- aing Hardcoded for now
-  local map = serverMapsFolder:WaitForChild("Level 1"):WaitForChild("1.1"):Clone()
+function MapManager.InitializeMap(level)
+  -- Choose random map of specified level
+  local rand = Random.new()
+  local levelMapFolder = serverMapsFolder:WaitForChild(level)
+  local levelMaps = levelMapFolder:GetChildren()
+  local randomMap = levelMaps[ rand:NextInteger(1, #levelMaps) ]
+
+  -- Create map
+  local map = randomMap:Clone()
   -- Make plots transparent
   for _, obj in pairs(map:GetDescendants()) do
     if obj.Name == "ConsumerPlot" or obj.Name == "ProducerPlot" or obj.Name == "TrashBinPlot" or obj.Name == "TablePlot" or obj.Name == "SpawnPlot" then

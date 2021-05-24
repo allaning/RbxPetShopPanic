@@ -17,6 +17,8 @@ local TransformerClass = require(ReplicatedStorage.Transformers.Transformer)
 local Session = require(ReplicatedStorage.Session)
 
 local ConsumerInputReceivedEvent = ReplicatedStorage.Events.ConsumerInputReceived
+local SelectLevelRequestEvent = ReplicatedStorage.Events.SelectLevelRequest
+local LevelRequestVotesEvent = ReplicatedStorage.Events.LevelRequestVotes
 local SessionCountdownBeginEvent = ReplicatedStorage.Events.SessionCountdownBegin
 local SessionUpdateTimerCountdownEvent = ReplicatedStorage.Events.SessionUpdateTimerCountdown
 local SessionBeginEvent = ReplicatedStorage.Events.SessionBegin
@@ -26,6 +28,14 @@ local ShowMessagePopupEvent = ReplicatedStorage.Events.ShowMessagePopup
 
 
 local PRODUCT_PLAYER_WELD_NAME = "ProductPlayerWeld"
+
+
+-- Keep track of player level votes; List of players and their votes
+-- Format: {
+--            { 'PlayerName' = player.Name, 'PlayerId' = player.UserId, 'LevelVote' = levelRequest },
+--            { 'PlayerName' = player.Name, 'PlayerId' = player.UserId, 'LevelVote' = levelRequest },
+--         }
+local playerLevelVotes = {}
 
 
 local session = nil
@@ -378,11 +388,9 @@ end
 ProximityPromptService.PromptButtonHoldEnded:Connect(onPromptHoldEnded)
 
 
-local function onGameStart()
+local function onGameStart(winningLevel)
   -- Select a map
-  local map = MapManager.InitializeMap()
-
-  Util:RealWait(12)
+  local map = MapManager.InitializeMap(winningLevel)
 
   -- Spawn players into map
   local playerList = {}
@@ -460,5 +468,52 @@ local function onGameStart()
   end)
 end
 
---aing onGameStart()
+
+local function onSelectLevelRequestEvent(player, levelRequest)
+  print(string.format("Player %s voted for %s", player.Name, levelRequest))
+
+  -- TODO: Wait for all votes
+  -- Find player vote, if any
+  local foundPlayerVote = false
+  for idx, playerVote in pairs(playerLevelVotes) do
+    if player.Name == playerVote['PlayerName'] then
+      playerVote['LevelVote'] = levelRequest
+      foundPlayerVote = true
+      break
+    end
+  end
+  if not foundPlayerVote then
+    -- Add player's vote
+    table.insert(playerLevelVotes, { ['PlayerName'] = player.Name, ['PlayerId'] = player.UserId, ['LevelVote'] = levelRequest })
+  end
+
+  if false then -- Debug
+    for _, pv in pairs(playerLevelVotes) do
+      print(string.format("  playerLevelVotes: Player %s (%d) votes for %s", pv['PlayerName'], pv['PlayerId'], pv['LevelVote']))
+    end
+  end
+
+  -- Send clients a list of players and their level votes
+  LevelRequestVotesEvent:FireAllClients(playerLevelVotes)
+
+  -- If all players voted, then choose random vote
+  local winningLevel = ""
+  local numPlayers = Util:TableLength(Players:GetPlayers())
+  if numPlayers == Util:TableLength(playerLevelVotes) then
+    if numPlayers == 1 then
+      winningLevel = levelRequest
+    else
+      -- TODO
+      -- Choose random vote
+    end
+  end
+
+  if winningLevel and winningLevel ~= "" then
+    -- Start the game session
+    --aing onGameStart(winningLevel)
+    -- Clear level votes
+    playerLevelVotes = {}
+  end
+end
+SelectLevelRequestEvent.OnServerEvent:Connect(onSelectLevelRequestEvent)
 
