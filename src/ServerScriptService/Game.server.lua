@@ -6,6 +6,7 @@ local ProximityPromptService = game:GetService("ProximityPromptService")
 local AnimationModule = require(ReplicatedStorage.AnimationModule)
 local Players = game:GetService("Players")
 
+local Globals = require(ReplicatedStorage.Globals)
 local Util = require(ReplicatedStorage.Util)
 local SoundModule = require(ReplicatedStorage.SoundModule)
 local Promise = require(ReplicatedStorage.Vendor.Promise)
@@ -19,12 +20,14 @@ local Session = require(ReplicatedStorage.Session)
 local ConsumerInputReceivedEvent = ReplicatedStorage.Events.ConsumerInputReceived
 local SelectLevelRequestEvent = ReplicatedStorage.Events.SelectLevelRequest
 local LevelRequestVotesEvent = ReplicatedStorage.Events.LevelRequestVotes
+local SessionMapLevelSelectedEvent = ReplicatedStorage.Events.SessionMapLevelSelected
 local SessionCountdownBeginEvent = ReplicatedStorage.Events.SessionCountdownBegin
 local SessionUpdateTimerCountdownEvent = ReplicatedStorage.Events.SessionUpdateTimerCountdown
 local SessionBeginEvent = ReplicatedStorage.Events.SessionBegin
 local SessionEndedEvent = ReplicatedStorage.Events.SessionEnded
 local SessionScoreEvent = ReplicatedStorage.Events.SessionScore
 local ShowMessagePopupEvent = ReplicatedStorage.Events.ShowMessagePopup
+local PlayerRemovingEvent = ReplicatedStorage.Events.PlayerRemoving
 
 
 local PRODUCT_PLAYER_WELD_NAME = "ProductPlayerWeld"
@@ -297,7 +300,7 @@ end
 local function getElementModelAndType(object)
   local promptModel = object.Parent.Parent.Parent -- Get the product Model
   if promptModel then
-    local promptModelTypeName = ""
+    local promptModelTypeName = Globals.UNINIT_STRING
     -- Get the type of object as a string, e.g. "Product", "Consumer", etc.
     local promptModelFolder = promptModel:FindFirstAncestorWhichIsA("Folder")
     if promptModelFolder then
@@ -469,25 +472,51 @@ local function onGameStart(winningLevel)
 end
 
 
-local function onSelectLevelRequestEvent(player, levelRequest)
-  print(string.format("Player %s voted for %s", player.Name, levelRequest))
-
-  -- TODO: Wait for all votes
-  -- Find player vote, if any
-  local foundPlayerVote = false
+-- Get player vote info
+local function getPlayerVote(playerName)
   for idx, playerVote in pairs(playerLevelVotes) do
-    if player.Name == playerVote['PlayerName'] then
-      playerVote['LevelVote'] = levelRequest
-      foundPlayerVote = true
-      break
+    if playerName == playerVote['PlayerName'] then
+      local name = playerVote['PlayerName']
+      local id = playerVote['PlayerId']
+      local vote = playerVote['LevelVote']
+      return name, id, vote
     end
   end
-  if not foundPlayerVote then
-    -- Add player's vote
-    table.insert(playerLevelVotes, { ['PlayerName'] = player.Name, ['PlayerId'] = player.UserId, ['LevelVote'] = levelRequest })
+end
+
+-- Remove player vote
+local function removePlayerVote(playerName)
+  for idx, playerVote in pairs(playerLevelVotes) do
+    if playerName == playerVote['PlayerName'] then
+      table.remove(playerLevelVotes, idx)
+      return true
+    end
+  end
+  return false
+end
+
+local function onSelectLevelRequestEvent(player, levelRequest)
+  local levelRequest = levelRequest or Globals.UNINIT_STRING
+  print(string.format("Player %s voted for %s", player.Name, levelRequest))
+
+  -- If no levelRequest provided (e.g. on Player Removing event), then remove vote
+  if levelRequest == Globals.UNINIT_STRING then
+    removePlayerVote(player.Name)
+  else
+    -- Process player vote
+
+    -- Find player vote, if any
+    local plrName, plrId, plrVote = getPlayerVote(player.Name)
+    if not plrVote then
+      -- Add player's vote
+      table.insert(playerLevelVotes, { ['PlayerName'] = player.Name, ['PlayerId'] = player.UserId, ['LevelVote'] = levelRequest })
+      --table.insert(playerLevelVotes, { ['PlayerName'] = player.Name.."2", ['PlayerId'] = player.UserId, ['LevelVote'] = levelRequest }) --aing
+      --table.insert(playerLevelVotes, { ['PlayerName'] = player.Name.."3", ['PlayerId'] = player.UserId, ['LevelVote'] = levelRequest }) --aing
+      --table.insert(playerLevelVotes, { ['PlayerName'] = player.Name.."4", ['PlayerId'] = player.UserId, ['LevelVote'] = levelRequest }) --aing
+    end
   end
 
-  if false then -- Debug
+  if true then -- Debug
     for _, pv in pairs(playerLevelVotes) do
       print(string.format("  playerLevelVotes: Player %s (%d) votes for %s", pv['PlayerName'], pv['PlayerId'], pv['LevelVote']))
     end
@@ -497,23 +526,40 @@ local function onSelectLevelRequestEvent(player, levelRequest)
   LevelRequestVotesEvent:FireAllClients(playerLevelVotes)
 
   -- If all players voted, then choose random vote
-  local winningLevel = ""
-  local numPlayers = Util:TableLength(Players:GetPlayers())
+  local winningLevel = Globals.UNINIT_STRING
+  local playerList = Players:GetPlayers()
+  local numPlayers = Util:TableLength(playerList)
   if numPlayers == Util:TableLength(playerLevelVotes) then
     if numPlayers == 1 then
       winningLevel = levelRequest
     else
-      -- TODO
       -- Choose random vote
-    end
-  end
+      local rand = Random.new()
+      local randPlayer = rand:NextInteger(1, numPlayers)
+      print("  randPlayer=".. tostring(randPlayer))
+      local plrName, plrId, plrVote = getPlayerVote(playerList[randPlayer].Name)
+      print(string.format("Chose %s vote: %s", plrName, plrVote))
+      if plrVote then
+        SessionMapLevelSelectedEvent:FireAllClients(plrName, plrVote)
+        winningLevel = plrVote
+      else
+        warn("Error choosing random voter. Using current voter: ".. player.Name)
+        SessionMapLevelSelectedEvent:FireAllClients(player.Name, levelRequest)
+        winningLevel = levelRequest
+      end
 
-  if winningLevel and winningLevel ~= "" then
-    -- Start the game session
-    --aing onGameStart(winningLevel)
-    -- Clear level votes
-    playerLevelVotes = {}
+      -- Delay to show random vote being chosen
+      Util:RealWait(Globals.RANDOM_LEVEL_SELECTION_DISPLAY_DELAY_SEC + 1)
+    end
+
+    if winningLevel ~= Globals.UNINIT_STRING then
+      -- Start the game session
+      onGameStart(winningLevel)
+      -- Clear level votes
+      playerLevelVotes = {}
+    end
   end
 end
 SelectLevelRequestEvent.OnServerEvent:Connect(onSelectLevelRequestEvent)
+PlayerRemovingEvent.Event:Connect(onSelectLevelRequestEvent)
 

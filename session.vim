@@ -419,17 +419,17 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 490 - ((30 * winheight(0) + 29) / 58)
+let s:l = 488 - ((28 * winheight(0) + 29) / 58)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-490
-normal! 020|
+488
+normal! 0139|
 wincmd w
 exe 'vert 1resize ' . ((&columns * 134 + 134) / 269)
 exe 'vert 2resize ' . ((&columns * 134 + 134) / 269)
 tabnext
-edit C:\Data\Roblox\Places\PetShopPanic\src\StarterGui\UserThumbnailGui.lua
+edit C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\InitializePlayer.server.lua
 set splitbelow splitright
 wincmd _ | wincmd |
 vsplit
@@ -563,7 +563,7 @@ setlocal spellfile=
 setlocal spelllang=en
 setlocal statusline=
 setlocal suffixesadd=
-setlocal noswapfile
+setlocal swapfile
 setlocal synmaxcol=3000
 if &syntax != 'lua'
 setlocal syntax=lua
@@ -587,12 +587,12 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 55 - ((48 * winheight(0) + 29) / 58)
+let s:l = 31 - ((30 * winheight(0) + 29) / 58)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-55
-normal! 046|
+31
+normal! 03|
 lcd C:\Data\Roblox\Places\PetShopPanic\src\StarterGui
 wincmd w
 argglobal
@@ -739,31 +739,32 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 159 - ((28 * winheight(0) + 29) / 58)
+let s:l = 196 - ((1 * winheight(0) + 29) / 58)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-159
-normal! 0
+196
+normal! 0108|
 wincmd w
 exe 'vert 1resize ' . ((&columns * 134 + 134) / 269)
 exe 'vert 2resize ' . ((&columns * 134 + 134) / 269)
 tabnext 1
 badd +19 C:\Data\Roblox\Places\PetShopPanic\default.project.json
+badd +4 C:\Data\Roblox\Places\PetShopPanic\src\StarterGui\UserThumbnailGui.lua
+badd +488 C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\Game.server.lua
+badd +177 C:\Data\Roblox\Places\PetShopPanic\src\StarterGui\LobbyGui.client.lua
 badd +2 C:\Data\Roblox\Places\PetShopPanic\src\StarterGui\AvatarGui.lua
 badd +9 C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\SelectCharacter.server.lua
 badd +392 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Consumers\Consumer.lua
-badd +488 C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\Game.server.lua
-badd +165 C:\Data\Roblox\Places\PetShopPanic\src\StarterGui\LobbyGui.client.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\InitializePlayer.server.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\StarterPlayer\StarterPlayerScripts\InitializePlayer.client.lua
-badd +26 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Util.lua
+badd +96 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Util.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Products\Product.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\AnimationModule.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Gui\ViewportFrameFactory.lua
 badd +8 C:\Data\Roblox\Places\PetShopPanic\src\StarterPlayer\StarterCharacterScripts\InitializeCharacter.client.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Products\ProductFactory.lua
-badd +278 C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\MapManager.lua
+badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\MapManager.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Gui\ParticleEmitterFactory.lua
 badd +105 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Gui\TweenGuiFactory.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\SoundModule.lua
@@ -787,7 +788,6 @@ badd +21 C:\Data\Roblox\Places\PetShopPanic\src\StarterGui\AnnouncementGui.clien
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\StarterGui
 badd +78 C:\Data\Roblox\Places\PetShopPanic\src\StarterGui\SessionGui.client.lua
 badd +21 C:\Data\Roblox\Places\PetShopPanic\src\StarterGui\PlayGui.lua
-badd +55 C:\Data\Roblox\Places\PetShopPanic\src\StarterGui\UserThumbnailGui.lua
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0
   silent exe 'bwipe ' . s:wipebuf
 endif

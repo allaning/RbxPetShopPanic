@@ -13,10 +13,12 @@ local THUMB_SIZE_SCALE_Y = 0.15
 
 local UserThumbnailGui = {}
 
+UserThumbnailGui.MainFrameName = "UserThumbnail"
+UserThumbnailGui.VoteFrameName = "VoteBgFrame"
 
 function UserThumbnailGui.GetThumbnail(playerName, userId)
   local frame = Util:CreateInstance("Frame", {
-      Name = "UserThumbnail",
+      Name = UserThumbnailGui.MainFrameName,
       Size = UDim2.new(THUMB_SIZE_SCALE_X, 0, THUMB_SIZE_SCALE_Y, 0),
       SizeConstraint = Enum.SizeConstraint.RelativeYY,
       BackgroundColor3 = Color3.fromRGB(255, 255, 255),
