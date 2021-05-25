@@ -424,7 +424,7 @@ local function onGameStart(winningLevel)
 
   Promise.try(function()
     SessionCountdownBeginEvent:FireAllClients(session:GetDuration())
-    Util:RealWait(4)  -- Wait for "Ready" countdown
+    Util:RealWait(Globals.READY_SET_GO_COUNTDOWN_SEC)  -- Wait for "Ready" countdown
     SessionBeginEvent:FireAllClients()
 
     local timerUpdateIntervalSec = 1
@@ -433,14 +433,16 @@ local function onGameStart(winningLevel)
       local remainingTime = math.ceil(session:GetRemainingTime())
       if remainingTime >= 0 then
         SessionUpdateTimerCountdownEvent:FireAllClients(remainingTime)
-        print("SessionUpdateTimerCountdownEvent:FireAllClients(): ".. tostring(math.ceil(session:GetRemainingTime())))
         Util:RealWait(timerUpdateIntervalSec)
-        print("Elapsed Time: ".. tostring(session:GetElapsedTime()))
       end
     end
 
     SessionEndedEvent:FireAllClients(session:GetScore())
     Util:RealWait(Session.POST_GAME_COOLDOWN_PERIOD_SEC)
+    LevelRequestVotesEvent:FireAllClients({})  -- Make client show user thumbnails
+
+    -- TODO
+    -- Show score
 
     -- Spawn players into lobby
     for idx, player in pairs(playerList) do

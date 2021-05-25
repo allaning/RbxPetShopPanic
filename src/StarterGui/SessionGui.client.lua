@@ -83,10 +83,11 @@ local function initializeScoreGui(score)
         CornerRadius = UDim.new(0, 20),
       }, scoreFrame)
 
+    -- "Score:" heading
     getScoreTitleTextLabel(scoreFrame)
+    -- Score value
+    scoreTextLabel = getScoreTextLabel(scoreFrame, score)
   end
-
-  scoreTextLabel = getScoreTextLabel(scoreFrame, score)
 end
 
 
@@ -95,6 +96,9 @@ local function showScoreGui()
     scoreGui.Enabled = true
   end
   initializeScoreGui(0)
+  if scoreTextLabel then
+    scoreTextLabel.Text = tostring(0)
+  end
 end
 SessionCountdownBeginEvent.OnClientEvent:Connect(showScoreGui)
 
@@ -180,10 +184,11 @@ local function initializeTimerGui(timer)
         CornerRadius = UDim.new(0, 20),
       }, timerFrame)
 
+    -- "Time:" heading
     getTimerTitleTextLabel(timerFrame)
+    -- Time value
+    timerTextLabel, timerScale = getTimerTextLabel(timerFrame, timer)
   end
-
-  timerTextLabel, timerScale = getTimerTextLabel(timerFrame, timer)
 end
 
 
@@ -204,7 +209,6 @@ SessionEndedEvent.OnClientEvent:Connect(hideTimerGui)
 
 
 local function updateTimer(timeSec)
-  print("Update timer: ".. tostring(timeSec))
   if timerTextLabel then
     timerTextLabel.Text = tostring(timeSec)
     if timeSec < 10 then

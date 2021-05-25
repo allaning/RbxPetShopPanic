@@ -60,13 +60,13 @@ Consumer.INPUT_REQUEST_RECEIVED_SOUND = SoundModule.SOUND_ID_LEVEL_UP_HIGH
 Consumer.INPUT_REQUEST_EXPIRED_SOUND = SoundModule.SOUND_ID_WAH
 
 -- Additional delay time before requesting first input
-Consumer.INITIAL_INPUT_REQUEST_DELAY_SEC = 5.0
+Consumer.INITIAL_INPUT_REQUEST_DELAY_SEC = 4.0
 
 -- Min delay time before requesting input
-Consumer.MIN_INPUT_REQUEST_DELAY_SEC = 5.0
+Consumer.MIN_INPUT_REQUEST_DELAY_SEC = 4.0
 
 -- Max delay time before requesting input
-Consumer.MAX_INPUT_REQUEST_DELAY_SEC = 15.0
+Consumer.MAX_INPUT_REQUEST_DELAY_SEC = 12.0
 
 -- Model Attribute override: ConsumeTimeSec [number]
 Consumer.DEFAULT_CONSUME_TIME_SEC = 2.0

@@ -98,6 +98,8 @@ local function showAnnouncement(message, isBackgroundTransparent, durationSec)
 end
 
 
+-- Show "ready, set, go" countdown
+-- Must match Globals.READY_SET_GO_COUNTDOWN_SEC in duration
 local function showSessionCountdownBeginAnnouncement()
   showAnnouncement("Ready", true, 0.9)
   Util:RealWait(1.0)

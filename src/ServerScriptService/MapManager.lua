@@ -258,11 +258,18 @@ end
 
 function MapManager.Cleanup(map)
   map:Destroy()
+
   cleanupList(MapManager.consumers)
+  MapManager.consumers = {}
   cleanupList(MapManager.factories)
+  MapManager.factories = {}
   cleanupList(MapManager.transformers)
+  MapManager.transformers = {}
   cleanupList(MapManager.products)
+  MapManager.products = {}
   cleanupList(MapManager.trashBins)
+  MapManager.trashBins = {}
+
   destroyObjectList(MapManager.tableModels)
   destroyObjectList(MapManager.spawnPlotParts)
 
