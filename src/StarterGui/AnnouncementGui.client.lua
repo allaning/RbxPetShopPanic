@@ -1,6 +1,7 @@
 -- Show announcements
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Globals = require(ReplicatedStorage.Globals)
 local TweenGuiFactory = require(ReplicatedStorage.Gui.TweenGuiFactory)
 local Util = require(ReplicatedStorage.Util)
 local SoundModule = require(ReplicatedStorage.SoundModule)
@@ -99,16 +100,15 @@ end
 
 
 -- Show "ready, set, go" countdown
--- Must match Globals.READY_SET_GO_COUNTDOWN_SEC in duration
 local function showSessionCountdownBeginAnnouncement()
   showAnnouncement("Ready", true, 0.9)
-  Util:RealWait(1.0)
+  Util:RealWait(Globals.READY_SET_GO_COUNTDOWN_SEC / 4)
   showAnnouncement("3", true, 0.9)
-  Util:RealWait(1.0)
+  Util:RealWait(Globals.READY_SET_GO_COUNTDOWN_SEC / 4)
   showAnnouncement("2", true, 0.9)
-  Util:RealWait(1.0)
+  Util:RealWait(Globals.READY_SET_GO_COUNTDOWN_SEC / 4)
   showAnnouncement("1", true, 0.9)
-  Util:RealWait(1.0)
+  Util:RealWait(Globals.READY_SET_GO_COUNTDOWN_SEC / 4)
   showAnnouncement("Go!", true, 0.9)
 end
 SessionCountdownBeginEvent.OnClientEvent:Connect(showSessionCountdownBeginAnnouncement)

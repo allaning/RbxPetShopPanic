@@ -32,6 +32,8 @@ local productFactory = require(ReplicatedStorage.Products.ProductFactory)
 
 local ShowOverheadBillboardEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ShowOverheadBillboard")
 local UpdateOverheadBillboardEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("UpdateOverheadBillboard")
+local ConsumerNewRequestEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ConsumerNewRequest")
+local ConsumerTimerExpiredEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ConsumerTimerExpired")
 local ReplicatedStorageAssetsFolder = ReplicatedStorage:WaitForChild("Assets")
 
 
@@ -281,6 +283,9 @@ local function runTimer(itself, delaySec, model, attachmentPart, color)
 
     -- Listener will check if color is nil and act accordingly
     UpdateOverheadBillboardEvent:FireAllClients(model, attachmentPart, color)
+    if color == nil then
+      ConsumerTimerExpiredEvent:Fire(self:GetName())
+    end
 
     -- Play time expired animation
     if color == nil then
@@ -311,6 +316,8 @@ function Consumer:ShowInputRequest(model, productModel)
       -- Allow input consumption
       local currentInputRequested = model:GetAttribute(Consumer.CURRENT_REQUESTED_INPUT_ATTR_NAME)
       self:SetRequestedInput(model, currentInputRequested)
+
+      ConsumerNewRequestEvent:Fire(self:GetName())
 
       -- Start the timer
       local awaitingInputHandler = Promise.resolve() -- Begin Promise chain

@@ -238,6 +238,10 @@ function MapManager.GetSpawns()
   end
 end
 
+function MapManager.GetNumConsumers()
+  return #(MapManager.consumers)
+end
+
 local function cleanup(obj)
   if obj[Cleanup] then
     obj:Cleanup()

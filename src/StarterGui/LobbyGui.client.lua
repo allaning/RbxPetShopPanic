@@ -10,6 +10,7 @@ local StarterGui = game:GetService("StarterGui")
 local AvatarGui = require(StarterGui.AvatarGui)
 local PlayGui = require(StarterGui.PlayGui)
 local UserThumbnailGui = require(StarterGui.UserThumbnailGui)
+local ScoreGui = require(StarterGui.ScoreGui)
 local TweenGuiFactory = require(ReplicatedStorage.Gui.TweenGuiFactory)
 
 local SelectLevelRequestSentEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SelectLevelRequestSent")
@@ -100,10 +101,27 @@ local function initializeLobbyGui()
   end
 end
 
+
+-- Show score gui on top of other guis
+local function showScoreGui()
+  local scoreScreenGui = Util:CreateInstance("ScreenGui", {
+      Name = "ScoreScreenGui",
+      DisplayOrder = 1,
+    }, PlayerGui)
+  local scoreGui = ScoreGui.GetCopy()
+  scoreGui.Parent = scoreScreenGui 
+end
+
+
 local function showLobbyGui()
   lobbyScreenGui.Enabled = true
 end
-SessionEndedEvent.OnClientEvent:Connect(showLobbyGui)
+
+local function showScoreAndLobbyGui()
+  showScoreGui()
+  showLobbyGui()
+end
+SessionEndedEvent.OnClientEvent:Connect(showScoreAndLobbyGui)
 
 local function hideLobbyGui()
   lobbyScreenGui.Enabled = false
@@ -118,6 +136,7 @@ SessionCountdownBeginEvent.OnClientEvent:Connect(hideLobbyGui)
 
 
 initializeLobbyGui()
+
 
 
 local function onAvatarIconClick()
@@ -286,7 +305,7 @@ LevelRequestVotesEvent.OnClientEvent:Connect(onLevelRequestVotesEvent)
 
 -- Make random frames visible
 local function showRandomFrames(frameList, frequency, durationSec)
-  print("In showRandomFrames")
+  --print("In showRandomFrames")
   local rand = Random.new()
   local isActive = true
   Promise.try(function()
@@ -309,12 +328,11 @@ local function showRandomFrames(frameList, frequency, durationSec)
   for idx = 1, #frameList do
     frameList[idx].Visible = false
   end
-  print("DONE **************************")
 end
 
 -- Show random vote being selected...
 local function onSessionMapLevelSelectedEvent(playerName, winningLevel)
-  print("In onSessionMapLevelSelectedEvent")
+  --print("In onSessionMapLevelSelectedEvent")
   -- Find the thumbnails and put the voting background into a list
   local voteFrameList = {}
   local winningFrameIdx = Globals.UNINIT_NUMBER
@@ -329,7 +347,7 @@ local function onSessionMapLevelSelectedEvent(playerName, winningLevel)
         -- Check if this is the winner
         if playerName == thumb.Name then
           winningFrameIdx = idx  -- This is the frame that won
-          print("Winner: ".. thumb.Name)
+          --print("Winner: ".. thumb.Name)
         end
       end
     end

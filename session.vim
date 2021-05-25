@@ -123,7 +123,7 @@ endif
 set shortmess=aoO
 argglobal
 %argdel
-$argadd src\ReplicatedStorage\Globals.lua
+$argadd src\StarterGui\PlayGui.lua
 tabnew
 tabrewind
 edit C:\Data\Roblox\Places\PetShopPanic\default.project.json
@@ -419,17 +419,17 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 446 - ((34 * winheight(0) + 29) / 58)
+let s:l = 475 - ((29 * winheight(0) + 29) / 58)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-446
+475
 normal! 0
 wincmd w
 exe 'vert 1resize ' . ((&columns * 134 + 134) / 269)
 exe 'vert 2resize ' . ((&columns * 134 + 134) / 269)
 tabnext
-edit C:\Data\Roblox\Places\PetShopPanic\src\StarterGui\AnnouncementGui.client.lua
+edit C:\Data\Roblox\Places\PetShopPanic\src\StarterGui\ScoreGui.lua
 set splitbelow splitright
 wincmd _ | wincmd |
 vsplit
@@ -587,12 +587,12 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 114 - ((51 * winheight(0) + 29) / 58)
+let s:l = 61 - ((21 * winheight(0) + 29) / 58)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-114
-normal! 0
+61
+normal! 05|
 lcd C:\Data\Roblox\Places\PetShopPanic\src\StarterGui
 wincmd w
 argglobal
@@ -739,43 +739,45 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 79 - ((1 * winheight(0) + 29) / 58)
+let s:l = 106 - ((19 * winheight(0) + 29) / 58)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-79
-normal! 07|
+106
+normal! 0
 wincmd w
 exe 'vert 1resize ' . ((&columns * 134 + 134) / 269)
 exe 'vert 2resize ' . ((&columns * 134 + 134) / 269)
 tabnext 1
 badd +21 C:\Data\Roblox\Places\PetShopPanic\default.project.json
+badd +5 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Globals.lua
+badd +119 C:\Data\Roblox\Places\PetShopPanic\src\StarterGui\AnnouncementGui.client.lua
+badd +471 C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\Game.server.lua
+badd +55 C:\Data\Roblox\Places\PetShopPanic\src\StarterGui\LobbyGui.client.lua
 badd +17 C:\Data\Roblox\Places\PetShopPanic\src\StarterGui\UserThumbnailGui.lua
-badd +32 C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\InitializePlayer.server.lua
-badd +488 C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\Game.server.lua
-badd +290 C:\Data\Roblox\Places\PetShopPanic\src\StarterGui\LobbyGui.client.lua
-badd +2 C:\Data\Roblox\Places\PetShopPanic\src\StarterGui\AvatarGui.lua
+badd +27 C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\InitializePlayer.server.lua
+badd +118 C:\Data\Roblox\Places\PetShopPanic\src\StarterGui\AvatarGui.lua
 badd +9 C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\SelectCharacter.server.lua
-badd +70 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Consumers\Consumer.lua
+badd +497 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Consumers\Consumer.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\StarterPlayer\StarterPlayerScripts\InitializePlayer.client.lua
-badd +96 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Util.lua
+badd +461 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Util.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Products\Product.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\AnimationModule.lua
-badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Gui\ViewportFrameFactory.lua
-badd +8 C:\Data\Roblox\Places\PetShopPanic\src\StarterPlayer\StarterCharacterScripts\InitializeCharacter.client.lua
+badd +28 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Gui\ViewportFrameFactory.lua
+badd +24 C:\Data\Roblox\Places\PetShopPanic\src\StarterPlayer\StarterCharacterScripts\InitializeCharacter.client.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Products\ProductFactory.lua
-badd +337 C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\MapManager.lua
+badd +241 C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\MapManager.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Gui\ParticleEmitterFactory.lua
 badd +105 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Gui\TweenGuiFactory.lua
-badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\SoundModule.lua
-badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Themes.lua
+badd +6 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\SoundModule.lua
+badd +11 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Themes.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\TrashBins\TrashBin.lua
 badd +124 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Factories\Factory.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Gui\ProximityPromptFactory.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Factories\FactoryFactory.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Consumers\DefaultConsumer.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Consumers\ConsumerFactory.lua
-badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Transformers\Transformer.lua
+badd +159 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Transformers\Transformer.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Transformers\DefaultTransformer.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Factories\DefaultFactory.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Transformers\TransformerFactory.lua
@@ -783,16 +785,18 @@ badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Gui\ProgressBar
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Settings.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Gui\RadialBackgroundFactory.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Gui\DecalFactory.lua
-badd +23 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Session.lua
-badd +1 C:\Data\Roblox\Places\PetShopPanic\src\StarterGui\AnnouncementGui.client.lua
+badd +24 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Session.lua
 badd +1 C:\Data\Roblox\Places\PetShopPanic\src\StarterGui
-badd +54 C:\Data\Roblox\Places\PetShopPanic\src\StarterGui\SessionGui.client.lua
-badd +85 C:\Data\Roblox\Places\PetShopPanic\src\StarterGui\PlayGui.lua
+badd +11 C:\Data\Roblox\Places\PetShopPanic\src\StarterGui\SessionGui.client.lua
+badd +46 C:\Data\Roblox\Places\PetShopPanic\src\StarterGui\PlayGui.lua
 badd +2 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Events\SelectLevelRequestSent.model.json
-badd +4 C:\Data\Roblox\Places\PetShopPanic\src\ReplicatedStorage\Globals.lua
-badd +783 C:\Data\Roblox\Places\PetShopPanic\session.vim
+badd +767 C:\Data\Roblox\Places\PetShopPanic\session.vim
 badd +20 C:\Data\Roblox\Places\PetShopPanic\src\StarterGui\PlayerCamera.client.lua
-badd +385 C:\Data\Roblox\Places\PetShopPanic\submodules\DataStore2\DataStore2\Promise.lua
+badd +7 C:\Data\Roblox\Places\PetShopPanic\src\StarterPlayer\StarterCharacterScripts\SelectCharacter.client.lua
+badd +76 C:\Data\Roblox\Places\PetShopPanic\src\ServerScriptService\PlayerManager.lua
+badd +80 C:\Data\Roblox\Places\PetShopPanic\src\StarterGui\ScoreGui.lua
+badd +6 C:\Data\Roblox\Places\PetShopPanic\src\StarterPlayer\StarterPlayerScripts\MusicManager.client.lua
+badd +16 C:\Data\Roblox\Places\PetShopPanic\src\StarterGui\FrameFactory.lua
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0
   silent exe 'bwipe ' . s:wipebuf
 endif
@@ -804,7 +808,6 @@ if file_readable(s:sx)
   exe "source " . fnameescape(s:sx)
 endif
 let &so = s:so_save | let &siso = s:siso_save
-nohlsearch
 doautoall SessionLoadPost
 unlet SessionLoad
 " vim: set ft=vim :

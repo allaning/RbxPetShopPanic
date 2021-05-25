@@ -4,7 +4,6 @@ local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Promise = require(ReplicatedStorage.Vendor.Promise)
 local Util = require(ReplicatedStorage.Util)
-local SoundModule = require(ReplicatedStorage.SoundModule)
 
 local CharactersFolder = Workspace:WaitForChild("Lobby"):WaitForChild("Characters")
 

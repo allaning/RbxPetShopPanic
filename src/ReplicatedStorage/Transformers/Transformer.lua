@@ -152,8 +152,10 @@ function Transformer:GetProximityPromptAttachment(model)
 end
 
 local function clearAttachment(attachment)
-  for _, obj in ipairs(attachment:GetChildren()) do
-    obj:Destroy()
+  if attachment then
+    for _, obj in ipairs(attachment:GetChildren()) do
+      obj:Destroy()
+    end
   end
 end
 

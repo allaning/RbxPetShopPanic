@@ -4,7 +4,7 @@ local ServerStorage = game:GetService("ServerStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ProximityPromptService = game:GetService("ProximityPromptService")
 local AnimationModule = require(ReplicatedStorage.AnimationModule)
-local Players = game:GetService("Players")
+local PlayerManager = require(ServerScriptService.PlayerManager)
 
 local Globals = require(ReplicatedStorage.Globals)
 local Util = require(ReplicatedStorage.Util)
@@ -18,6 +18,8 @@ local TransformerClass = require(ReplicatedStorage.Transformers.Transformer)
 local Session = require(ReplicatedStorage.Session)
 
 local ConsumerInputReceivedEvent = ReplicatedStorage.Events.ConsumerInputReceived
+local ConsumerNewRequestEvent = ReplicatedStorage.Events.ConsumerNewRequest
+local ConsumerTimerExpiredEvent = ReplicatedStorage.Events.ConsumerTimerExpired
 local SelectLevelRequestEvent = ReplicatedStorage.Events.SelectLevelRequest
 local LevelRequestVotesEvent = ReplicatedStorage.Events.LevelRequestVotes
 local SessionMapLevelSelectedEvent = ReplicatedStorage.Events.SessionMapLevelSelected
@@ -28,6 +30,8 @@ local SessionEndedEvent = ReplicatedStorage.Events.SessionEnded
 local SessionScoreEvent = ReplicatedStorage.Events.SessionScore
 local ShowMessagePopupEvent = ReplicatedStorage.Events.ShowMessagePopup
 local PlayerRemovingEvent = ReplicatedStorage.Events.PlayerRemoving
+
+local Players = game:GetService("Players")
 
 
 local PRODUCT_PLAYER_WELD_NAME = "ProductPlayerWeld"
@@ -40,6 +44,8 @@ local PRODUCT_PLAYER_WELD_NAME = "ProductPlayerWeld"
 --         }
 local playerLevelVotes = {}
 
+-- List of PlayerManager instances
+local playerManagers = {}
 
 local session = nil
 local lobbySpawn = nil
@@ -152,11 +158,13 @@ local function handleConsumerPrompt(consumerModel, player)
           AnimationModule.PlayVictoryAnimation(consumerModel)
           session:IncrementScore(ProductClass.DEFAULT_POINTS)
           SessionScoreEvent:FireAllClients(session:GetScore())
+          session:IncrementNumCompleted()
           print("Score=".. tostring(session:GetScore()))
         else
           -- Wrong input
           ConsumerInputReceivedEvent:FireAllClients(consumerModel, false)
           AnimationModule.PlayDefeatAnimation(consumerModel)
+          session:IncrementNumMissed()
         end
       end
     end -- isRequestingInput
@@ -287,7 +295,7 @@ local function handleTrashBinPrompt(trashBinModel, player)
       -- Make product "fall" straight down then destroy
       Promise.try(function()
         for iter = 1, 5 do
-          yOffset = iter * -0.035
+          local yOffset = iter * -0.035
           currentProduct:SetPrimaryPartCFrame(attachmentPart.CFrame + Vector3.new(0, yOffset, 0))
           Util:RealWait()
         end
@@ -352,20 +360,21 @@ local function onPromptHoldBegan(promptObject, player)
         end
       end
 
+      -- Face player toward ProximityHoldTargetPart, if exists
+      local humanoidRootPart = Util:GetHumanoidRootPart(player)
+      if humanoidRootPart then
+        local targetPart = Util:GetDescendantWithName(promptModel, ConsumerClass.PROXIMITY_HOLD_TARGET_PART_NAME)
+        if targetPart then
+          local targetPos = Vector3.new(targetPart.Position.X, humanoidRootPart.Position.Y, targetPart.Position.Z)
+          humanoidRootPart.CFrame = CFrame.new(humanoidRootPart.Position, targetPos)
+          humanoidRootPart.Anchored = true
+        end
+      end
+
       local holdAnimId = promptModel:GetAttribute(ConsumerClass.PROXIMITY_HOLD_ANIMATION_ATTR_NAME)
       if holdAnimId then
         local human = Util:GetHumanoid(player)
         if human then
-          -- Face player toward ProximityHoldTargetPart, if exists
-          local humanoidRootPart = Util:GetHumanoidRootPart(player)
-          if humanoidRootPart then
-            local targetPart = Util:GetDescendantWithName(promptModel, ConsumerClass.PROXIMITY_HOLD_TARGET_PART_NAME)
-            if targetPart then
-              local targetPos = Vector3.new(targetPart.Position.X, humanoidRootPart.Position.Y, targetPart.Position.Z)
-              humanoidRootPart.CFrame = CFrame.new(humanoidRootPart.Position, targetPos)
-            end
-          end
-
           -- Play animation
           AnimationModule.PlayAssetIdStr(human, holdAnimId, AnimationModule.IS_LOOPED)
         end
@@ -385,21 +394,45 @@ local function onPromptHoldEnded(promptObject, player)
       if human then
         AnimationModule.Stop(human)
       end
+      local humanoidRootPart = Util:GetHumanoidRootPart(player)
+      if humanoidRootPart then
+        humanoidRootPart.Anchored = false
+      end
     end
   end
 end
 ProximityPromptService.PromptButtonHoldEnded:Connect(onPromptHoldEnded)
 
 
+local function onConsumerNewRequest()
+  if session then
+    session:IncrementNumTotal()
+  end
+end
+ConsumerNewRequestEvent.Event:Connect(onConsumerNewRequest)
+
+
+local function onConsumerTimerExpired()
+  if session then
+    session:IncrementNumMissed()
+  end
+end
+ConsumerTimerExpiredEvent.Event:Connect(onConsumerTimerExpired)
+
+
 local function onGameStart(winningLevel)
+  print("In onGameStart")
   -- Select a map
   local map = MapManager.InitializeMap(winningLevel)
+
+  session = Session.new()
 
   -- Spawn players into map
   local playerList = {}
   local spawns = MapManager.GetSpawns()
   if spawns and #spawns > 0 then
     playerList = Players:GetPlayers()
+    session:SetPlayerList(playerList)
     for idx, spawn in pairs(spawns) do
       if playerList[idx] then
         print("Spawning into game map: ".. playerList[idx].Name)
@@ -420,8 +453,6 @@ local function onGameStart(winningLevel)
     error("Unable to get spawn plots from MapManager")
   end
 
-  session = Session.new()
-
   Promise.try(function()
     SessionCountdownBeginEvent:FireAllClients(session:GetDuration())
     Util:RealWait(Globals.READY_SET_GO_COUNTDOWN_SEC)  -- Wait for "Ready" countdown
@@ -432,17 +463,24 @@ local function onGameStart(winningLevel)
     while not session:IsDone() do
       local remainingTime = math.ceil(session:GetRemainingTime())
       if remainingTime >= 0 then
-        SessionUpdateTimerCountdownEvent:FireAllClients(remainingTime)
         Util:RealWait(timerUpdateIntervalSec)
+        SessionUpdateTimerCountdownEvent:FireAllClients(remainingTime)
       end
     end
 
-    SessionEndedEvent:FireAllClients(session:GetScore())
+    local pointsEarned = session:GetPointsEarned(MapManager.GetNumConsumers())
+    SessionEndedEvent:FireAllClients(pointsEarned)
     Util:RealWait(Session.POST_GAME_COOLDOWN_PERIOD_SEC)
     LevelRequestVotesEvent:FireAllClients({})  -- Make client show user thumbnails
 
     -- TODO
-    -- Show score
+    -- Update player points
+    for _, plrMgr in pairs(playerManagers) do
+      local plr = plrMgr:GetPlayer()
+      plrMgr:IncrementPoints(pointsEarned)
+      if plr then
+      end
+    end
 
     -- Spawn players into lobby
     for idx, player in pairs(playerList) do
@@ -469,6 +507,7 @@ local function onGameStart(winningLevel)
 
     -- Cleanup
     MapManager.Cleanup(map)
+    session = nil
 
   end)
 end
@@ -498,70 +537,79 @@ local function removePlayerVote(playerName)
 end
 
 local function onSelectLevelRequestEvent(player, levelRequest)
-  local levelRequest = levelRequest or Globals.UNINIT_STRING
-  print(string.format("Player %s voted for %s", player.Name, levelRequest))
+  if not session or session:GetIsActive() == false then
+    local levelRequest = levelRequest or Globals.UNINIT_STRING
+    print(string.format("Player %s voted for %s", player.Name, levelRequest))
 
-  -- If no levelRequest provided (e.g. on Player Removing event), then remove vote
-  if levelRequest == Globals.UNINIT_STRING then
-    removePlayerVote(player.Name)
-  else
-    -- Process player vote
-
-    -- Find player vote, if any
-    local plrName, plrId, plrVote = getPlayerVote(player.Name)
-    if not plrVote then
-      -- Add player's vote
-      table.insert(playerLevelVotes, { ['PlayerName'] = player.Name, ['PlayerId'] = player.UserId, ['LevelVote'] = levelRequest })
-      --table.insert(playerLevelVotes, { ['PlayerName'] = player.Name.."2", ['PlayerId'] = player.UserId, ['LevelVote'] = levelRequest }) --aing
-      --table.insert(playerLevelVotes, { ['PlayerName'] = player.Name.."3", ['PlayerId'] = player.UserId, ['LevelVote'] = levelRequest }) --aing
-      --table.insert(playerLevelVotes, { ['PlayerName'] = player.Name.."4", ['PlayerId'] = player.UserId, ['LevelVote'] = levelRequest }) --aing
-    end
-  end
-
-  if true then -- Debug
-    for _, pv in pairs(playerLevelVotes) do
-      print(string.format("  playerLevelVotes: Player %s (%d) votes for %s", pv['PlayerName'], pv['PlayerId'], pv['LevelVote']))
-    end
-  end
-
-  -- Send clients a list of players and their level votes
-  LevelRequestVotesEvent:FireAllClients(playerLevelVotes)
-
-  -- If all players voted, then choose random vote
-  local winningLevel = Globals.UNINIT_STRING
-  local playerList = Players:GetPlayers()
-  local numPlayers = Util:TableLength(playerList)
-  if numPlayers == Util:TableLength(playerLevelVotes) then
-    if numPlayers == 1 then
-      winningLevel = levelRequest
+    -- If no levelRequest provided (e.g. on Player Removing event), then remove vote
+    if levelRequest == Globals.UNINIT_STRING then
+      removePlayerVote(player.Name)
     else
-      -- Choose random vote
-      local rand = Random.new()
-      local randPlayer = rand:NextInteger(1, numPlayers)
-      print("  randPlayer=".. tostring(randPlayer))
-      local plrName, plrId, plrVote = getPlayerVote(playerList[randPlayer].Name)
-      print(string.format("Chose %s vote: %s", plrName, plrVote))
-      if plrVote then
-        SessionMapLevelSelectedEvent:FireAllClients(plrName, plrVote)
-        winningLevel = plrVote
-      else
-        warn("Error choosing random voter. Using current voter: ".. player.Name)
-        SessionMapLevelSelectedEvent:FireAllClients(player.Name, levelRequest)
+      -- Process player vote
+
+      -- Find player vote, if any
+      local plrName, plrId, plrVote = getPlayerVote(player.Name)
+      if not plrVote then
+        -- Add player's vote
+        table.insert(playerLevelVotes, { ['PlayerName'] = player.Name, ['PlayerId'] = player.UserId, ['LevelVote'] = levelRequest })
+        --table.insert(playerLevelVotes, { ['PlayerName'] = player.Name.."2", ['PlayerId'] = player.UserId, ['LevelVote'] = levelRequest }) --aing
+        --table.insert(playerLevelVotes, { ['PlayerName'] = player.Name.."3", ['PlayerId'] = player.UserId, ['LevelVote'] = levelRequest }) --aing
+        --table.insert(playerLevelVotes, { ['PlayerName'] = player.Name.."4", ['PlayerId'] = player.UserId, ['LevelVote'] = levelRequest }) --aing
+      end
+    end
+
+    if true then -- Debug
+      for _, pv in pairs(playerLevelVotes) do
+        print(string.format("  playerLevelVotes: Player %s (%d) votes for %s", pv['PlayerName'], pv['PlayerId'], pv['LevelVote']))
+      end
+    end
+
+    -- Send clients a list of players and their level votes
+    LevelRequestVotesEvent:FireAllClients(playerLevelVotes)
+
+    -- If all players voted, then choose random vote
+    local winningLevel = Globals.UNINIT_STRING
+    local playerList = Players:GetPlayers()
+    local numPlayers = Util:TableLength(playerList)
+    if numPlayers == Util:TableLength(playerLevelVotes) and numPlayers > 0 then
+      if numPlayers == 1 then
         winningLevel = levelRequest
+      else
+        -- Choose random vote
+        local rand = Random.new()
+        local randPlayer = rand:NextInteger(1, numPlayers)
+        print("  randPlayer=".. tostring(randPlayer))
+        local plrName, plrId, plrVote = getPlayerVote(playerList[randPlayer].Name)
+        print(string.format("Chose %s vote: %s", plrName, plrVote))
+        if plrVote then
+          SessionMapLevelSelectedEvent:FireAllClients(plrName, plrVote)
+          winningLevel = plrVote
+        else
+          warn("Error choosing random voter. Using current voter: ".. player.Name)
+          SessionMapLevelSelectedEvent:FireAllClients(player.Name, levelRequest)
+          winningLevel = levelRequest
+        end
+
+        -- Delay to show random vote being chosen
+        Util:RealWait(Globals.RANDOM_LEVEL_SELECTION_DISPLAY_DELAY_SEC + 1)
       end
 
-      -- Delay to show random vote being chosen
-      Util:RealWait(Globals.RANDOM_LEVEL_SELECTION_DISPLAY_DELAY_SEC + 1)
-    end
-
-    if winningLevel ~= Globals.UNINIT_STRING then
-      -- Start the game session
-      onGameStart(winningLevel)
-      -- Clear level votes
-      playerLevelVotes = {}
+      if winningLevel ~= Globals.UNINIT_STRING then
+        -- Start the game session
+        onGameStart(winningLevel)
+        -- Clear level votes
+        playerLevelVotes = {}
+      end
     end
   end
 end
 SelectLevelRequestEvent.OnServerEvent:Connect(onSelectLevelRequestEvent)
 PlayerRemovingEvent.Event:Connect(onSelectLevelRequestEvent)
+
+
+Players.PlayerAdded:Connect(function(Player)
+  local playerManager = PlayerManager.new(Player)
+  playerManager:InitializeLeaderstats()
+  table.insert(playerManagers, playerManager)
+end)
 
