@@ -17,6 +17,7 @@ local ConsumerClass = require(ReplicatedStorage.Consumers.Consumer)
 local TransformerClass = require(ReplicatedStorage.Transformers.Transformer)
 local Session = require(ReplicatedStorage.Session)
 
+local GetSessionStatusFn = ReplicatedStorage.RemoteFunctions.GetSessionStatus
 local ConsumerInputReceivedEvent = ReplicatedStorage.Events.ConsumerInputReceived
 local ConsumerNewRequestEvent = ReplicatedStorage.Events.ConsumerNewRequest
 local ConsumerTimerExpiredEvent = ReplicatedStorage.Events.ConsumerTimerExpired
@@ -27,6 +28,7 @@ local SessionCountdownBeginEvent = ReplicatedStorage.Events.SessionCountdownBegi
 local SessionUpdateTimerCountdownEvent = ReplicatedStorage.Events.SessionUpdateTimerCountdown
 local SessionBeginEvent = ReplicatedStorage.Events.SessionBegin
 local SessionEndedEvent = ReplicatedStorage.Events.SessionEnded
+local SessionResultsEvent = ReplicatedStorage.Events.SessionResults
 local SessionScoreEvent = ReplicatedStorage.Events.SessionScore
 local ShowMessagePopupEvent = ReplicatedStorage.Events.ShowMessagePopup
 local PlayerRemovingEvent = ReplicatedStorage.Events.PlayerRemoving
@@ -427,6 +429,11 @@ local function onGameStart(winningLevel)
 
   session = Session.new()
 
+  -- Set current players 'in game' status
+  for _, plrMgr in pairs(playerManagers) do
+    plrMgr:SetIsInGameSession(true)
+  end
+
   -- Spawn players into map
   local playerList = {}
   local spawns = MapManager.GetSpawns()
@@ -453,7 +460,9 @@ local function onGameStart(winningLevel)
     error("Unable to get spawn plots from MapManager")
   end
 
+  -- Start
   Promise.try(function()
+    --print("session:GetDuration()=".. tostring(session:GetDuration())) --aing
     SessionCountdownBeginEvent:FireAllClients(session:GetDuration())
     Util:RealWait(Globals.READY_SET_GO_COUNTDOWN_SEC)  -- Wait for "Ready" countdown
     SessionBeginEvent:FireAllClients()
@@ -468,18 +477,26 @@ local function onGameStart(winningLevel)
       end
     end
 
-    local pointsEarned = session:GetPointsEarned(MapManager.GetNumConsumers())
-    SessionEndedEvent:FireAllClients(pointsEarned)
+    -- Session ended
+    SessionEndedEvent:FireAllClients()
     Util:RealWait(Session.POST_GAME_COOLDOWN_PERIOD_SEC)
-    LevelRequestVotesEvent:FireAllClients({})  -- Make client show user thumbnails
 
-    -- TODO
     -- Update player points
+    local pointsEarned, numTotal, numCompleted, numFailed = session:GetStats(0) -- (MapManager.GetNumConsumers())
     for _, plrMgr in pairs(playerManagers) do
-      local plr = plrMgr:GetPlayer()
-      plrMgr:IncrementPoints(pointsEarned)
-      if plr then
+      if plrMgr:GetIsInGameSession() == true then
+        plrMgr:IncrementPoints(pointsEarned)
+        local plr = plrMgr:GetPlayer()
+        if plr then
+          -- Show score gui
+          SessionResultsEvent:FireClient(plr, pointsEarned, numTotal, numCompleted, numFailed)
+        end
       end
+    end
+
+    -- Set players 'in game' status
+    for _, plrMgr in pairs(playerManagers) do
+      plrMgr:SetIsInGameSession(false)
     end
 
     -- Spawn players into lobby
@@ -504,6 +521,8 @@ local function onGameStart(winningLevel)
         error("Unable to find torso for ".. playerList[idx].Name)
       end
     end
+
+    LevelRequestVotesEvent:FireAllClients({})  -- Make client show user thumbnails
 
     -- Cleanup
     MapManager.Cleanup(map)
@@ -607,9 +626,24 @@ SelectLevelRequestEvent.OnServerEvent:Connect(onSelectLevelRequestEvent)
 PlayerRemovingEvent.Event:Connect(onSelectLevelRequestEvent)
 
 
+local function getSessionStatus()
+  if session then
+    return session:GetIsActive()
+  end
+end
+GetSessionStatusFn.OnServerInvoke = getSessionStatus
+
 Players.PlayerAdded:Connect(function(Player)
+  -- Add player to list of PlayerManager instances
   local playerManager = PlayerManager.new(Player)
   playerManager:InitializeLeaderstats()
   table.insert(playerManagers, playerManager)
+end)
+
+Players.PlayerRemoving:Connect(function(Player)
+  -- Remove PlayerManager instance
+  for idx, plr in pairs(playerManagers) do
+    table.remove(playerManagers, idx)
+  end
 end)
 

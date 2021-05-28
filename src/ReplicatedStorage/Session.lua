@@ -79,8 +79,8 @@ function Session:GetNumCompleted()
 end
 
 function Session:IncrementNumCompleted()
-  print("self.NumCompleted += 1 --> ".. tostring(self.NumCompleted))
   self.NumCompleted += 1
+  --print("self.NumCompleted += 1 --> ".. tostring(self.NumCompleted))
 end
 
 function Session:GetNumMissed()
@@ -88,8 +88,8 @@ function Session:GetNumMissed()
 end
 
 function Session:IncrementNumMissed()
-  print("self.NumMissed += 1")
   self.NumMissed += 1
+  --print("self.NumMissed += 1")
 end
 
 function Session:GetPlayerList()
@@ -105,8 +105,8 @@ function Session:GetNumTotal()
 end
 
 function Session:IncrementNumTotal()
-  print("self.NumTotal += 1 --> ".. tostring(self.NumTotal))
   self.NumTotal += 1
+  --print("self.NumTotal += 1 --> ".. tostring(self.NumTotal))
 end
 
 function Session:GetElapsedTime()
@@ -126,14 +126,21 @@ function Session:IsDone()
   end
 end
 
-function Session:GetPointsEarned(handicap)
+function Session:GetStats(handicap)
   -- Handicap is because we assume current consumer requests couldn't be fulfilled before time expired
   local handicap = handicap or 0
-  local effectiveTotalRequests = self:GetNumTotal() - handicap
-  if effectiveTotalRequests == 0 then
+  local numTotalRequests = self:GetNumTotal()
+  local numCompleted = self:GetNumCompleted()
+
+  local effectiveTotalRequests = numTotalRequests - handicap
+  if effectiveTotalRequests <= 0 then
     effectiveTotalRequests = 1  -- Avoid div by zero
   end
-  local percentComplete = self:GetNumCompleted() / effectiveTotalRequests * 100
+  if effectiveTotalRequests < numCompleted then
+    effectiveTotalRequests = numCompleted  -- Make sure total is higher
+  end
+
+  local percentComplete = numCompleted / effectiveTotalRequests * 100
   print("effectiveTotalRequests=".. tostring(effectiveTotalRequests).. "; self:GetNumCompleted()=".. tostring(self:GetNumCompleted()).. "; percentComplete=".. tostring(percentComplete))
 
   local points = 0
@@ -144,7 +151,9 @@ function Session:GetPointsEarned(handicap)
   elseif percentComplete >= 30 then
     points = 1
   end
-  return points
+
+  local numFailed = self:GetNumMissed()
+  return points, effectiveTotalRequests, numCompleted, numFailed
 end
 
 

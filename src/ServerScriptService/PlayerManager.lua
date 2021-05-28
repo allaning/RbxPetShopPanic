@@ -17,6 +17,7 @@ function PlayerManager.new(player)
   self.PlayerName = player.Name
   self.LeaderstatsFolder = nil
   self.PointsInstance = nil
+  self.IsInGameSession = false
 
   self.Points = 0
 
@@ -59,6 +60,14 @@ function PlayerManager:SetPoints(points)
   else
     error("PlayerManager:SetPoints: self.PointsInstance not initialized")
   end
+end
+
+function PlayerManager:GetIsInGameSession()
+  return self.IsInGameSession
+end
+
+function PlayerManager:SetIsInGameSession(isInGameSession)
+  self.IsInGameSession = isInGameSession
 end
 
 function PlayerManager:IncrementPoints(points)

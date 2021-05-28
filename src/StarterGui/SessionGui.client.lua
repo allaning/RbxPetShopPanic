@@ -48,7 +48,7 @@ local function getScoreTitleTextLabel(parent)
   return textLabel
 end
 
-local function getScoreTextLabel(parent, score)
+local function getScoreTextLabel(score)
   local textLabel = Util:CreateInstance("TextLabel", {
       Name = "Value",
       Text = score,
@@ -63,7 +63,7 @@ local function getScoreTextLabel(parent, score)
       BackgroundColor3 = Color3.new(1, 1, 1),
       BackgroundTransparency = 1.0,
       BorderSizePixel = 0,
-    }, parent)
+    }, nil)
   return textLabel
 end
 
@@ -86,7 +86,8 @@ local function initializeScoreGui(score)
     -- "Score:" heading
     getScoreTitleTextLabel(scoreFrame)
     -- Score value
-    scoreTextLabel = getScoreTextLabel(scoreFrame, score)
+    scoreTextLabel = getScoreTextLabel(score)
+    scoreTextLabel.Parent = scoreFrame
   end
 end
 
@@ -145,10 +146,10 @@ local function getTimerTitleTextLabel(parent)
   return textLabel
 end
 
-local function getTimerTextLabel(parent, timer)
+local function getTimerTextLabel(timer)
   local textLabel = Util:CreateInstance("TextLabel", {
       Name = "Value",
-      Text = timer,
+      Text = tostring(timer),
       --Font = Enum.Font.Bangers,
       Font = Enum.Font.LuckiestGuy,
       AnchorPoint = Vector2.new(0.5, 0, 0.5, 0),
@@ -161,7 +162,7 @@ local function getTimerTextLabel(parent, timer)
       BackgroundColor3 = Color3.new(1, 1, 1),
       BackgroundTransparency = 1.0,
       BorderSizePixel = 0,
-    }, parent)
+    }, nil)
   local scale = Util:CreateInstance("UIScale", {
       Scale = 1.0,
     }, textLabel)
@@ -187,7 +188,8 @@ local function initializeTimerGui(timer)
     -- "Time:" heading
     getTimerTitleTextLabel(timerFrame)
     -- Time value
-    timerTextLabel, timerScale = getTimerTextLabel(timerFrame, timer)
+    timerTextLabel, timerScale = getTimerTextLabel(timer)
+    timerTextLabel.Parent = timerFrame
   end
 end
 
@@ -197,6 +199,9 @@ local function showTimerGui(duration)
     timerGui.Enabled = true
   end
   initializeTimerGui(duration)
+  if timerTextLabel then
+    timerTextLabel.Text = tostring(duration)
+  end
 end
 SessionCountdownBeginEvent.OnClientEvent:Connect(showTimerGui)
 

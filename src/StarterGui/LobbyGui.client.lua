@@ -13,27 +13,39 @@ local UserThumbnailGui = require(StarterGui.UserThumbnailGui)
 local ScoreGui = require(StarterGui.ScoreGui)
 local TweenGuiFactory = require(ReplicatedStorage.Gui.TweenGuiFactory)
 
+local GetSessionStatusFn = ReplicatedStorage:WaitForChild("RemoteFunctions"):WaitForChild("GetSessionStatus")
 local SelectLevelRequestSentEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SelectLevelRequestSent")
 local LevelRequestVotesEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("LevelRequestVotes")
 local SessionMapLevelSelectedEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionMapLevelSelected")
 local SessionCountdownBeginEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionCountdownBegin")
-local SessionEndedEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionEnded")
+local SessionUpdateTimerCountdownEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionUpdateTimerCountdown")
+local SessionResultsEndedEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionResults")
 local UpdateCharacterEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("UpdateCharacter")
 
 local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
+
+local isLocalPlayerInGameSession = false
+
+
 -- Folder to hold UserThumbnailGui images
 local UserThumbsFolder = Instance.new("Folder", PlayerGui)
 UserThumbsFolder.Name = "UserThumbsFolder"
 
+-- Show lobby user menu icons
 local lobbyScreenGui = nil
 local lobbyFrame = nil
 local avatarIcon = nil
 local avatarIconId = "rbxassetid://6847150302"  -- https://icon-icons.com/icon/avatar-default-user/92824
 local playIcon = nil
 local playIconId = "rbxassetid://6855026893"  -- https://graphiccave.com/project/play-icon-vector-and-png-free-download/
+
+-- For late joiners, show countdown for an existing game in session
+local alreadyInSessionCountdownFrame = nil
+local alreadyInSessionCountdownTitle = "Game in session -- Time remaining:"
+local alreadyInSessionCountdownValue = nil
 
 local lobbyFrames = {
   avatarFrame = nil,
@@ -99,17 +111,70 @@ local function initializeLobbyGui()
     lobbyFrames.avatarFrame.Parent = lobbyScreenGui
     lobbyFrames.playFrame.Parent = lobbyScreenGui
   end
+
+  if not alreadyInSessionCountdownFrame then
+    alreadyInSessionCountdownFrame = Util:CreateInstance("Frame", {
+        Name = "AlreadyInSessionCountdownFrame",
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Position = UDim2.new(0.5, 0, 0.85, 0),
+        Size = UDim2.new(0.5, 0, 0.3, 0),
+        BackgroundTransparency = 1.0,
+        BorderSizePixel = 0,
+        Active = false,
+        Visible = false,
+      }, lobbyScreenGui)
+    local titleTextLabel = Util:CreateInstance("TextLabel", {
+        Name = "AlreadyInSessionCountdown",
+        Text = alreadyInSessionCountdownTitle,
+        Font = Enum.Font.SourceSansSemibold,
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Position = UDim2.new(0.5, 0, 0.25, 0),
+        Size = UDim2.new(1.0, 0, 0.4, 0),
+        BackgroundTransparency = 1.0,
+        TextColor3 = Color3.new(1, 1, 1),
+        TextScaled = true,
+      }, alreadyInSessionCountdownFrame)
+    alreadyInSessionCountdownValue = Util:CreateInstance("TextLabel", {
+        Name = "Value",
+        Text = "",
+        Font = Enum.Font.SourceSansSemibold,
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Position = UDim2.new(0.5, 0, 0.5, 0),
+        Size = UDim2.new(1.0, 0, 0.4, 0),
+        BackgroundTransparency = 1.0,
+        TextColor3 = Color3.new(1, 1, 1),
+        TextScaled = true,
+      }, alreadyInSessionCountdownFrame)
+  end
 end
 
 
--- Show score gui on top of other guis
-local function showScoreGui()
-  local scoreScreenGui = Util:CreateInstance("ScreenGui", {
-      Name = "ScoreScreenGui",
-      DisplayOrder = 1,
-    }, PlayerGui)
-  local scoreGui = ScoreGui.GetCopy()
-  scoreGui.Parent = scoreScreenGui 
+-- For players not in game session, show game countdown
+local function updateAlreadyInSessionCountdown(timeLeft)
+  if not isLocalPlayerInGameSession then
+    if alreadyInSessionCountdownFrame.Active == false then
+      alreadyInSessionCountdownFrame.Active = true
+      alreadyInSessionCountdownFrame.Visible = true
+    end
+
+    if alreadyInSessionCountdownValue then
+      alreadyInSessionCountdownValue.Text = tostring(timeLeft)
+    end
+  end
+end
+SessionUpdateTimerCountdownEvent.OnClientEvent:Connect(updateAlreadyInSessionCountdown)
+
+
+-- Show score gui (takes up whole screen) on top of other guis
+local function showScoreGui(pointsEarned, numTotal, numCompleted, numFailed)
+  Promise.try(function()
+    local scoreScreenGui = Util:CreateInstance("ScreenGui", {
+        Name = "ScoreScreenGui",
+        DisplayOrder = 1,
+      }, PlayerGui)
+    local scoreGui = ScoreGui.GetCopy(pointsEarned, numTotal, numCompleted, numFailed)
+    scoreGui.Parent = scoreScreenGui 
+  end)
 end
 
 
@@ -117,15 +182,22 @@ local function showLobbyGui()
   lobbyScreenGui.Enabled = true
 end
 
-local function showScoreAndLobbyGui()
-  showScoreGui()
+local function showSessionResults(pointsEarned, numTotal, numCompleted, numFailed)
+  showScoreGui(pointsEarned, numTotal, numCompleted, numFailed)
   showLobbyGui()
+  isLocalPlayerInGameSession = false
+
+  if alreadyInSessionCountdownFrame.Active == true then
+    alreadyInSessionCountdownFrame.Active = false
+    alreadyInSessionCountdownFrame.Visible = false
+  end
 end
-SessionEndedEvent.OnClientEvent:Connect(showScoreAndLobbyGui)
+SessionResultsEndedEvent.OnClientEvent:Connect(showSessionResults)
 
 local function hideLobbyGui()
   lobbyScreenGui.Enabled = false
   AvatarGui.Close()
+  isLocalPlayerInGameSession = true
 
   -- Remove vote thumbnails
   for _, obj in pairs(UserThumbsFolder:GetChildren()) do
@@ -169,6 +241,9 @@ showLobbyGui()
 
 
 
+-- Voting
+
+
 -- Find Id from Name based on table of this format:
 -- { { ['PlayerName'] = plr.Name, ['PlayerId'] = plr.UserId }, }
 local function getPlayerIdFromName(nameToIdMap, playerName)
@@ -195,8 +270,24 @@ local playerLevelVotesPrevious = {}
 local function onLevelRequestVotesEvent(playerLevelVotes)
   print("Received LevelRequestVotesEvent")
 
+  -- If player is in game session, then do nothing
+  if isLocalPlayerInGameSession then
+    return
+  end
+
   -- If this was triggered by a new player, then use the last vote info
   if not playerLevelVotes then
+    local isSessionActive = GetSessionStatusFn:InvokeServer()
+    if isSessionActive then
+      print("Session is active")
+      -- Show 'in session' countdown
+      alreadyInSessionCountdownFrame.Active = true
+      alreadyInSessionCountdownFrame.Visible = true
+
+      -- Don't show user vote thumbnails
+      return
+    end
+
     playerLevelVotes = Util:DeepTableCopy(playerLevelVotesPrevious)
   end
 

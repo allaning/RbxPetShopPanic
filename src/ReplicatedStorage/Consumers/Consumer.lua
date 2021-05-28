@@ -273,33 +273,30 @@ end
 local function runTimer(itself, delaySec, model, attachmentPart, color)
   return Promise.new(function(resolve, reject, onCancel)
     Util:RealWait(delaySec)
+    if model then
+      -- Check to see if timer was cancelled
+      if onCancel(function()
+          --print("Time was cancelled for ".. model.Name)
+        end) then
+        return
+      end
 
-    -- Check to see if timer was cancelled
-    if onCancel(function()
-        --print("Time was cancelled for ".. model.Name)
-      end) then
-      return
+      -- Listener will check if color is nil and act accordingly
+      UpdateOverheadBillboardEvent:FireAllClients(model, attachmentPart, color)
+
+      -- Timer expired
+      if not color then
+        AnimationModule.PlayDefeatAnimation(model)
+        ConsumerTimerExpiredEvent:Fire()
+
+        -- Reset consumer
+        itself:OnReceiveInput()
+        itself:OnInputConsumed()
+        return
+      end
+
+      resolve()
     end
-
-    -- Listener will check if color is nil and act accordingly
-    UpdateOverheadBillboardEvent:FireAllClients(model, attachmentPart, color)
-    if color == nil then
-      ConsumerTimerExpiredEvent:Fire(self:GetName())
-    end
-
-    -- Play time expired animation
-    if color == nil then
-      AnimationModule.PlayDefeatAnimation(model)
-    end
-
-    if not color then
-      -- Reset consumer
-      itself:OnReceiveInput()
-      itself:OnInputConsumed()
-      return
-    end
-
-    resolve()
   end)
 end
 

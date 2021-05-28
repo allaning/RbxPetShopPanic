@@ -261,8 +261,6 @@ local function destroyObjectList(list)
 end
 
 function MapManager.Cleanup(map)
-  map:Destroy()
-
   cleanupList(MapManager.consumers)
   MapManager.consumers = {}
   cleanupList(MapManager.factories)
@@ -275,9 +273,13 @@ function MapManager.Cleanup(map)
   MapManager.trashBins = {}
 
   destroyObjectList(MapManager.tableModels)
+  MapManager.tableModels = {}
   destroyObjectList(MapManager.spawnPlotParts)
+  MapManager.spawnPlotParts = {}
 
-  -- Destroy objects in Workspace
+  map:Destroy()
+
+  -- Destroy other objects in Workspace
   destroyObjectList(wsConsumersFolder:GetChildren())
   destroyObjectList(wsFactoriesFolder:GetChildren())
   destroyObjectList(wsTransformersFolder:GetChildren())
