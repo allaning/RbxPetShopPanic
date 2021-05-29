@@ -30,6 +30,7 @@ Players.PlayerAdded:Connect(function(Player)
     humanoid.WalkSpeed = 18
   end)
 
+  -- Show user vote thumbnails; Send to all so they can adjust count
   LevelRequestVotesEvent:FireAllClients()
 end)
 

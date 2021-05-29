@@ -9,7 +9,7 @@ Session.__index = Session
 
 
 -- Default game session length
-Session.DEFAULT_TIME_PER_SESSION_SEC = 60 * 2
+Session.DEFAULT_TIME_PER_SESSION_SEC = 60 * 3
 
 -- Delay that occurs when game session ends
 Session.POST_GAME_COOLDOWN_PERIOD_SEC = 2
@@ -23,6 +23,7 @@ function Session.new()
   self.StartTime = 0
   self.Duration = Session.DEFAULT_TIME_PER_SESSION_SEC
   self.IsActive = false
+  self.Level = 0  -- Difficulty level
 
   self.NumCompleted = 0  -- Number of consumers successfully completed
   self.NumMissed = 0  -- Number of requests missed (wrong item given or request timed out)
@@ -47,7 +48,6 @@ end
 
 function Session:Start()
   self.StartTime = os.time()
-  self:SetIsActive(true)
 end
 
 function Session:GetStartTime()
@@ -72,6 +72,14 @@ end
 
 function Session:SetIsActive(isActive)
   self.IsActive = isActive
+end
+
+function Session:GetLevel()
+  return self.Level
+end
+
+function Session:SetLevel(level)
+  self.Level = level
 end
 
 function Session:GetNumCompleted()
@@ -100,6 +108,15 @@ function Session:SetPlayerList(playerList)
   self.PlayerList = playerList
 end
 
+function Session:RemoveFromPlayerList(playerName)
+  for idx = #self.PlayerList, 1, -1 do
+    if self.PlayerList[idx].Name == playerName then
+      table.remove(self.PlayerList, idx)
+      break
+    end
+  end
+end
+
 function Session:GetNumTotal()
   return self.NumTotal
 end
@@ -119,7 +136,6 @@ end
 
 function Session:IsDone()
   if self:GetElapsedTime() > self:GetDuration() then
-    self:SetIsActive(false)
     return true
   else
     return false
@@ -144,9 +160,9 @@ function Session:GetStats(handicap)
   print("effectiveTotalRequests=".. tostring(effectiveTotalRequests).. "; self:GetNumCompleted()=".. tostring(self:GetNumCompleted()).. "; percentComplete=".. tostring(percentComplete))
 
   local points = 0
-  if percentComplete >= 90 then
+  if percentComplete >= 85 then
     points = 3
-  elseif percentComplete >= 70 then
+  elseif percentComplete >= 60 then
     points = 2
   elseif percentComplete >= 30 then
     points = 1

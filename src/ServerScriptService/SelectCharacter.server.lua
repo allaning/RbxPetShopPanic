@@ -13,9 +13,10 @@ local CharactersFolder = ReplicatedStorage.Characters
 local Players = game:GetService("Players")
 
 
-local function transform(char, model)
+local function transform(char, characterModel)
   if char.PrimaryPart then
-    local model = model:Clone()
+    local model = characterModel:Clone()
+
     model:SetPrimaryPartCFrame(char.PrimaryPart.CFrame+Vector3.new(0,model:GetExtentsSize().Y,0))
     local h = char:WaitForChild("Humanoid")
     local function unkill()
@@ -39,6 +40,13 @@ local function transform(char, model)
     for i,v in pairs(model:GetChildren()) do
       if v.Name ~= "Humanoid" and v.Name ~= "HumanoidRootPart" then
         v.Parent = char
+
+        -- Remove TouchInterest parts (e.g. so accessories don't jump from player to player!)
+        for i, desc in pairs(v:GetDescendants()) do
+          if desc.Name == 'TouchInterest' then
+            desc:Destroy()
+          end
+        end
       end
     end
 

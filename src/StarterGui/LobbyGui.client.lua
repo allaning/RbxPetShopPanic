@@ -14,20 +14,30 @@ local ScoreGui = require(StarterGui.ScoreGui)
 local TweenGuiFactory = require(ReplicatedStorage.Gui.TweenGuiFactory)
 
 local GetSessionStatusFn = ReplicatedStorage:WaitForChild("RemoteFunctions"):WaitForChild("GetSessionStatus")
+local GetLevelRequestVotesFn = ReplicatedStorage:WaitForChild("RemoteFunctions"):WaitForChild("GetLevelRequestVotes")
 local SelectLevelRequestSentEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SelectLevelRequestSent")
 local LevelRequestVotesEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("LevelRequestVotes")
 local SessionMapLevelSelectedEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionMapLevelSelected")
 local SessionCountdownBeginEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionCountdownBegin")
 local SessionUpdateTimerCountdownEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionUpdateTimerCountdown")
+local SessionEndedEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionEnded")
 local SessionResultsEndedEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionResults")
 local UpdateCharacterEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("UpdateCharacter")
+local ShowMessagePopupBindableEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ShowMessagePopupBindable")
 
 local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
 
-local isLocalPlayerInGameSession = false
+-- Keep track of player status
+local function setIsLocalPlayerInGameSession(isActive)
+  Player:SetAttribute(Globals.PLAYER_IS_IN_GAME_SESSION_ATTRIBUTE_NAME, isActive)
+end
+local function isLocalPlayerInGameSession()
+  return Player:GetAttribute(Globals.PLAYER_IS_IN_GAME_SESSION_ATTRIBUTE_NAME)
+end
+setIsLocalPlayerInGameSession(false)
 
 
 -- Folder to hold UserThumbnailGui images
@@ -149,13 +159,26 @@ local function initializeLobbyGui()
 end
 
 
+local function showAlreadyInSessionCountdownFrame()
+  if alreadyInSessionCountdownFrame and alreadyInSessionCountdownFrame.Active == false then
+    alreadyInSessionCountdownFrame.Active = true
+    alreadyInSessionCountdownFrame.Visible = true
+  end
+end
+
+local function hideAlreadyInSessionCountdownFrame()
+  if alreadyInSessionCountdownFrame and alreadyInSessionCountdownFrame.Active == true then
+    alreadyInSessionCountdownFrame.Active = false
+    alreadyInSessionCountdownFrame.Visible = false
+  end
+end
+
+SessionEndedEvent.OnClientEvent:Connect(hideAlreadyInSessionCountdownFrame)
+
 -- For players not in game session, show game countdown
 local function updateAlreadyInSessionCountdown(timeLeft)
-  if not isLocalPlayerInGameSession then
-    if alreadyInSessionCountdownFrame.Active == false then
-      alreadyInSessionCountdownFrame.Active = true
-      alreadyInSessionCountdownFrame.Visible = true
-    end
+  if not isLocalPlayerInGameSession() then
+    showAlreadyInSessionCountdownFrame()
 
     if alreadyInSessionCountdownValue then
       alreadyInSessionCountdownValue.Text = tostring(timeLeft)
@@ -185,19 +208,16 @@ end
 local function showSessionResults(pointsEarned, numTotal, numCompleted, numFailed)
   showScoreGui(pointsEarned, numTotal, numCompleted, numFailed)
   showLobbyGui()
-  isLocalPlayerInGameSession = false
+  setIsLocalPlayerInGameSession(false)
 
-  if alreadyInSessionCountdownFrame.Active == true then
-    alreadyInSessionCountdownFrame.Active = false
-    alreadyInSessionCountdownFrame.Visible = false
-  end
+  hideAlreadyInSessionCountdownFrame()
 end
 SessionResultsEndedEvent.OnClientEvent:Connect(showSessionResults)
 
 local function hideLobbyGui()
   lobbyScreenGui.Enabled = false
   AvatarGui.Close()
-  isLocalPlayerInGameSession = true
+  setIsLocalPlayerInGameSession(true)
 
   -- Remove vote thumbnails
   for _, obj in pairs(UserThumbsFolder:GetChildren()) do
@@ -224,9 +244,15 @@ end
 UpdateCharacterEvent.OnClientEvent:Connect(hideAvatarGui)
 
 local function onPlayIconClick()
-  AvatarGui.Close()
-  PlayGui.Toggle()
-  SoundModule.PlayMouseClick(PlayerGui)
+  local isSessionActive = GetSessionStatusFn:InvokeServer()
+  if isSessionActive then
+    -- Wait for session to end
+    ShowMessagePopupBindableEvent:Fire("Wait for session to end", 1.8)
+  else
+    AvatarGui.Close()
+    PlayGui.Toggle()
+    SoundModule.PlayMouseClick(PlayerGui)
+  end
 end
 playIcon.Activated:Connect(onPlayIconClick)
 
@@ -263,32 +289,30 @@ local posOrderedListScaleX = {
   { 0.25, 0.4, 0.55, 0.7 },
 }
 
--- Last votes
-local playerLevelVotesPrevious = {}
-
 -- See Game.server.lua for playerLevelVotes format
 local function onLevelRequestVotesEvent(playerLevelVotes)
   print("Received LevelRequestVotesEvent")
 
   -- If player is in game session, then do nothing
-  if isLocalPlayerInGameSession then
+  if isLocalPlayerInGameSession() then
     return
   end
 
-  -- If this was triggered by a new player, then use the last vote info
+  -- Check if this was triggered by a new player
   if not playerLevelVotes then
     local isSessionActive = GetSessionStatusFn:InvokeServer()
     if isSessionActive then
       print("Session is active")
       -- Show 'in session' countdown
-      alreadyInSessionCountdownFrame.Active = true
-      alreadyInSessionCountdownFrame.Visible = true
+      showAlreadyInSessionCountdownFrame()
 
       -- Don't show user vote thumbnails
       return
     end
 
-    playerLevelVotes = Util:DeepTableCopy(playerLevelVotesPrevious)
+    -- Request vote info
+    playerLevelVotes = GetLevelRequestVotesFn:InvokeServer()
+    print("playerLevelVotes = GetLevelRequestVotesFn:InvokeServer()")
   end
 
   if true then -- Debug
@@ -296,9 +320,6 @@ local function onLevelRequestVotesEvent(playerLevelVotes)
       print(string.format("  playerLevelVotes: Player %s (%d) votes for %s", pv['PlayerName'], pv['PlayerId'], pv['LevelVote']))
     end
   end
-
-  -- Save votes
-  playerLevelVotesPrevious = Util:DeepTableCopy(playerLevelVotes)
 
   -- Create sorted list of player names and another list with corresponding user IDs
   local playerNames = {}

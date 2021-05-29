@@ -8,9 +8,10 @@ local SoundModule = require(ReplicatedStorage.SoundModule)
 local Promise = require(ReplicatedStorage.Vendor.Promise)
 
 -- Events
-local SessionCountdownBeginEvent = ReplicatedStorage.Events.SessionCountdownBegin
-local SessionEndedEvent = ReplicatedStorage.Events.SessionEnded
-local ShowMessagePopupEvent = ReplicatedStorage.Events.ShowMessagePopup
+local SessionCountdownBeginEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionCountdownBegin")
+local SessionEndedEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionEnded")
+local ShowMessagePopupEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ShowMessagePopup")
+local ShowMessagePopupBindableEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ShowMessagePopupBindable")
 
 local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
@@ -22,6 +23,10 @@ local Character = Player.Character or Player.CharacterAdded:wait()
 local FONT_COLOR_DEFAULT = Color3.fromRGB(255, 255, 0)
 local FONT_BORDER_COLOR_DEFAULT = Color3.fromRGB(170, 170, 0)
 
+
+local function isLocalPlayerInGameSession()
+  return Player:GetAttribute(Globals.PLAYER_IS_IN_GAME_SESSION_ATTRIBUTE_NAME)
+end
 
 local function showMessagePopup(message, duration)
   SoundModule.PlayAssetIdStr(Character, SoundModule.SOUND_ID_ERROR, 0.5)
@@ -55,6 +60,7 @@ local function showMessagePopup(message, duration)
   end)
 end
 ShowMessagePopupEvent.OnClientEvent:Connect(showMessagePopup)
+ShowMessagePopupBindableEvent.Event:Connect(showMessagePopup)
 
 
 local function getAnnouncementTextLabel(screenGui, message, backgroundTransparency, scale)
@@ -101,20 +107,24 @@ end
 
 -- Show "ready, set, go" countdown
 local function showSessionCountdownBeginAnnouncement()
-  showAnnouncement("Ready", true, 0.9)
-  Util:RealWait(Globals.READY_SET_GO_COUNTDOWN_SEC / 4)
-  showAnnouncement("3", true, 0.9)
-  Util:RealWait(Globals.READY_SET_GO_COUNTDOWN_SEC / 4)
-  showAnnouncement("2", true, 0.9)
-  Util:RealWait(Globals.READY_SET_GO_COUNTDOWN_SEC / 4)
-  showAnnouncement("1", true, 0.9)
-  Util:RealWait(Globals.READY_SET_GO_COUNTDOWN_SEC / 4)
-  showAnnouncement("Go!", true, 0.9)
+  if isLocalPlayerInGameSession() then
+    showAnnouncement("Ready", true, 0.9)
+    Util:RealWait(Globals.READY_SET_GO_COUNTDOWN_SEC / 4)
+    showAnnouncement("3", true, 0.9)
+    Util:RealWait(Globals.READY_SET_GO_COUNTDOWN_SEC / 4)
+    showAnnouncement("2", true, 0.9)
+    Util:RealWait(Globals.READY_SET_GO_COUNTDOWN_SEC / 4)
+    showAnnouncement("1", true, 0.9)
+    Util:RealWait(Globals.READY_SET_GO_COUNTDOWN_SEC / 4)
+    showAnnouncement("Go!", true, 0.9)
+  end
 end
 SessionCountdownBeginEvent.OnClientEvent:Connect(showSessionCountdownBeginAnnouncement)
 
 local function showSessionEndedAnnouncement()
-  showAnnouncement("Time's Up", true, 1.5)
+  if isLocalPlayerInGameSession() then
+    showAnnouncement("Time's Up", true, 1.5)
+  end
 end
 SessionEndedEvent.OnClientEvent:Connect(showSessionEndedAnnouncement)
 

@@ -64,7 +64,9 @@ function PlayGui.Initialize()
     local levelNames = {}
     -- Sort level names
     for _, levelFolder in pairs(levelFolders) do
-      table.insert(levelNames, levelFolder.Name)
+      if levelFolder:IsA("Folder") then
+        table.insert(levelNames, levelFolder.Name)
+      end
     end
     table.sort(levelNames)
     -- Add level names to gui

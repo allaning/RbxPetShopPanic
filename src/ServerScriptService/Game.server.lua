@@ -18,6 +18,7 @@ local TransformerClass = require(ReplicatedStorage.Transformers.Transformer)
 local Session = require(ReplicatedStorage.Session)
 
 local GetSessionStatusFn = ReplicatedStorage.RemoteFunctions.GetSessionStatus
+local GetLevelRequestVotesFn = ReplicatedStorage.RemoteFunctions.GetLevelRequestVotes
 local ConsumerInputReceivedEvent = ReplicatedStorage.Events.ConsumerInputReceived
 local ConsumerNewRequestEvent = ReplicatedStorage.Events.ConsumerNewRequest
 local ConsumerTimerExpiredEvent = ReplicatedStorage.Events.ConsumerTimerExpired
@@ -428,6 +429,7 @@ local function onGameStart(winningLevel)
   local map = MapManager.InitializeMap(winningLevel)
 
   session = Session.new()
+  session:SetIsActive(true)
 
   -- Set current players 'in game' status
   for _, plrMgr in pairs(playerManagers) do
@@ -479,10 +481,11 @@ local function onGameStart(winningLevel)
 
     -- Session ended
     SessionEndedEvent:FireAllClients()
+    print("SessionEndedEvent:FireAllClients() **************************aing")
     Util:RealWait(Session.POST_GAME_COOLDOWN_PERIOD_SEC)
 
     -- Update player points
-    local pointsEarned, numTotal, numCompleted, numFailed = session:GetStats(0) -- (MapManager.GetNumConsumers())
+    local pointsEarned, numTotal, numCompleted, numFailed = session:GetStats(2) -- (MapManager.GetNumConsumers())
     for _, plrMgr in pairs(playerManagers) do
       if plrMgr:GetIsInGameSession() == true then
         plrMgr:IncrementPoints(pointsEarned)
@@ -493,11 +496,13 @@ local function onGameStart(winningLevel)
         end
       end
     end
+    print(" 2 :FireAllClients() **************************aing")
 
     -- Set players 'in game' status
     for _, plrMgr in pairs(playerManagers) do
       plrMgr:SetIsInGameSession(false)
     end
+    print(" 3 :FireAllClients() **************************aing")
 
     -- Spawn players into lobby
     for idx, player in pairs(playerList) do
@@ -521,11 +526,16 @@ local function onGameStart(winningLevel)
         error("Unable to find torso for ".. playerList[idx].Name)
       end
     end
+    print(" 4 :FireAllClients() **************************aing")
 
     LevelRequestVotesEvent:FireAllClients({})  -- Make client show user thumbnails
 
     -- Cleanup
     MapManager.Cleanup(map)
+
+    -- Remove map before allowing players to click the Play icon
+    session:SetIsActive(false)
+    print("session:SetIsActive(false) ********************** aing")
     session = nil
 
   end)
@@ -629,9 +639,16 @@ PlayerRemovingEvent.Event:Connect(onSelectLevelRequestEvent)
 local function getSessionStatus()
   if session then
     return session:GetIsActive()
+  else
+    return false
   end
 end
 GetSessionStatusFn.OnServerInvoke = getSessionStatus
+
+local function getGetLevelRequestVotes()
+  return playerLevelVotes
+end
+GetLevelRequestVotesFn.OnServerInvoke = getGetLevelRequestVotes
 
 Players.PlayerAdded:Connect(function(Player)
   -- Add player to list of PlayerManager instances
@@ -644,6 +661,25 @@ Players.PlayerRemoving:Connect(function(Player)
   -- Remove PlayerManager instance
   for idx, plr in pairs(playerManagers) do
     table.remove(playerManagers, idx)
+  end
+
+  -- Remove from session player list
+  if session then
+    session:RemoveFromPlayerList(Player.Name)
+  end
+
+  -- Check if all players in session left
+  local inSessionCount = 0
+  for _, plr in pairs(playerManagers) do
+    if plr:GetIsInGameSession() then
+      inSessionCount += 1
+    end
+  end
+  if inSessionCount == 0 then
+    -- End the session
+    if session then
+      session:SetDuration(1)
+    end
   end
 end)
 

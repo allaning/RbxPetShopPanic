@@ -9,6 +9,9 @@ local Globals = {
   -- Number of seconds to show 'ready, set, go' countdown
   ['READY_SET_GO_COUNTDOWN_SEC'] = 4,
 
+  -- Keep track of player status
+  ['PLAYER_IS_IN_GAME_SESSION_ATTRIBUTE_NAME'] = "IsLocalPlayerInGameSession",
+
   ['UNINIT_STRING'] = "UNINITIALIZED",
   ['UNINIT_NUMBER'] = -1,
 }
