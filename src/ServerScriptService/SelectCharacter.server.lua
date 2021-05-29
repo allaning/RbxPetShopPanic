@@ -64,12 +64,12 @@ local function transform(char, characterModel)
   end
 end
 
-local function checkSelectCharacterRequest(player, modelName)
+local function checkSelectCharacterRequest(player, folderName, modelName)
   --print("Received SelectCharacterRequestEvent from ".. player.Name.. " for ".. modelName)
   local character = Util:GetCharacterFromPlayer(player)
   if character then
     -- Find model
-    local characterModel = CharactersFolder[modelName]
+    local characterModel = CharactersFolder[folderName][modelName]
     if characterModel then
       transform(character, characterModel)
       return

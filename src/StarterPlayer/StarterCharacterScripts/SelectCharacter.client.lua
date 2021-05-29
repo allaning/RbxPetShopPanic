@@ -96,28 +96,29 @@ local function transform(player, model)
   end
 end
 
-for _, part in pairs(CharactersFolder:GetChildren()) do
-  local debounce = false
-  part.Touched:Connect(function(partTouched)
-    Promise.try(function()
-      if not debounce then
-        debounce = true
-        local characterModel = part:FindFirstChildWhichIsA("Model")
-        if characterModel then
-          --loadCharacter(Player, characterModel)
-          transform(Player, characterModel)
-
-          Humanoid.Died:Connect(function()
-            Util:RealWait(3) -- seconds between death and respawn
-            --loadCharacter(Player, characterModel)
-            transform(Player, characterModel)
-          end)
-        end
-
-        Util:RealWait(2)
-        debounce = false
-      end
-    end)
-  end)
-end
+-- I don't think this is needed
+--for _, part in pairs(CharactersFolder:GetChildren()) do
+--  local debounce = false
+--  part.Touched:Connect(function(partTouched)
+--    Promise.try(function()
+--      if not debounce then
+--        debounce = true
+--        local characterModel = part:FindFirstChildWhichIsA("Model")
+--        if characterModel then
+--          --loadCharacter(Player, characterModel)
+--          transform(Player, characterModel)
+--
+--          Humanoid.Died:Connect(function()
+--            Util:RealWait(3) -- seconds between death and respawn
+--            --loadCharacter(Player, characterModel)
+--            transform(Player, characterModel)
+--          end)
+--        end
+--
+--        Util:RealWait(2)
+--        debounce = false
+--      end
+--    end)
+--  end)
+--end
 

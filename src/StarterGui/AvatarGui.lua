@@ -59,6 +59,7 @@ function AvatarGui.Initialize()
       }, AvatarGui.Frame)
     local uiGridLayout = Util:CreateInstance("UIGridLayout", {
         CellSize = UDim2.new(CHARACTER_THUMB_SIZE_SCALE_X, 0, CHARACTER_THUMB_SIZE_SCALE_Y, 0),
+        SortOrder = Enum.SortOrder.LayoutOrder,
       }, scrollingFrame)
 
     -- Info frame
@@ -100,30 +101,46 @@ function AvatarGui.Initialize()
       }, charEquipBtn)
 
     -- Add character buttons
-    for idx, model in pairs(CharacterFolder:GetChildren()) do
-      --print("CharacterFolder: ".. model.Name)
-      local charFrame = Util:CreateInstance("Frame", {
-          Name = model.Name.. "Frame",
-          BackgroundTransparency = 1.0,
-        }, scrollingFrame)
-      local viewport = ViewportFrameFactory.GetViewportFrame(model, Vector3.new(0, 2.5, -6.0))
-      viewport.Parent = charFrame
+    -- Get sorted list of subdirectories
+    local subdirNameList = {}
+    for _, subdir in pairs(CharacterFolder:GetChildren()) do
+      table.insert(subdirNameList, subdir.Name)
+    end
+    table.sort(subdirNameList)
+    local layoutOrder = 1  -- Specify order for UIGridLayout
+    for subdirIdx = 1, #subdirNameList do
+      local subdirCharacters = CharacterFolder:WaitForChild(subdirNameList[subdirIdx]):GetChildren()
+      for idx = 1, #subdirCharacters do
+        --print("CharacterFolder: ".. model.Name)
+        local model = subdirCharacters[idx]
+        print("Add character button: ".. model.Name)
+        local charFrame = Util:CreateInstance("Frame", {
+            Name = model.Name.. "Frame",
+            BackgroundTransparency = 1.0,
+            LayoutOrder = layoutOrder,
+          }, scrollingFrame)
+        local viewport = ViewportFrameFactory.GetViewportFrame(model, Vector3.new(0, 2.5, -6.0))
+        viewport.Parent = charFrame
 
-      local charButton = Util:CreateInstance("TextButton", {
-          Name = "Button",
-          Position = UDim2.new(0.0, 0, 0.0, 0),
-          Size = UDim2.new(1.0, 0, 1.0, 0),
-          Transparency = 1.0,
-        }, charFrame)
-      charButton.Activated:Connect(function()
-          charTitle.Text = model.Name
-          SoundModule.PlayMouseClick(PlayerGui)
-
-          charEquipBtn.Activated:Connect(function()
+        local charButton = Util:CreateInstance("TextButton", {
+            Name = "Button",
+            Position = UDim2.new(0.0, 0, 0.0, 0),
+            Size = UDim2.new(1.0, 0, 1.0, 0),
+            Transparency = 1.0,
+          }, charFrame)
+        charButton.Activated:Connect(function()
+            charTitle.Text = model.Name
             SoundModule.PlayMouseClick(PlayerGui)
-            SelectCharacterRequestEvent:FireServer(charTitle.Text)
+
+            local connection
+            connection = charEquipBtn.Activated:Connect(function()
+              SoundModule.PlayMouseClick(PlayerGui)
+              SelectCharacterRequestEvent:FireServer(subdirNameList[subdirIdx], charTitle.Text)
+              connection:Disconnect()
+            end)
           end)
-        end)
+        layoutOrder += 1
+      end
     end  -- CharacterFolder
 
   end
