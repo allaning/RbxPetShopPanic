@@ -10,8 +10,18 @@ local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
 
--- Swing It
- local MUSIC_ID_SWING_IT = "rbxassetid://1843313385"  -- https://www.roblox.com/library/1843313385/Swing-it
+local music = {
+  ['Level 1'] = {
+    "rbxassetid://1843313385",  -- https://www.roblox.com/library/1843313385/Swing-it
+    "rbxassetid://1846707136",  -- https://www.roblox.com/library/1846707136/Baby-Dwarf
+    "rbxassetid://1841212514",  -- https://www.roblox.com/library/1841212514/Shop-til-You-Flop-a
+  },
+  ['Level 2'] = {
+    "rbxassetid://1846442728",  -- https://www.roblox.com/library/refer/1846442728/The-Entertainer
+    "rbxassetid://1844779713",  -- https://www.roblox.com/library/1844779713/Boulevard
+    "rbxassetid://1845765957",  -- https://www.roblox.com/library/1845765957/Happy-Music-Happy-People
+  },
+}
 
 
 local currentMusic = nil
@@ -43,9 +53,11 @@ local function stopMusic()
 end
 
 
-local function playSessionMusic()
-  -- TODO: Choose music
-  playMusic(PlayerGui, MUSIC_ID_SWING_IT)
+local function playSessionMusic(duration, levelName)
+  -- Choose music
+  local rand = Random.new()
+  local randIdx = rand:NextInteger(1, #(music[levelName]))
+  playMusic(PlayerGui, music[levelName][randIdx])
 end
 SessionCountdownBeginEvent.OnClientEvent:Connect(playSessionMusic)
 

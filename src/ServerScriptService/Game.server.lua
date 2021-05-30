@@ -507,7 +507,7 @@ local function onGameStart(winningLevel)
   -- Start
   Promise.try(function()
     --print("session:GetDuration()=".. tostring(session:GetDuration())) --aing
-    SessionCountdownBeginEvent:FireAllClients(session:GetDuration())
+    SessionCountdownBeginEvent:FireAllClients(session:GetDuration(), winningLevel)
     Util:RealWait(Globals.READY_SET_GO_COUNTDOWN_SEC)  -- Wait for "Ready" countdown
     SessionBeginEvent:FireAllClients()
 

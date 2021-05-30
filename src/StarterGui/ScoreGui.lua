@@ -308,7 +308,7 @@ function ScoreGui.GetCopy(pointsEarned, numTotal, numCompleted, numFailed, playe
         Size = UDim2.new(0.5, 0, 0.18, 0),
         BackgroundTransparency = 1.0,
         TextScaled = true,
-        Text = "Assists",
+        Text = "Most Assists",
         TextColor3 = Themes[Themes.CurrentTheme].TextColor,
         Font = Enum.Font.FredokaOne,
         ZIndex = zIndex,
