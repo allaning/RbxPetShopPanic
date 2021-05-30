@@ -10,6 +10,7 @@ local SessionCountdownBeginEvent = ReplicatedStorage:WaitForChild("Events"):Wait
 local SessionUpdateTimerCountdownEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionUpdateTimerCountdown")
 local SessionEndedEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionEnded")
 local SessionScoreEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionScore")
+local ShowAnnouncementBindableEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ShowAnnouncement")
 
 local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
@@ -110,9 +111,16 @@ local function hideScoreGui()
 end
 SessionEndedEvent.OnClientEvent:Connect(hideScoreGui)
 
-local function updateScore(score)
+local function updateScore(increment)
   if scoreTextLabel then
-    scoreTextLabel.Text = tostring(score)
+    -- Show announcement
+    local announcementMsg = "+".. tostring(increment)
+    ShowAnnouncementBindableEvent:Fire(announcementMsg, true, 1.0)
+
+    -- Update score gui
+    local scoreNumber = tonumber(scoreTextLabel.Text)
+    scoreNumber += increment
+    scoreTextLabel.Text = tostring(scoreNumber)
   end
 end
 SessionScoreEvent.OnClientEvent:Connect(updateScore)

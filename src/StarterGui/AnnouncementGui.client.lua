@@ -12,6 +12,7 @@ local SessionCountdownBeginEvent = ReplicatedStorage:WaitForChild("Events"):Wait
 local SessionEndedEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionEnded")
 local ShowMessagePopupEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ShowMessagePopup")
 local ShowMessagePopupBindableEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ShowMessagePopupBindable")
+local ShowAnnouncementBindableEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ShowAnnouncement")
 
 local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
@@ -84,11 +85,8 @@ local function getAnnouncementTextLabel(screenGui, message, backgroundTransparen
 end
 
 local function showAnnouncement(message, isBackgroundTransparent, durationSec)
-  if isBackgroundTransparent == nil then
-    isBackgroundTransparent = true
-  end
-
-  local duration = durationSec or 3.0
+  isBackgroundTransparent = isBackgroundTransparent or true
+  local duration = durationSec or 2.0
 
   local announceGui = Util:CreateInstance("ScreenGui", {
       Name = "AnnouncementGui",
@@ -103,7 +101,7 @@ local function showAnnouncement(message, isBackgroundTransparent, durationSec)
     announceGui:Destroy()
   end)
 end
-
+ShowAnnouncementBindableEvent.Event:Connect(showAnnouncement)
 
 -- Show "ready, set, go" countdown
 local function showSessionCountdownBeginAnnouncement()

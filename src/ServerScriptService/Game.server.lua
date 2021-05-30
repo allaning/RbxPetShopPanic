@@ -188,7 +188,7 @@ local function handleConsumerPrompt(consumerModel, player)
           ConsumerInputReceivedEvent:FireAllClients(consumerModel, true)
           AnimationModule.PlayVictoryAnimation(consumerModel)
           session:IncrementScore(ProductClass.DEFAULT_POINTS)
-          SessionScoreEvent:FireAllClients(session:GetScore())
+          SessionScoreEvent:FireAllClients(ProductClass.DEFAULT_POINTS)
           session:IncrementNumCompleted()
 
           -- Keep track of player points

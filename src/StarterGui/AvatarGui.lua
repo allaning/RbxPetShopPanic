@@ -1,3 +1,11 @@
+-- Avatars
+--[[
+Avatar rules:
+  - Should be in ReplicatedStorage/Characters/XX_Description
+  - Top level must be a Character with PrimaryPart HumanoidRootPart
+  - Optional: Add a Number Attribute named CostPoints to specify Points required to equip Character
+]]--
+
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Themes = require(ReplicatedStorage.Themes)
 local ViewportFrameFactory = require(ReplicatedStorage.Gui.ViewportFrameFactory)
@@ -82,6 +90,18 @@ function AvatarGui.Initialize()
         Text = "",  -- This will be set to the selected model name and used in the remote event
         TextColor3 = Themes[Themes.CurrentTheme].TextColor,
         Font = Enum.Font.FredokaOne,
+      }, infoFrame)
+    local charDescription = Util:CreateInstance("TextLabel", {
+        Name = "CharacterDescription",
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Position = UDim2.new(0.5, 0, 0.5, 0),
+        Size = UDim2.new(0.8, 0, 0.6, 0),
+        BackgroundTransparency = 1.0,
+        TextScaled = false,
+        Text = "",  -- This will be set when a character icon is clicked
+        TextColor3 = Themes[Themes.CurrentTheme].TextColor,
+        Font = Enum.Font.FredokaOne,
+        TextSize = 20,
       }, infoFrame)
     local charEquipBtn = Util:CreateInstance("TextButton", {
         Name = "EquipCharacter",
