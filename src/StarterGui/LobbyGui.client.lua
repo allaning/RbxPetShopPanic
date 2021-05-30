@@ -21,7 +21,7 @@ local SessionMapLevelSelectedEvent = ReplicatedStorage:WaitForChild("Events"):Wa
 local SessionCountdownBeginEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionCountdownBegin")
 local SessionUpdateTimerCountdownEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionUpdateTimerCountdown")
 local SessionEndedEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionEnded")
-local SessionResultsEndedEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionResults")
+local SessionResultsEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionResults")
 local UpdateCharacterEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("UpdateCharacter")
 local ShowMessagePopupBindableEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ShowMessagePopupBindable")
 
@@ -189,13 +189,13 @@ SessionUpdateTimerCountdownEvent.OnClientEvent:Connect(updateAlreadyInSessionCou
 
 
 -- Show score gui (takes up whole screen) on top of other guis
-local function showScoreGui(pointsEarned, numTotal, numCompleted, numFailed)
+local function showScoreGui(pointsEarned, numTotal, numCompleted, numFailed, playerWithBestScore, playerWithBestAssists)
   Promise.try(function()
     local scoreScreenGui = Util:CreateInstance("ScreenGui", {
         Name = "ScoreScreenGui",
         DisplayOrder = 1,
       }, PlayerGui)
-    local scoreGui = ScoreGui.GetCopy(pointsEarned, numTotal, numCompleted, numFailed)
+    local scoreGui = ScoreGui.GetCopy(pointsEarned, numTotal, numCompleted, numFailed, playerWithBestScore, playerWithBestAssists)
     scoreGui.Parent = scoreScreenGui 
   end)
 end
@@ -205,14 +205,14 @@ local function showLobbyGui()
   lobbyScreenGui.Enabled = true
 end
 
-local function showSessionResults(pointsEarned, numTotal, numCompleted, numFailed)
-  showScoreGui(pointsEarned, numTotal, numCompleted, numFailed)
+local function showSessionResults(pointsEarned, numTotal, numCompleted, numFailed, playerWithBestScore, playerWithBestAssists)
+  showScoreGui(pointsEarned, numTotal, numCompleted, numFailed, playerWithBestScore, playerWithBestAssists)
   showLobbyGui()
   setIsLocalPlayerInGameSession(false)
 
   hideAlreadyInSessionCountdownFrame()
 end
-SessionResultsEndedEvent.OnClientEvent:Connect(showSessionResults)
+SessionResultsEvent.OnClientEvent:Connect(showSessionResults)
 
 local function hideLobbyGui()
   lobbyScreenGui.Enabled = false

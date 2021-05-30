@@ -35,7 +35,7 @@ function ViewportFrameFactory.GetViewportFrame(model, cameraPositionOffset)
       viewportCamera.Parent = viewportFrame
       viewportCamera.CFrame = CFrame.new(cameraPosition, part.Position + targetPositionOffset)
 
-      return viewportFrame
+      return viewportFrame, clone
     end
   else
     error("Input model is nil; Unable to create ViewportFrame")

@@ -15,17 +15,25 @@ function PlayerManager.new(player)
   -- Reference to this instance's player
   self.Player = player
   self.PlayerName = player.Name
-  self.LeaderstatsFolder = nil
-  self.PointsInstance = nil
-  self.IsInGameSession = false
 
-  self.Points = 0
+  self.LeaderstatsFolder = nil
+  self.PointsInstance = nil  -- Leaderstats points (versus per session points)
+
+  self.Points = 0  -- Cached Points; When changing Points, also update PointsInstance
+
+  self.IsInGameSession = false
+  self.SessionScore = 0  -- Per session score for this player
+  self.SessionAssists = 0  -- Per session transformations made for this player
 
   return self
 end
 
 function PlayerManager:GetPlayer()
   return self.Player
+end
+
+function PlayerManager:GetPlayerName()
+  return self.PlayerName
 end
 
 -- Create leaderstats for Player
@@ -62,14 +70,6 @@ function PlayerManager:SetPoints(points)
   end
 end
 
-function PlayerManager:GetIsInGameSession()
-  return self.IsInGameSession
-end
-
-function PlayerManager:SetIsInGameSession(isInGameSession)
-  self.IsInGameSession = isInGameSession
-end
-
 function PlayerManager:IncrementPoints(points)
   self.Points += points
 
@@ -78,6 +78,40 @@ function PlayerManager:IncrementPoints(points)
   else
     error("PlayerManager:IncrementPoints: self.PointsInstance not initialized")
   end
+end
+
+function PlayerManager:GetIsInGameSession()
+  return self.IsInGameSession
+end
+
+function PlayerManager:SetIsInGameSession(isInGameSession)
+  self.IsInGameSession = isInGameSession
+end
+
+function PlayerManager:GetSessionScore()
+  return self.SessionScore
+end
+
+function PlayerManager:SetSessionScore(sessionScore)
+  self.SessionScore = sessionScore
+end
+
+function PlayerManager:IncrementSessionScore(increment)
+  local incr = increment or 1
+  self.SessionScore += incr
+end
+
+function PlayerManager:GetSessionAssists()
+  return self.SessionAssists
+end
+
+function PlayerManager:SetSessionAssists(sessionAssists)
+  self.SessionAssists = sessionAssists
+end
+
+function PlayerManager:IncrementSessionAssists(increment)
+  local incr = increment or 1
+  self.SessionAssists += incr
 end
 
 

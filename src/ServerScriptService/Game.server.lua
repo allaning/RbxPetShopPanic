@@ -50,6 +50,34 @@ local playerLevelVotes = {}
 -- List of PlayerManager instances
 local playerManagers = {}
 
+-- Get PlayerManager for specified Player.Name
+local function getPlayerManagerFromList(playerName)
+  for _, plrMgr in pairs(playerManagers) do
+    if plrMgr:GetPlayerName() == playerName then
+      return plrMgr
+    end
+  end
+end
+
+-- Get player with highest score and assists
+local function getPlayersWithBestScoreAndAssists()
+  local playerWithBestScore = nil
+  local playerWithBestAssists = nil
+  local bestScore = 0
+  local bestAssists = 0
+  for _, plrMgr in pairs(playerManagers) do
+    if plrMgr:GetSessionScore() > bestScore then
+      bestScore = plrMgr:GetSessionScore()
+      playerWithBestScore = plrMgr:GetPlayer()
+    end
+    if plrMgr:GetSessionAssists() > bestAssists then
+      bestAssists = plrMgr:GetSessionAssists()
+      playerWithBestAssists = plrMgr:GetPlayer()
+    end
+  end
+  return playerWithBestScore, playerWithBestAssists
+end
+
 local session = nil
 local lobbySpawn = nil
 
@@ -162,6 +190,13 @@ local function handleConsumerPrompt(consumerModel, player)
           session:IncrementScore(ProductClass.DEFAULT_POINTS)
           SessionScoreEvent:FireAllClients(session:GetScore())
           session:IncrementNumCompleted()
+
+          -- Keep track of player points
+          local plrMgr = getPlayerManagerFromList(player.Name)
+          if plrMgr then
+            plrMgr:IncrementSessionScore(1)
+          end
+
           print("Score=".. tostring(session:GetScore()))
         else
           -- Wrong input
@@ -256,6 +291,13 @@ local function handleTransformerPrompt(transformerModel, player)
           transformerProductsFolder.Name = "Products"
         end
         currentProduct.Parent = transformerProductsFolder
+
+        -- Keep track of player assists
+        local plrMgr = getPlayerManagerFromList(player.Name)
+        if plrMgr then
+          plrMgr:IncrementSessionAssists(1)
+        end
+
       end
     end
 
@@ -481,10 +523,20 @@ local function onGameStart(winningLevel)
 
     -- Session ended
     SessionEndedEvent:FireAllClients()
-    print("SessionEndedEvent:FireAllClients() **************************aing")
     Util:RealWait(Session.POST_GAME_COOLDOWN_PERIOD_SEC)
 
     -- Update player points
+    local playerWithBestScore, playerWithBestAssists = getPlayersWithBestScoreAndAssists()
+    local playerWithBestScoreCharacter = nil
+    if playerWithBestScore then
+      playerWithBestScoreCharacter = Util:GetCharacterFromPlayer(playerWithBestScore)
+      playerWithBestScoreCharacter.Archivable = true
+    end
+    local playerWithBestAssistsCharacter = nil
+    if playerWithBestAssists then
+      playerWithBestAssistsCharacter = Util:GetCharacterFromPlayer(playerWithBestAssists)
+      playerWithBestAssistsCharacter.Archivable = true
+    end
     local pointsEarned, numTotal, numCompleted, numFailed = session:GetStats(2) -- (MapManager.GetNumConsumers())
     for _, plrMgr in pairs(playerManagers) do
       if plrMgr:GetIsInGameSession() == true then
@@ -492,17 +544,18 @@ local function onGameStart(winningLevel)
         local plr = plrMgr:GetPlayer()
         if plr then
           -- Show score gui
-          SessionResultsEvent:FireClient(plr, pointsEarned, numTotal, numCompleted, numFailed)
+          -- TODO Show MVP and Most Assists
+          SessionResultsEvent:FireClient(plr, pointsEarned, numTotal, numCompleted, numFailed, playerWithBestScoreCharacter, playerWithBestAssistsCharacter)
         end
       end
     end
-    print(" 2 :FireAllClients() **************************aing")
 
-    -- Set players 'in game' status
+    -- Set PlayerManager status
     for _, plrMgr in pairs(playerManagers) do
       plrMgr:SetIsInGameSession(false)
+      plrMgr:SetSessionScore(0)
+      plrMgr:SetSessionAssists(0)
     end
-    print(" 3 :FireAllClients() **************************aing")
 
     -- Spawn players into lobby
     for idx, player in pairs(playerList) do
@@ -526,7 +579,6 @@ local function onGameStart(winningLevel)
         error("Unable to find torso for ".. playerList[idx].Name)
       end
     end
-    print(" 4 :FireAllClients() **************************aing")
 
     LevelRequestVotesEvent:FireAllClients({})  -- Make client show user thumbnails
 
@@ -535,7 +587,6 @@ local function onGameStart(winningLevel)
 
     -- Remove map before allowing players to click the Play icon
     session:SetIsActive(false)
-    print("session:SetIsActive(false) ********************** aing")
     session = nil
 
   end)

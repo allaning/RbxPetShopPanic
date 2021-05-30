@@ -36,7 +36,7 @@ local function getIcon(imageId, parent)
   return pointsIcon
 end
 
-function ScoreGui.GetCopy(pointsEarned, numTotal, numCompleted, numFailed)
+function ScoreGui.GetCopy(pointsEarned, numTotal, numCompleted, numFailed, playerWithBestScore, playerWithBestAssists)
   if pointsEarned then
     local zIndex = 5
     ScoreGui.BackgroundFrame = Util:CreateInstance("Frame", {
@@ -60,7 +60,6 @@ function ScoreGui.GetCopy(pointsEarned, numTotal, numCompleted, numFailed)
     zIndex += 1
     ScoreGui.Frame.ZIndex = zIndex
 
-    -- TODO show stars
     -- Points Frame
     zIndex += 1
     local pointsFrame = Util:CreateInstance("Frame", {
@@ -210,6 +209,133 @@ function ScoreGui.GetCopy(pointsEarned, numTotal, numCompleted, numFailed)
     local uiCornerShadow = Util:CreateInstance("UICorner", {
         CornerRadius = UDim.new(0, 10),
       }, okBtnShadow)
+
+
+
+    -- MVP
+
+    zIndex += 1
+    local mvpFrame = Util:CreateInstance("Frame", {
+        Name = "MvpFrame",
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Position = UDim2.new(0.26, 0, 0.5, 0),
+        Size = UDim2.new(0.45, 0, 0.9, 0),
+        BackgroundTransparency = 1.0,
+        BackgroundColor3 = Themes[Themes.CurrentTheme].InnerFrameColor,
+        BorderSizePixel = 0,
+        --BorderColor3 = Themes[Themes.CurrentTheme].BorderColor,
+        ZIndex = zIndex,
+      }, ScoreGui.Frame)
+    local uiCornerPointsFrame = Util:CreateInstance("UICorner", {
+        CornerRadius = UDim.new(0, 10),
+      }, mvpFrame)
+
+    -- MVP Title
+    zIndex += 1
+    local mvpTitle = Util:CreateInstance("TextLabel", {
+        Name = "MvpTitle",
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Position = UDim2.new(0.25, 0, 0.14, 0),
+        Size = UDim2.new(0.5, 0, 0.18, 0),
+        BackgroundTransparency = 1.0,
+        TextScaled = true,
+        Text = "MVP",
+        TextColor3 = Themes[Themes.CurrentTheme].TextColor,
+        Font = Enum.Font.FredokaOne,
+        ZIndex = zIndex,
+      }, mvpFrame)
+
+    zIndex += 1
+    if playerWithBestScore then
+      local viewport, scoreClone = ViewportFrameFactory.GetViewportFrame(playerWithBestScore, Vector3.new(0, 2.5, -6.0))
+      viewport.Position = UDim2.new(0.25, 0, 0.6, 0)
+      viewport.BackgroundTransparency = 1.0
+      viewport.ZIndex = zIndex
+      viewport.Parent = mvpFrame
+
+      -- Animate (can't get this to work)
+      --scoreClone.Parent = Workspace
+      --local human = scoreClone:FindFirstChildOfClass("Humanoid")
+      --if human then
+      --  print("aing *****************if human then")
+      --  local animation = Instance.new("Animation")
+      --  animation.AnimationId = "rbxassetid://656117400"
+      --  local animationTrack = human:LoadAnimation(animation)
+      --  animationTrack:Play()
+      --end
+      --scoreClone.Parent = viewport
+    else
+      zIndex += 1
+      local sadFace = Util:CreateInstance("TextLabel", {
+          Name = "sadFace",
+          AnchorPoint = Vector2.new(0.5, 0.5),
+          Position = UDim2.new(0.25, 0, 0.6, 0),
+          Size = UDim2.new(0.5, 0, 0.5, 0),
+          BackgroundTransparency = 1.0,
+          TextScaled = true,
+          Text = ";-;",
+          TextColor3 = Themes[Themes.CurrentTheme].TextColor,
+          Font = Enum.Font.FredokaOne,
+          ZIndex = zIndex,
+        }, mvpFrame)
+    end
+
+
+    -- Assists
+
+    zIndex += 1
+    local assistsFrame = Util:CreateInstance("Frame", {
+        Name = "AssistsFrame",
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Position = UDim2.new(0.46, 0, 0.5, 0),
+        Size = UDim2.new(0.3, 0, 0.7, 0),
+        BackgroundTransparency = 1.0,
+        BackgroundColor3 = Themes[Themes.CurrentTheme].InnerFrameColor,
+        BorderSizePixel = 0,
+        --BorderColor3 = Themes[Themes.CurrentTheme].BorderColor,
+        ZIndex = zIndex,
+      }, ScoreGui.Frame)
+    local uiCornerPointsFrame = Util:CreateInstance("UICorner", {
+        CornerRadius = UDim.new(0, 10),
+      }, assistsFrame)
+
+    -- Assists Title
+    zIndex += 1
+    local assistsTitle = Util:CreateInstance("TextLabel", {
+        Name = "AssistsTitle",
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Position = UDim2.new(0.25, 0, 0.14, 0),
+        Size = UDim2.new(0.5, 0, 0.18, 0),
+        BackgroundTransparency = 1.0,
+        TextScaled = true,
+        Text = "Assists",
+        TextColor3 = Themes[Themes.CurrentTheme].TextColor,
+        Font = Enum.Font.FredokaOne,
+        ZIndex = zIndex,
+      }, assistsFrame)
+
+    zIndex += 1
+    if playerWithBestAssists then
+      local viewport, assistsClone = ViewportFrameFactory.GetViewportFrame(playerWithBestAssists, Vector3.new(0, 2.5, -6.0))
+      viewport.Position = UDim2.new(0.25, 0, 0.6, 0)
+      viewport.BackgroundTransparency = 1.0
+      viewport.ZIndex = zIndex
+      viewport.Parent = assistsFrame
+    else
+      zIndex += 1
+      local sadFace = Util:CreateInstance("TextLabel", {
+          Name = "sadFace",
+          AnchorPoint = Vector2.new(0.5, 0.5),
+          Position = UDim2.new(0.25, 0, 0.6, 0),
+          Size = UDim2.new(0.5, 0, 0.5, 0),
+          BackgroundTransparency = 1.0,
+          TextScaled = true,
+          Text = ";-;",
+          TextColor3 = Themes[Themes.CurrentTheme].TextColor,
+          Font = Enum.Font.FredokaOne,
+          ZIndex = zIndex,
+        }, assistsFrame)
+    end
 
   end
   return ScoreGui.BackgroundFrame

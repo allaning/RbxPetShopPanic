@@ -113,7 +113,6 @@ function AvatarGui.Initialize()
       for idx = 1, #subdirCharacters do
         --print("CharacterFolder: ".. model.Name)
         local model = subdirCharacters[idx]
-        print("Add character button: ".. model.Name)
         local charFrame = Util:CreateInstance("Frame", {
             Name = model.Name.. "Frame",
             BackgroundTransparency = 1.0,
