@@ -33,6 +33,7 @@ local SessionResultsEvent = ReplicatedStorage.Events.SessionResults
 local SessionScoreEvent = ReplicatedStorage.Events.SessionScore
 local ShowMessagePopupEvent = ReplicatedStorage.Events.ShowMessagePopup
 local PlayerRemovingEvent = ReplicatedStorage.Events.PlayerRemoving
+local GetPlayerManagerInstanceBindableFn = ServerScriptService.GetPlayerManagerInstanceBindableFn
 
 local Players = game:GetService("Players")
 
@@ -52,31 +53,10 @@ local playerManagers = {}
 
 -- Get PlayerManager for specified Player.Name
 local function getPlayerManagerFromList(playerName)
-  for _, plrMgr in pairs(playerManagers) do
-    if plrMgr:GetPlayerName() == playerName then
-      return plrMgr
-    end
-  end
+  return PlayerManager.GetPlayerManagerFromList(playerManagers, playerName)
 end
+GetPlayerManagerInstanceBindableFn.OnInvoke = getPlayerManagerFromList
 
--- Get player with highest score and assists
-local function getPlayersWithBestScoreAndAssists()
-  local playerWithBestScore = nil
-  local playerWithBestAssists = nil
-  local bestScore = 0
-  local bestAssists = 0
-  for _, plrMgr in pairs(playerManagers) do
-    if plrMgr:GetSessionScore() > bestScore then
-      bestScore = plrMgr:GetSessionScore()
-      playerWithBestScore = plrMgr:GetPlayer()
-    end
-    if plrMgr:GetSessionAssists() > bestAssists then
-      bestAssists = plrMgr:GetSessionAssists()
-      playerWithBestAssists = plrMgr:GetPlayer()
-    end
-  end
-  return playerWithBestScore, playerWithBestAssists
-end
 
 local session = nil
 local lobbySpawn = nil
@@ -526,7 +506,7 @@ local function onGameStart(winningLevel)
     Util:RealWait(Session.POST_GAME_COOLDOWN_PERIOD_SEC)
 
     -- Update player points
-    local playerWithBestScore, playerWithBestAssists = getPlayersWithBestScoreAndAssists()
+    local playerWithBestScore, playerWithBestAssists = PlayerManager.GetPlayersWithBestScoreAndAssists(playerManagers)
     local playerWithBestScoreCharacter = nil
     if playerWithBestScore then
       playerWithBestScoreCharacter = Util:GetCharacterFromPlayer(playerWithBestScore)
@@ -543,8 +523,7 @@ local function onGameStart(winningLevel)
         plrMgr:IncrementPoints(pointsEarned)
         local plr = plrMgr:GetPlayer()
         if plr then
-          -- Show score gui
-          -- TODO Show MVP and Most Assists
+          -- Show score, MVP and Most Assists
           SessionResultsEvent:FireClient(plr, pointsEarned, numTotal, numCompleted, numFailed, playerWithBestScoreCharacter, playerWithBestAssistsCharacter)
         end
       end

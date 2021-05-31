@@ -3,6 +3,9 @@ local Globals = {
   -- Leaderboard stats names
   ['LEADERBOARD_POINTS_NAME'] = "Stars",
 
+  -- Cost for avatar in points (see StarterGui/AvatarGui.lua)
+  ['AVATAR_COST_POINTS_ATTR_NAME'] = "CostPoints",
+
   -- Number of seconds to show random map level vote being selected
   ['RANDOM_LEVEL_SELECTION_DISPLAY_DELAY_SEC'] = 4,
 

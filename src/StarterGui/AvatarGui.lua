@@ -10,6 +10,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Themes = require(ReplicatedStorage.Themes)
 local ViewportFrameFactory = require(ReplicatedStorage.Gui.ViewportFrameFactory)
 local SoundModule = require(ReplicatedStorage.SoundModule)
+local Globals = require(ReplicatedStorage.Globals)
 local Util = require(ReplicatedStorage.Util)
 
 local StarterGui = game:GetService("StarterGui")
@@ -28,7 +29,9 @@ local PlayerGui = Player:WaitForChild("PlayerGui")
 local CHARACTER_THUMB_SIZE_SCALE_X = 0.30
 local CHARACTER_THUMB_SIZE_SCALE_Y = 0.40
 
+
 local AvatarGui = {}
+
 
 AvatarGui.Frame = nil
 AvatarGui.OuterFrame = nil
@@ -70,56 +73,6 @@ function AvatarGui.Initialize()
         SortOrder = Enum.SortOrder.LayoutOrder,
       }, scrollingFrame)
 
-    -- Info frame
-    local infoFrame = Util:CreateInstance("Frame", {
-        Name = "Info",
-        AnchorPoint = Vector2.new(0.5, 0.5),
-        Position = UDim2.new(0.8, 0, 0.55, 0),
-        Size = UDim2.new(0.3, 0, 0.7, 0),
-        BackgroundTransparency = 0.0,
-        BackgroundColor3 = Themes[Themes.CurrentTheme].InnerFrameColor,
-        BorderSizePixel = 0,
-      }, AvatarGui.Frame)
-    local charTitle = Util:CreateInstance("TextLabel", {
-        Name = "CharacterTitle",
-        AnchorPoint = Vector2.new(0.5, 0.5),
-        Position = UDim2.new(0.5, 0, 0.2, 0),
-        Size = UDim2.new(0.8, 0, 0.2, 0),
-        BackgroundTransparency = 1.0,
-        TextScaled = true,
-        Text = "",  -- This will be set to the selected model name and used in the remote event
-        TextColor3 = Themes[Themes.CurrentTheme].TextColor,
-        Font = Enum.Font.FredokaOne,
-      }, infoFrame)
-    local charDescription = Util:CreateInstance("TextLabel", {
-        Name = "CharacterDescription",
-        AnchorPoint = Vector2.new(0.5, 0.5),
-        Position = UDim2.new(0.5, 0, 0.5, 0),
-        Size = UDim2.new(0.8, 0, 0.6, 0),
-        BackgroundTransparency = 1.0,
-        TextScaled = false,
-        Text = "",  -- This will be set when a character icon is clicked
-        TextColor3 = Themes[Themes.CurrentTheme].TextColor,
-        Font = Enum.Font.FredokaOne,
-        TextSize = 20,
-      }, infoFrame)
-    local charEquipBtn = Util:CreateInstance("TextButton", {
-        Name = "EquipCharacter",
-        AnchorPoint = Vector2.new(0.5, 0.5),
-        Position = UDim2.new(0.5, 0, 0.8, 0),
-        Size = UDim2.new(0.5, 0, 0.2, 0),
-        BackgroundTransparency = 0.0,
-        BackgroundColor3 = Themes[Themes.CurrentTheme].BorderColor,
-        BorderSizePixel = 0,
-        Text = "   MORPH   ",
-        Font = Enum.Font.Bangers,
-        TextColor3 = Themes[Themes.CurrentTheme].InnerFrameColor,
-        TextScaled = true,
-      }, infoFrame)
-    local uiCorner = Util:CreateInstance("UICorner", {
-        CornerRadius = UDim.new(0, 10),
-      }, charEquipBtn)
-
     -- Add character buttons
     -- Get sorted list of subdirectories
     local subdirNameList = {}
@@ -148,14 +101,73 @@ function AvatarGui.Initialize()
             Transparency = 1.0,
           }, charFrame)
         charButton.Activated:Connect(function()
+            -- Info frame
+            local infoFrame = Util:CreateInstance("Frame", {
+                Name = "Info",
+                AnchorPoint = Vector2.new(0.5, 0.5),
+                Position = UDim2.new(0.8, 0, 0.55, 0),
+                Size = UDim2.new(0.3, 0, 0.7, 0),
+                BackgroundTransparency = 0.0,
+                BackgroundColor3 = Themes[Themes.CurrentTheme].InnerFrameColor,
+                BorderSizePixel = 0,
+              }, AvatarGui.Frame)
+            local charTitle = Util:CreateInstance("TextLabel", {
+                Name = "CharacterTitle",
+                AnchorPoint = Vector2.new(0.5, 0.5),
+                Position = UDim2.new(0.5, 0, 0.2, 0),
+                Size = UDim2.new(0.8, 0, 0.2, 0),
+                BackgroundTransparency = 1.0,
+                TextScaled = true,
+                Text = "",  -- This will be set to the selected model name and used in the remote event
+                TextColor3 = Themes[Themes.CurrentTheme].TextColor,
+                Font = Enum.Font.FredokaOne,
+              }, infoFrame)
+            local charDescription = Util:CreateInstance("TextLabel", {
+                Name = "CharacterDescription",
+                AnchorPoint = Vector2.new(0.5, 0.5),
+                Position = UDim2.new(0.5, 0, 0.48, 0),
+                Size = UDim2.new(0.8, 0, 0.3, 0),
+                BackgroundTransparency = 1.0,
+                TextColor3 = Themes[Themes.CurrentTheme].TextColor,
+                Font = Enum.Font.FredokaOne,
+                TextScaled = false,
+                TextSize = 26,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                TextYAlignment = Enum.TextYAlignment.Top,
+                Text = "",  -- This will be set when a character icon is clicked
+              }, infoFrame)
+            local charEquipBtn = Util:CreateInstance("TextButton", {
+                Name = "EquipCharacter",
+                AnchorPoint = Vector2.new(0.5, 0.5),
+                Position = UDim2.new(0.5, 0, 0.8, 0),
+                Size = UDim2.new(0.5, 0, 0.2, 0),
+                BackgroundTransparency = 0.0,
+                BackgroundColor3 = Themes[Themes.CurrentTheme].BorderColor,
+                BorderSizePixel = 0,
+                Text = "   MORPH   ",
+                Font = Enum.Font.Bangers,
+                TextColor3 = Themes[Themes.CurrentTheme].InnerFrameColor,
+                TextScaled = true,
+              }, infoFrame)
+            local uiCorner = Util:CreateInstance("UICorner", {
+                CornerRadius = UDim.new(0, 10),
+              }, charEquipBtn)
+
             charTitle.Text = model.Name
             SoundModule.PlayMouseClick(PlayerGui)
 
-            local connection
-            connection = charEquipBtn.Activated:Connect(function()
+            -- Check for requirements
+            local costPoints = model:GetAttribute(Globals.AVATAR_COST_POINTS_ATTR_NAME)
+            if costPoints then
+              charDescription.Text = "Stars needed: ".. tostring(costPoints)
+            else
+              charDescription.Text = ""
+            end
+
+            charEquipBtn.Activated:Connect(function()
               SoundModule.PlayMouseClick(PlayerGui)
               SelectCharacterRequestEvent:FireServer(subdirNameList[subdirIdx], charTitle.Text)
-              connection:Disconnect()
+              --print(string.format("SelectCharacterRequestEvent:FireServer(subdirNameList[subdirIdx] %s, charTitle.Text %s)", subdirNameList[subdirIdx], charTitle.Text))
             end)
           end)
         layoutOrder += 1

@@ -3,10 +3,16 @@
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Promise = require(ReplicatedStorage.Vendor.Promise)
+local Globals = require(ReplicatedStorage.Globals)
 local Util = require(ReplicatedStorage.Util)
 
+local ShowMessagePopupEvent = ReplicatedStorage.Events.ShowMessagePopup
 local SelectCharacterRequestEvent = ReplicatedStorage.Events.SelectCharacterRequest
 local UpdateCharacterEvent = ReplicatedStorage.Events.UpdateCharacter
+
+local ServerScriptService = game:GetService("ServerScriptService")
+local PlayerManager = require(ServerScriptService.PlayerManager)
+local GetPlayerManagerInstanceBindableFn = ServerScriptService.GetPlayerManagerInstanceBindableFn
 
 local CharactersFolder = ReplicatedStorage.Characters
 
@@ -71,6 +77,18 @@ local function checkSelectCharacterRequest(player, folderName, modelName)
     -- Find model
     local characterModel = CharactersFolder[folderName][modelName]
     if characterModel then
+      -- Check requirements
+      local costPoints = characterModel:GetAttribute(Globals.AVATAR_COST_POINTS_ATTR_NAME)
+      if costPoints then
+        local plrMgr = GetPlayerManagerInstanceBindableFn:Invoke(player.Name)
+        if plrMgr then
+          if PlayerManager.GetPoints(plrMgr) < costPoints then
+            ShowMessagePopupEvent:FireClient(player, "Need ".. costPoints.. " stars", 2.0)
+            return
+          end
+        end
+      end
+
       transform(character, characterModel)
       return
     end

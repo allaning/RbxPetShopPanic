@@ -115,5 +115,40 @@ function PlayerManager:IncrementSessionAssists(increment)
 end
 
 
+-- Helper functions, since can't pass operations via BindableFunction
+
+-- Get PlayerManager for specified Player.Name
+function PlayerManager.GetPlayerManagerFromList(playerManagers, playerName)
+  for _, plrMgr in pairs(playerManagers) do
+    if plrMgr:GetPlayerName() == playerName then
+      return plrMgr
+    end
+  end
+end
+
+-- Get player with highest score and assists
+function PlayerManager.GetPlayersWithBestScoreAndAssists(playerManagers)
+  local playerWithBestScore = nil
+  local playerWithBestAssists = nil
+  local bestScore = 0
+  local bestAssists = 0
+  for _, plrMgr in pairs(playerManagers) do
+    if plrMgr:GetSessionScore() > bestScore then
+      bestScore = plrMgr:GetSessionScore()
+      playerWithBestScore = plrMgr:GetPlayer()
+    end
+    if plrMgr:GetSessionAssists() > bestAssists then
+      bestAssists = plrMgr:GetSessionAssists()
+      playerWithBestAssists = plrMgr:GetPlayer()
+    end
+  end
+  return playerWithBestScore, playerWithBestAssists
+end
+
+function PlayerManager.GetPoints(playerManager)
+  return playerManager.Points
+end
+
+
 return PlayerManager
 
