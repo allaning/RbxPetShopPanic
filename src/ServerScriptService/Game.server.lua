@@ -5,6 +5,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local ProximityPromptService = game:GetService("ProximityPromptService")
 local AnimationModule = require(ReplicatedStorage.AnimationModule)
 local PlayerManager = require(ServerScriptService.PlayerManager)
+local DatabaseAdapter = require(ServerScriptService.DatabaseAdapter)
 
 local Globals = require(ReplicatedStorage.Globals)
 local Util = require(ReplicatedStorage.Util)
@@ -39,6 +40,10 @@ local Players = game:GetService("Players")
 
 
 local PRODUCT_PLAYER_WELD_NAME = "ProductPlayerWeld"
+
+
+-- Initialize the database
+DatabaseAdapter.Initialize()
 
 
 -- Keep track of player level votes; List of players and their votes
@@ -680,12 +685,14 @@ local function getGetLevelRequestVotes()
 end
 GetLevelRequestVotesFn.OnServerInvoke = getGetLevelRequestVotes
 
+
 Players.PlayerAdded:Connect(function(Player)
   -- Add player to list of PlayerManager instances
   local playerManager = PlayerManager.new(Player)
   playerManager:InitializeLeaderstats()
   table.insert(playerManagers, playerManager)
 end)
+
 
 Players.PlayerRemoving:Connect(function(Player)
   -- Remove PlayerManager instance

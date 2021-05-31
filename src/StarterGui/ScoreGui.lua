@@ -248,7 +248,7 @@ function ScoreGui.GetCopy(pointsEarned, numTotal, numCompleted, numFailed, playe
     zIndex += 1
     if playerWithBestScore then
       local viewport, scoreClone = ViewportFrameFactory.GetViewportFrame(playerWithBestScore, Vector3.new(0, 2.5, -6.0))
-      viewport.Position = UDim2.new(0.25, 0, 0.6, 0)
+      viewport.Position = UDim2.new(0.25, 0, 0.7, 0)
       viewport.BackgroundTransparency = 1.0
       viewport.ZIndex = zIndex
       viewport.Parent = mvpFrame
@@ -317,7 +317,7 @@ function ScoreGui.GetCopy(pointsEarned, numTotal, numCompleted, numFailed, playe
     zIndex += 1
     if playerWithBestAssists then
       local viewport, assistsClone = ViewportFrameFactory.GetViewportFrame(playerWithBestAssists, Vector3.new(0, 2.5, -6.0))
-      viewport.Position = UDim2.new(0.25, 0, 0.6, 0)
+      viewport.Position = UDim2.new(0.25, 0, 0.75, 0)
       viewport.BackgroundTransparency = 1.0
       viewport.ZIndex = zIndex
       viewport.Parent = assistsFrame

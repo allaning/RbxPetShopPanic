@@ -1,10 +1,19 @@
 local Globals = {
 
+  -- If true, then use real database (can use false for offline testing)
+  ['USE_REAL_DATABASE'] = true,
+
+  -- Datastore name
+  ['DATA_STORE_NAME'] = "DATA00",  -- TODO Use real database
+
   -- Leaderboard stats names
   ['LEADERBOARD_POINTS_NAME'] = "Stars",
 
   -- Cost for avatar in points (see StarterGui/AvatarGui.lua)
   ['AVATAR_COST_POINTS_ATTR_NAME'] = "CostPoints",
+
+  -- Cost for avatar in Robux (see StarterGui/AvatarGui.lua)
+  ['AVATAR_COST_ROBUX_ATTR_NAME'] = "CostRobux",
 
   -- Number of seconds to show random map level vote being selected
   ['RANDOM_LEVEL_SELECTION_DISPLAY_DELAY_SEC'] = 4,

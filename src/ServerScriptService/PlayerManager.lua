@@ -1,6 +1,9 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Globals = require(ReplicatedStorage.Globals)
 
+local ServerScriptService = game:GetService("ServerScriptService")
+local DatabaseAdapter = require(ServerScriptService.DatabaseAdapter)
+
 local Players = game:GetService("Players")
 
 
@@ -46,9 +49,10 @@ function PlayerManager:InitializeLeaderstats()
     self.LeaderstatsFolder = leaderstats
 
     -- Points
+    local points = DatabaseAdapter.GetPoints(self.Player)
     local pointsInstance = Instance.new("IntValue")
     pointsInstance.Name = Globals.LEADERBOARD_POINTS_NAME  -- Name of the in-game leaderboard stat
-    pointsInstance.Value = 0
+    pointsInstance.Value = points
     pointsInstance.Parent = leaderstats
     self.PointsInstance = pointsInstance
   else
@@ -65,6 +69,7 @@ function PlayerManager:SetPoints(points)
 
   if self.PointsInstance then
     self.PointsInstance.Value = points
+    DatabaseAdapter.SetPoints(self.Player, points)
   else
     error("PlayerManager:SetPoints: self.PointsInstance not initialized")
   end
@@ -75,6 +80,7 @@ function PlayerManager:IncrementPoints(points)
 
   if self.PointsInstance then
     self.PointsInstance.Value += points
+    DatabaseAdapter.IncrementPoints(self.Player, points)
   else
     error("PlayerManager:IncrementPoints: self.PointsInstance not initialized")
   end

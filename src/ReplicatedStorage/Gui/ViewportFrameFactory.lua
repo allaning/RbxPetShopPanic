@@ -11,7 +11,8 @@ local ViewportFrameFactory = {}
 -- Returns ViewportFrame containing image of model
 function ViewportFrameFactory.GetViewportFrame(model, cameraPositionOffset)
   if model then
-    local cameraPosition = cameraPositionOffset or model:GetAttribute("ViewportCameraPosition") or Vector3.new(0, 0.5, 1.9)
+    local cameraPosition = model:GetAttribute("ViewportCameraPosition") or cameraPositionOffset or Vector3.new(0, 0.5, 1.9)
+    --print(string.format("aing ******** cameraPosition= %d, %d, %d", cameraPosition.X, cameraPosition.Y, cameraPosition.Z))
     local targetPositionOffset = model:GetAttribute("ViewportTargetPositionOffset") or Vector3.new(0, 0, 0)
 
     local viewportFrame = Instance.new("ViewportFrame")

@@ -4,6 +4,9 @@ Avatar rules:
   - Should be in ReplicatedStorage/Characters/XX_Description
   - Top level must be a Character with PrimaryPart HumanoidRootPart
   - Optional: Add a Number Attribute named CostPoints to specify Points required to equip Character
+  - Optional: Add a Number Attribute named CostRobux to specify Robux required to buy Character
+  - Optional: Add Vector3 Attribute named ViewportCameraPosition to specify custom position for ViewportFrame Camera
+  - Optional: Add Vector3 Attribute named ViewportTargetPositionOffset to specify target position offset for ViewportFrame Camera
 ]]--
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -27,7 +30,7 @@ local PlayerGui = Player:WaitForChild("PlayerGui")
 
 
 local CHARACTER_THUMB_SIZE_SCALE_X = 0.30
-local CHARACTER_THUMB_SIZE_SCALE_Y = 0.40
+local CHARACTER_THUMB_SIZE_SCALE_Y = 0.18
 
 
 local AvatarGui = {}
@@ -61,7 +64,7 @@ function AvatarGui.Initialize()
         AnchorPoint = Vector2.new(0.5, 0.5),
         Position = UDim2.new(0.335, 0, 0.55, 0),
         Size = UDim2.new(0.58, 0, 0.7, 0),
-        CanvasSize = UDim2.new(0, 0, 2.0, 0),  -- TODO: Increase Y
+        CanvasSize = UDim2.new(0, 0, 4.0, 0),  -- TODO: Increase Y
         BackgroundTransparency = 0.0,
         BackgroundColor3 = Themes[Themes.CurrentTheme].InnerFrameColor,
         BorderSizePixel = 2,
@@ -125,13 +128,13 @@ function AvatarGui.Initialize()
             local charDescription = Util:CreateInstance("TextLabel", {
                 Name = "CharacterDescription",
                 AnchorPoint = Vector2.new(0.5, 0.5),
-                Position = UDim2.new(0.5, 0, 0.48, 0),
-                Size = UDim2.new(0.8, 0, 0.3, 0),
+                Position = UDim2.new(0.5, 0, 0.5, 0),
+                Size = UDim2.new(0.85, 0, 0.3, 0),
                 BackgroundTransparency = 1.0,
                 TextColor3 = Themes[Themes.CurrentTheme].TextColor,
                 Font = Enum.Font.FredokaOne,
-                TextScaled = false,
-                TextSize = 26,
+                TextScaled = true,
+                --TextSize = 22,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 TextYAlignment = Enum.TextYAlignment.Top,
                 Text = "",  -- This will be set when a character icon is clicked
@@ -159,9 +162,11 @@ function AvatarGui.Initialize()
             -- Check for requirements
             local costPoints = model:GetAttribute(Globals.AVATAR_COST_POINTS_ATTR_NAME)
             if costPoints then
-              charDescription.Text = "Stars needed: ".. tostring(costPoints)
-            else
-              charDescription.Text = ""
+              charDescription.Text = "Stars needed: ".. tostring(costPoints).. "\n"
+            end
+            local costRobux = model:GetAttribute(Globals.AVATAR_COST_ROBUX_ATTR_NAME)
+            if costRobux then
+              charDescription.Text = charDescription.Text.. "Robux: ".. tostring(costRobux).. "\n"
             end
 
             charEquipBtn.Activated:Connect(function()
