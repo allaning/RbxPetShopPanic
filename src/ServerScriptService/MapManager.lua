@@ -432,6 +432,17 @@ function MapManager.InitializeMap(level)
 
   MapManager.ColorizeMap(map)
 
+  -- Add ceiling barrier to block cheaters
+  local ceilingBarrier = Util:CreateInstance("Part", {
+      Name = "ceilingBarrier",
+      Position = Vector3.new(map.PrimaryPart.Position.X, 12, map.PrimaryPart.Position.Z),
+      Size = Vector3.new(200, 1, 160),
+      Anchored = true,
+      CastShadow = false,
+      Transparency = 1.0,
+      CanCollide = true,
+    }, map)
+
   return map
 
 end

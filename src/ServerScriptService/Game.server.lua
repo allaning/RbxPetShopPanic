@@ -35,6 +35,7 @@ local SessionScoreEvent = ReplicatedStorage.Events.SessionScore
 local ShowMessagePopupEvent = ReplicatedStorage.Events.ShowMessagePopup
 local PlayerRemovingEvent = ReplicatedStorage.Events.PlayerRemoving
 local GetPlayerManagerInstanceBindableFn = ServerScriptService.GetPlayerManagerInstanceBindableFn
+local InsertProductIdBindableEvent = ServerScriptService.InsertProductIdBindable
 
 local Players = game:GetService("Players")
 
@@ -73,6 +74,18 @@ Promise.try(function()
     if obj.Name == "SpawnLocation" then
       lobbySpawn = obj
       obj.Duration = 0
+
+      -- Add ceiling barrier to block cheaters
+      local ceilingBarrier = Util:CreateInstance("Part", {
+          Name = "ceilingBarrier",
+          Position = Vector3.new(obj.Position.X, 16, obj.Position.Z),
+          Size = Vector3.new(200, 1, 120),
+          Anchored = true,
+          CastShadow = false,
+          Transparency = 1.0,
+          CanCollide = true,
+        }, Workspace)
+
       break
     end
   end
@@ -686,10 +699,21 @@ end
 GetLevelRequestVotesFn.OnServerInvoke = getGetLevelRequestVotes
 
 
+local function onInsertProductIdBindableEvent(player, productId)
+  if player then
+    local plrMgr = getPlayerManagerFromList(player.Name)
+    if plrMgr then
+      plrMgr:InsertProductIdOwned(productId)
+    end
+  end
+end
+InsertProductIdBindableEvent.Event:Connect(onInsertProductIdBindableEvent)
+
+
 Players.PlayerAdded:Connect(function(Player)
   -- Add player to list of PlayerManager instances
   local playerManager = PlayerManager.new(Player)
-  playerManager:InitializeLeaderstats()
+  playerManager:Initialize()
   table.insert(playerManagers, playerManager)
 end)
 
@@ -719,4 +743,5 @@ Players.PlayerRemoving:Connect(function(Player)
     end
   end
 end)
+
 

@@ -19,11 +19,15 @@ function PlayerManager.new(player)
   self.Player = player
   self.PlayerName = player.Name
 
+  -- Leaderstats
   self.LeaderstatsFolder = nil
   self.PointsInstance = nil  -- Leaderstats points (versus per session points)
 
+  -- Database
   self.Points = 0  -- Cached Points; When changing Points, also update PointsInstance
+  self.ProductIdsOwned = {}  -- Cached list of Marketplace Product IDs owned
 
+  -- Session info
   self.IsInGameSession = false
   self.SessionScore = 0  -- Per session score for this player
   self.SessionAssists = 0  -- Per session transformations made for this player
@@ -39,8 +43,7 @@ function PlayerManager:GetPlayerName()
   return self.PlayerName
 end
 
--- Create leaderstats for Player
-function PlayerManager:InitializeLeaderstats()
+function PlayerManager:Initialize()
   if self.Player then
     -- Setup leaderboard
     local leaderstats = Instance.new("Folder")
@@ -49,16 +52,24 @@ function PlayerManager:InitializeLeaderstats()
     self.LeaderstatsFolder = leaderstats
 
     -- Points
-    local points = DatabaseAdapter.GetPoints(self.Player)
+    self.Points = DatabaseAdapter.GetPoints(self.Player)
     local pointsInstance = Instance.new("IntValue")
     pointsInstance.Name = Globals.LEADERBOARD_POINTS_NAME  -- Name of the in-game leaderboard stat
-    pointsInstance.Value = points
+    pointsInstance.Value = self.Points
     pointsInstance.Parent = leaderstats
     self.PointsInstance = pointsInstance
+
+    -- Product IDs Owned
+    self.ProductIdsOwned = DatabaseAdapter.GetProductIdsOwned(self.Player)
+    --table.insert(self.ProductIdsOwned, 1106769224)  -- testing
+
   else
     error("Cannot InitializePlayer because self.Player is not set")
   end
 end
+
+
+-- Points
 
 function PlayerManager:GetPoints()
   return self.Points
@@ -86,6 +97,26 @@ function PlayerManager:IncrementPoints(points)
   end
 end
 
+
+-- ProductIdsOwned
+
+function PlayerManager:GetProductIdsOwned()
+  return self.ProductIdsOwned
+end
+
+function PlayerManager:SetProductIdsOwned(productIdsOwnedList)
+  self.ProductIdsOwned = productIdsOwnedList
+  DatabaseAdapter.SetProductIdsOwned(self.Player, productIdsOwnedList)
+end
+
+function PlayerManager:InsertProductIdOwned(productIdOwned)
+  table.insert(self.ProductIdsOwned, productIdOwned)
+  DatabaseAdapter.SetProductIdsOwned(self.Player, self.ProductIdsOwned)
+end
+
+
+-- Other attributes
+
 function PlayerManager:GetIsInGameSession()
   return self.IsInGameSession
 end
@@ -93,6 +124,7 @@ end
 function PlayerManager:SetIsInGameSession(isInGameSession)
   self.IsInGameSession = isInGameSession
 end
+
 
 function PlayerManager:GetSessionScore()
   return self.SessionScore
@@ -106,6 +138,7 @@ function PlayerManager:IncrementSessionScore(increment)
   local incr = increment or 1
   self.SessionScore += incr
 end
+
 
 function PlayerManager:GetSessionAssists()
   return self.SessionAssists
@@ -122,6 +155,7 @@ end
 
 
 -- Helper functions, since can't pass operations via BindableFunction
+-- NOTE: Only use getters here, not setters; Users of BindableFunction get a copy of object
 
 -- Get PlayerManager for specified Player.Name
 function PlayerManager.GetPlayerManagerFromList(playerManagers, playerName)
@@ -153,6 +187,18 @@ end
 
 function PlayerManager.GetPoints(playerManager)
   return playerManager.Points
+end
+
+function PlayerManager.GetProductIdsOwned(playerManager)
+  return playerManager.ProductIdsOwned
+end
+
+function PlayerManager.DoesPlayerOwnProductId(playerManager, productId)
+  for _, id in ipairs(playerManager.ProductIdsOwned) do
+    if tonumber(id) == tonumber(productId) then
+      return true
+    end
+  end
 end
 
 

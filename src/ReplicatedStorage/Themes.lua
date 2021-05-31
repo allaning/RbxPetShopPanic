@@ -10,12 +10,14 @@ local Themes = {
     ['Color'] = Color3.fromRGB(206, 237, 255),
     ['InnerFrameColor'] = Color3.fromRGB(234, 252, 255),
     ['TextColor'] = Color3.fromRGB(19, 153, 255),
+    ['TextColor2'] = Color3.fromRGB(14, 115, 188),
   },
   ['Dark'] = {
     ['BorderColor'] = Color3.fromRGB(48, 112, 168),
     ['Color'] = Color3.fromRGB(6, 53, 85),
     ['InnerFrameColor'] = Color3.fromRGB(5, 5, 5),
     ['TextColor'] = Color3.fromRGB(119, 200, 255),
+    ['TextColor2'] = Color3.fromRGB(114, 160, 180),
   },
 
   -- Used for map

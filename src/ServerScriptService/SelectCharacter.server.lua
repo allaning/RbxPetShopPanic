@@ -1,9 +1,11 @@
 -- https://devforum.roblox.com/t/character-morph-script/1199389
 
+local MarketplaceService = game:GetService("MarketplaceService")
+
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Promise = require(ReplicatedStorage.Vendor.Promise)
-local Globals = require(ReplicatedStorage.Globals)
+local Avatars = require(ReplicatedStorage.Avatars)
 local Util = require(ReplicatedStorage.Util)
 
 local ShowMessagePopupEvent = ReplicatedStorage.Events.ShowMessagePopup
@@ -14,7 +16,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local PlayerManager = require(ServerScriptService.PlayerManager)
 local GetPlayerManagerInstanceBindableFn = ServerScriptService.GetPlayerManagerInstanceBindableFn
 
-local CharactersFolder = ReplicatedStorage.Characters
+local CharacterFolder = ReplicatedStorage.Characters
 
 local Players = game:GetService("Players")
 
@@ -75,15 +77,30 @@ local function checkSelectCharacterRequest(player, folderName, modelName)
   local character = Util:GetCharacterFromPlayer(player)
   if character then
     -- Find model
-    local characterModel = CharactersFolder[folderName][modelName]
+    local characterModel = CharacterFolder[folderName][modelName]
     if characterModel then
       -- Check requirements
-      local costPoints = characterModel:GetAttribute(Globals.AVATAR_COST_POINTS_ATTR_NAME)
-      if costPoints then
-        local plrMgr = GetPlayerManagerInstanceBindableFn:Invoke(player.Name)
-        if plrMgr then
+      local plrMgr = GetPlayerManagerInstanceBindableFn:Invoke(player.Name)
+      if plrMgr then
+        -- Points
+        local costPoints = characterModel:GetAttribute(Avatars.COST_POINTS_ATTR_NAME)
+        if costPoints then
           if PlayerManager.GetPoints(plrMgr) < costPoints then
             ShowMessagePopupEvent:FireClient(player, "Need ".. costPoints.. " stars", 2.0)
+            return
+          end
+        end
+
+        -- Robux
+        local costRobux = characterModel:GetAttribute(Avatars.COST_ROBUX_ATTR_NAME)
+        if costRobux then
+          -- Check if player owns avatar
+          local productId = characterModel:GetAttribute(Avatars.PRODUCT_ID_ATTR_NAME)
+          local playerOwnsAvatar = PlayerManager.DoesPlayerOwnProductId(plrMgr, productId)
+
+          if not playerOwnsAvatar then
+            -- Prompt for purchase
+            MarketplaceService:PromptProductPurchase(player, productId)
             return
           end
         end

@@ -5,7 +5,8 @@ local Util = require(ReplicatedStorage.Util)
 
 local FrameFactory = {}
 
-function FrameFactory.GetDefaultLobbyFrame()
+function FrameFactory.GetDefaultLobbyFrame(frameSize)
+  frameSize = frameSize or UDim2.new(0.6, 0, 0.5, 0)
   local mainFrame = nil
   local outerFrame = nil
 
@@ -13,7 +14,7 @@ function FrameFactory.GetDefaultLobbyFrame()
       Name = "outerFrame",
       AnchorPoint = Vector2.new(0.5, 0.5),
       Position = UDim2.new(0.5, 0, 0.5, 0),
-      Size = UDim2.new(0.6, 0, 0.5, 0),
+      Size = frameSize,
       BackgroundTransparency = 0.0,
       BackgroundColor3 = Themes[Themes.CurrentTheme].BorderColor,
       BorderSizePixel = 0,
@@ -42,6 +43,10 @@ function FrameFactory.GetDefaultLobbyFrame()
     }, mainFrame)
 
   return mainFrame, outerFrame
+end
+
+function FrameFactory.GetLargeLobbyFrame()
+  return FrameFactory.GetDefaultLobbyFrame(UDim2.new(0.6, 0, 0.7, 0))
 end
 
 return FrameFactory

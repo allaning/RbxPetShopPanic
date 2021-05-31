@@ -21,7 +21,7 @@ function Session.new()
 
   self.Score = 0  -- This is the running score for current session (versus points, e.g. stars, earned at end of session)
   self.StartTime = 0
-  self.Duration = 22--aing Session.DEFAULT_TIME_PER_SESSION_SEC
+  self.Duration = Session.DEFAULT_TIME_PER_SESSION_SEC
   self.IsActive = false
   self.Level = 0  -- Difficulty level
 

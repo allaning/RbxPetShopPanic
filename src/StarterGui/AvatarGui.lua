@@ -13,7 +13,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Themes = require(ReplicatedStorage.Themes)
 local ViewportFrameFactory = require(ReplicatedStorage.Gui.ViewportFrameFactory)
 local SoundModule = require(ReplicatedStorage.SoundModule)
-local Globals = require(ReplicatedStorage.Globals)
+local Avatars = require(ReplicatedStorage.Avatars)
 local Util = require(ReplicatedStorage.Util)
 
 local StarterGui = game:GetService("StarterGui")
@@ -30,7 +30,7 @@ local PlayerGui = Player:WaitForChild("PlayerGui")
 
 
 local CHARACTER_THUMB_SIZE_SCALE_X = 0.30
-local CHARACTER_THUMB_SIZE_SCALE_Y = 0.18
+local CHARACTER_THUMB_SIZE_SCALE_Y = 0.1
 
 
 local AvatarGui = {}
@@ -41,9 +41,10 @@ AvatarGui.OuterFrame = nil
 
 function AvatarGui.Initialize()
   if not AvatarGui.Frame then
-    AvatarGui.Frame, AvatarGui.OuterFrame = FrameFactory.GetDefaultLobbyFrame()
+    AvatarGui.Frame, AvatarGui.OuterFrame = FrameFactory.GetLargeLobbyFrame()
     AvatarGui.Frame.Name = "AvatarGui.Frame"
     AvatarGui.OuterFrame.Name = "AvatarGui.OuterFrame"
+    AvatarGui.OuterFrame.Position = UDim2.new(0.5, 0, 0.4, 0)
 
     -- Title
     local title = Util:CreateInstance("TextLabel", {
@@ -104,9 +105,16 @@ function AvatarGui.Initialize()
             Transparency = 1.0,
           }, charFrame)
         charButton.Activated:Connect(function()
+            local infoFrameName = "Info"
+            -- Remove old Info frames
+            local oldInfoFrame = AvatarGui.Frame:FindFirstChild(infoFrameName)
+            if oldInfoFrame then
+              oldInfoFrame:Destroy()
+            end
+
             -- Info frame
             local infoFrame = Util:CreateInstance("Frame", {
-                Name = "Info",
+                Name = infoFrameName,
                 AnchorPoint = Vector2.new(0.5, 0.5),
                 Position = UDim2.new(0.8, 0, 0.55, 0),
                 Size = UDim2.new(0.3, 0, 0.7, 0),
@@ -122,14 +130,14 @@ function AvatarGui.Initialize()
                 BackgroundTransparency = 1.0,
                 TextScaled = true,
                 Text = "",  -- This will be set to the selected model name and used in the remote event
-                TextColor3 = Themes[Themes.CurrentTheme].TextColor,
+                TextColor3 = Themes[Themes.CurrentTheme].TextColor2,
                 Font = Enum.Font.FredokaOne,
               }, infoFrame)
             local charDescription = Util:CreateInstance("TextLabel", {
                 Name = "CharacterDescription",
                 AnchorPoint = Vector2.new(0.5, 0.5),
                 Position = UDim2.new(0.5, 0, 0.5, 0),
-                Size = UDim2.new(0.85, 0, 0.3, 0),
+                Size = UDim2.new(0.85, 0, 0.2, 0),
                 BackgroundTransparency = 1.0,
                 TextColor3 = Themes[Themes.CurrentTheme].TextColor,
                 Font = Enum.Font.FredokaOne,
@@ -160,11 +168,11 @@ function AvatarGui.Initialize()
             SoundModule.PlayMouseClick(PlayerGui)
 
             -- Check for requirements
-            local costPoints = model:GetAttribute(Globals.AVATAR_COST_POINTS_ATTR_NAME)
+            local costPoints = model:GetAttribute(Avatars.COST_POINTS_ATTR_NAME)
             if costPoints then
               charDescription.Text = "Stars needed: ".. tostring(costPoints).. "\n"
             end
-            local costRobux = model:GetAttribute(Globals.AVATAR_COST_ROBUX_ATTR_NAME)
+            local costRobux = model:GetAttribute(Avatars.COST_ROBUX_ATTR_NAME)
             if costRobux then
               charDescription.Text = charDescription.Text.. "Robux: ".. tostring(costRobux).. "\n"
             end
