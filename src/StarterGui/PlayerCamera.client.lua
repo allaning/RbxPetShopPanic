@@ -27,11 +27,6 @@ if Settings.IsFixedCameraAngle then
   -- Enables the camera to do what this script says
   camera.CameraType = Enum.CameraType.Scriptable
 
-  --camera.DiagonalFieldOfView = 125
-  --camera.FieldOfView = 80
-  --camera.FieldOfViewMode = Enum.FieldOfViewMode.MaxAxis
-  --camera.MaxAxisFieldOfView = 100
-
   -- Called every time the screen refreshes
   local function onRenderStep()
     -- Check if the player's character has spawned

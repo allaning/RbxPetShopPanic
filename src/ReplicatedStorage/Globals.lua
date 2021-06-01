@@ -18,6 +18,9 @@ local Globals = {
   -- Keep track of player status
   ['PLAYER_IS_IN_GAME_SESSION_ATTRIBUTE_NAME'] = "IsLocalPlayerInGameSession",
 
+  -- Level name prefix (to go in front of number)
+  ['LEVEL_NAME_PREFIX'] = "Level ",
+
   -- Uninitialized values
   ['UNINIT_STRING'] = "UNINITIALIZED",
   ['UNINIT_NUMBER'] = -1,

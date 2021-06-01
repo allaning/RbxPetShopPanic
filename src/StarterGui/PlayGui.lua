@@ -3,6 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Themes = require(ReplicatedStorage.Themes)
 local ViewportFrameFactory = require(ReplicatedStorage.Gui.ViewportFrameFactory)
 local SoundModule = require(ReplicatedStorage.SoundModule)
+local Globals = require(ReplicatedStorage.Globals)
 local Util = require(ReplicatedStorage.Util)
 
 local StarterGui = game:GetService("StarterGui")
@@ -77,15 +78,15 @@ function PlayGui.Initialize()
           Size = UDim2.new(0.9, 0, LEVEL_THUMB_SIZE_SCALE_Y, 0),
           BackgroundTransparency = 1.0,
           TextScaled = true,
-          Text = levelNames[idx],
+          Text = Globals.LEVEL_NAME_PREFIX.. levelNames[idx],
           Font = Enum.Font.FredokaOne,
           TextColor3 = Themes[Themes.CurrentTheme].TextColor,
         }, scrollingFrame)
       levelButton.Activated:Connect(function()
           print("Clicked levelButton.Text = ".. levelButton.Text)
           SoundModule.PlayMouseClick(PlayerGui)
-          SelectLevelRequestSentEvent:Fire(levelButton.Text)
-          SelectLevelRequestEvent:FireServer(levelButton.Text)
+          SelectLevelRequestSentEvent:Fire()
+          SelectLevelRequestEvent:FireServer(levelNames[idx])
         end)
     end
 

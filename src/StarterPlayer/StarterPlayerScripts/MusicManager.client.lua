@@ -11,12 +11,12 @@ local PlayerGui = Player:WaitForChild("PlayerGui")
 
 
 local music = {
-  ['Level 1'] = {
+  ['1'] = {
     "rbxassetid://1843313385",  -- https://www.roblox.com/library/1843313385/Swing-it
     "rbxassetid://1846707136",  -- https://www.roblox.com/library/1846707136/Baby-Dwarf
     "rbxassetid://1841212514",  -- https://www.roblox.com/library/1841212514/Shop-til-You-Flop-a
   },
-  ['Level 2'] = {
+  ['2'] = {
     "rbxassetid://1846442728",  -- https://www.roblox.com/library/refer/1846442728/The-Entertainer
     "rbxassetid://1844779713",  -- https://www.roblox.com/library/1844779713/Boulevard
     "rbxassetid://1845765957",  -- https://www.roblox.com/library/1845765957/Happy-Music-Happy-People
