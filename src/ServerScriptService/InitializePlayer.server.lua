@@ -13,6 +13,10 @@ Players.RespawnTime = 0.0
 Players.PlayerAdded:Connect(function(Player)
   print("PlayerAdded: ".. Player.Name)
 
+  -- Show user vote thumbnails; Send to all so they can adjust count
+  LevelRequestVotesEvent:FireAllClients()
+
+
   -- CharacterAdded
   Player.CharacterAdded:Connect(function(Character)
     Character:WaitForChild("Animate").walk.WalkAnim.AnimationId = "rbxassetid://910034870"
@@ -28,10 +32,8 @@ Players.PlayerAdded:Connect(function(Player)
     -- Set walk speed
     local humanoid = Character:FindFirstChild("Humanoid")
     humanoid.WalkSpeed = 18
-  end)
 
-  -- Show user vote thumbnails; Send to all so they can adjust count
-  LevelRequestVotesEvent:FireAllClients()
+  end)
 end)
 
 Players.PlayerRemoving:Connect(function(Player)

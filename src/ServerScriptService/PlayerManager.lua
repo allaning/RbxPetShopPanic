@@ -61,7 +61,9 @@ function PlayerManager:Initialize()
 
     -- Product IDs Owned
     self.ProductIdsOwned = DatabaseAdapter.GetProductIdsOwned(self.Player)
-    --table.insert(self.ProductIdsOwned, 1106769224)  -- testing
+    --table.insert(self.ProductIdsOwned, 1178916298)  -- aing testing Fox
+    --table.insert(self.ProductIdsOwned, 1178952971)  -- aing testing Bear
+    --table.insert(self.ProductIdsOwned, 1178968280)  -- aing testing Monkey
 
   else
     error("Cannot InitializePlayer because self.Player is not set")

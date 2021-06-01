@@ -21,21 +21,21 @@ local CharacterFolder = ReplicatedStorage.Characters
 local Players = game:GetService("Players")
 
 
-local function transform(char, characterModel)
-  if char.PrimaryPart then
-    local model = characterModel:Clone()
+local function transform(playerCharacter, characterModel)
+  if playerCharacter.PrimaryPart then
+    local modelClone = characterModel:Clone()
 
-    model:SetPrimaryPartCFrame(char.PrimaryPart.CFrame+Vector3.new(0,model:GetExtentsSize().Y,0))
-    local h = char:WaitForChild("Humanoid")
+    modelClone:SetPrimaryPartCFrame(playerCharacter.PrimaryPart.CFrame+Vector3.new(0, modelClone:GetExtentsSize().Y, 0))
+    local humanoid = playerCharacter:WaitForChild("Humanoid")
     local function unkill()
-      h:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+      humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
     end
-    for i,v in pairs(h:GetPlayingAnimationTracks()) do
+    for i,v in pairs(humanoid:GetPlayingAnimationTracks()) do
       v:Stop()
     end
-    h.Parent = ReplicatedStorage
+    humanoid.Parent = ReplicatedStorage
     unkill()
-    for i,v in pairs(char:GetChildren()) do
+    for i,v in pairs(playerCharacter:GetChildren()) do
       if v.Name ~= "Humanoid" and v.Name ~= "HumanoidRootPart" and not v:IsA("Script") and not v:IsA("LocalScript") then
         -- Don't delete custom objects (e.g. created in InitializePlayer.server.lua)
         if v.Name ~= "Products" then
@@ -43,29 +43,39 @@ local function transform(char, characterModel)
         end
       end
     end
-    local hipheight = model.Humanoid.HipHeight
-    local primary = model.PrimaryPart
-    for i,v in pairs(model:GetChildren()) do
-      if v.Name ~= "Humanoid" and v.Name ~= "HumanoidRootPart" then
-        v.Parent = char
+    local cloneHumanoid = modelClone:WaitForChild("Humanoid", 1)
+    if cloneHumanoid then
+      local hipheight = cloneHumanoid.HipHeight
 
-        -- Remove TouchInterest parts (e.g. so accessories don't jump from player to player!)
-        for i, desc in pairs(v:GetDescendants()) do
-          if desc.Name == 'TouchInterest' then
-            desc:Destroy()
+      local primary = modelClone.PrimaryPart
+      for i,v in pairs(modelClone:GetChildren()) do
+        if v.Name ~= "Humanoid" and v.Name ~= "HumanoidRootPart" then
+          v.Parent = playerCharacter
+
+          -- Remove TouchInterest parts (e.g. so accessories don't jump from player to player!)
+          for i, desc in pairs(v:GetDescendants()) do
+            if desc.Name == 'TouchInterest' then
+              desc:Destroy()
+            end
           end
         end
       end
     end
 
     -- synchronize
-    model:Destroy()
-    char.PrimaryPart = char:WaitForChild("HumanoidRootPart")
-    h.HipHeight = hipheight
-    h.Parent = char
-    char.PrimaryPart = char:WaitForChild("HumanoidRootPart")
-    h.HipHeight = hipheight
-    local plr = Players:GetPlayerFromCharacter(char)
+    modelClone:Destroy()
+    playerCharacter.PrimaryPart = playerCharacter:WaitForChild("HumanoidRootPart")
+    humanoid.HipHeight = hipheight
+    humanoid.Parent = playerCharacter
+    playerCharacter.PrimaryPart = playerCharacter:WaitForChild("HumanoidRootPart")
+    humanoid.HipHeight = hipheight
+
+    -- Copy description
+    --local description = humanoid:GetAppliedDescription()
+    --description.HeadScale = 1.0
+    --humanoid:ApplyDescription(description)
+
+    local plr = Players:GetPlayerFromCharacter(playerCharacter)
     if plr then
       UpdateCharacterEvent:FireClient(plr, hipheight)
     end

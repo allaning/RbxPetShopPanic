@@ -487,10 +487,10 @@ local function onGameStart(winningLevel)
         print("Spawning into game map: ".. playerList[idx].Name)
         local torso = Util:GetTorsoFromPlayer(playerList[idx])
         if torso then
-          local yOffset = 4
+          local yOffset = 6
           local humanoid = Util:GetHumanoid(playerList[idx])
           if humanoid then
-            yOffset = humanoid.HipHeight + 1
+            yOffset = humanoid.HipHeight + 4
           end
           torso.CFrame = CFrame.new(spawn.Position + Vector3.new(0, yOffset, 0))
         else
