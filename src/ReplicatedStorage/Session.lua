@@ -9,7 +9,7 @@ Session.__index = Session
 
 
 -- Default game session length
-Session.DEFAULT_TIME_PER_SESSION_SEC = 60 * 3
+Session.DEFAULT_TIME_PER_SESSION_SEC = (60 * 2) + 30
 
 -- Delay that occurs when game session ends
 Session.POST_GAME_COOLDOWN_PERIOD_SEC = 2
@@ -21,7 +21,7 @@ function Session.new()
 
   self.Score = 0  -- This is the running score for current session (versus points, e.g. stars, earned at end of session)
   self.StartTime = 0
-  self.Duration = 12--aing Session.DEFAULT_TIME_PER_SESSION_SEC
+  self.Duration = Session.DEFAULT_TIME_PER_SESSION_SEC
   self.IsActive = false
   self.Level = 0  -- Difficulty level
 

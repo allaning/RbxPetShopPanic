@@ -1,7 +1,7 @@
 local Globals = {
 
   -- If true, then use real database (can use false for offline testing)
-  ['USE_REAL_DATABASE'] = true,
+  ['USE_REAL_DATABASE'] = false,
 
   -- Datastore name
   ['DATA_STORE_NAME'] = "DATA00",  -- TODO Use real database

@@ -29,6 +29,16 @@ local transformerFactory = require(ReplicatedStorage.Transformers.TransformerFac
 
 local trashBinClass = require(ReplicatedStorage.TrashBins.TrashBin)
 
+
+local WALL_STR = "Wall"
+local FLOOR_STR = "Floor"
+local PRODUCER_PLOT_STR = "ProducerPlot"
+local CONSUMER_PLOT_STR = "ConsumerPlot"
+local TRASH_BIN_PLOT_STR = "TrashBinPlot"
+local TABLE_PLOT_STR = "TablePlot"
+local SPAWN_PLOT_STR = "SpawnPlot"
+
+
 local MAX_SEARCH_FOR_PLOTS = 1000
 
 
@@ -80,7 +90,7 @@ local function getAvailablePlot(map, plotType)
   while #mapObjects > 0 do
     local randNum = rand:NextInteger(1, #mapObjects)
     local obj = mapObjects[randNum]
-    if obj.Name == plotType then
+    if string.find(obj.Name, plotType) then
       local assetName = obj:GetAttribute("AssetName")
       if assetName == "" then
         --print("       Found available plot: ".. plotType)
@@ -92,11 +102,11 @@ local function getAvailablePlot(map, plotType)
 end
 
 local function getAvailableConsumerPlot(map)
-  return getAvailablePlot(map, "ConsumerPlot")
+  return getAvailablePlot(map, CONSUMER_PLOT_STR)
 end
 
 local function getAvailableProducerPlot(map)
-  return getAvailablePlot(map, "ProducerPlot")
+  return getAvailablePlot(map, PRODUCER_PLOT_STR)
 end
 
 
@@ -108,11 +118,11 @@ function MapManager.ColorizeMap(map)
   local wallColor = color["Wall"]
   for _, obj in pairs(map:GetChildren()) do
     --print("  map: ".. obj.Name)
-    if obj.Name == "Wall" then
+    if string.find(obj.Name, WALL_STR) then
       --print ("wallColor: ".. color["Wall"].R.. ",".. color["Wall"].G.. ",".. color["Wall"].B)
       local colorObj = Color3.fromRGB( color["Wall"].R, color["Wall"].G, color["Wall"].B )
       obj.Color = colorObj
-    elseif obj.Name == "Floor" then
+    elseif string.find(obj.Name, FLOOR_STR) then
       --print ("floorColor: ".. color["Floor"].R.. ",".. color["Floor"].G.. ",".. color["Floor"].B)
       local colorObj = Color3.fromRGB( color["Floor"].R, color["Floor"].G, color["Floor"].B )
       obj.Color = colorObj
@@ -299,7 +309,7 @@ function MapManager.InitializeMap(level)
   local map = randomMap:Clone()
   -- Make plots transparent
   for _, obj in pairs(map:GetDescendants()) do
-    if obj.Name == "ConsumerPlot" or obj.Name == "ProducerPlot" or obj.Name == "TrashBinPlot" or obj.Name == "TablePlot" or obj.Name == "SpawnPlot" then
+    if string.find(obj.Name, CONSUMER_PLOT_STR) or string.find(obj.Name, PRODUCER_PLOT_STR) or string.find(obj.Name, TRASH_BIN_PLOT_STR) or string.find(obj.Name, TABLE_PLOT_STR) or string.find(obj.Name, SPAWN_PLOT_STR) then
       obj.Transparency = 1
     end
   end
@@ -398,10 +408,10 @@ function MapManager.InitializeMap(level)
   local trashBinModel = serverTrashBinsFolder:WaitForChild("TrashBin")
   local tableModel = serverTablesFolder:WaitForChild("Table")
   for _, obj in pairs(map:GetChildren()) do
-    if obj.Name == "TrashBinPlot" then
+    if string.find(obj.Name, TRASH_BIN_PLOT_STR) then
       local trashBinInstance = createTrashBinAtPlot(trashBinModel, obj)
       table.insert(MapManager.trashBins, trashBinInstance)
-    elseif obj.Name == "TablePlot" then
+    elseif string.find(obj.Name, TABLE_PLOT_STR) then
       local tableClone = createTableAtPlot(tableModel, obj)
       table.insert(MapManager.tableModels, tableClone)
     end
@@ -425,7 +435,7 @@ function MapManager.InitializeMap(level)
   -- Put spawn plots in table
   local mapObjects = map:GetChildren()
   for idx, object in pairs(mapObjects) do
-    if object.Name == "SpawnPlot" then
+    if string.find(object.Name, SPAWN_PLOT_STR) then
       table.insert(MapManager.spawnPlotParts, object)
     end
   end
