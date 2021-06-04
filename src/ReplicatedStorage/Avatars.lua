@@ -9,6 +9,9 @@ local Avatars = {
   -- MarketplaceService Product ID
   ['PRODUCT_ID_ATTR_NAME'] = "ProductId",
 
+  -- Label to show on avatar thumbnail
+  ['THUMB_LABEL_ATTR_NAME'] = "ThumbLabel",
+
 }
 
 return Avatars

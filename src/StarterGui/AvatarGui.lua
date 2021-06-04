@@ -98,8 +98,26 @@ function AvatarGui.Initialize()
         local viewport = ViewportFrameFactory.GetViewportFrame(model, Vector3.new(0, 2.5, -6.0))
         viewport.Parent = charFrame
 
+        -- Thumbnail label
+        local thumbLabel = model:GetAttribute(Avatars.THUMB_LABEL_ATTR_NAME)
+        if thumbLabel then
+          local thumbTextLabel = Util:CreateInstance("TextLabel", {
+              Name = "thumbTextLabel",
+              AnchorPoint = Vector2.new(0.5, 0.5),
+              Position = UDim2.new(0.5, 0, 0.89, 0),
+              Size = UDim2.new(0.8, 0, 0.15, 0),
+              BackgroundTransparency = 1.0,
+              TextColor3 = Themes[Themes.CurrentTheme].TextColor,
+              TextStrokeTransparency = false,
+              Font = Enum.Font.LuckiestGuy,
+              TextScaled = true,
+              Text = thumbLabel,
+            }, charFrame)
+        end
+
+        -- Thumbnail button
         local charButton = Util:CreateInstance("TextButton", {
-            Name = "Button",
+            Name = "ThumbnailButton",
             Position = UDim2.new(0.0, 0, 0.0, 0),
             Size = UDim2.new(1.0, 0, 1.0, 0),
             Transparency = 1.0,
