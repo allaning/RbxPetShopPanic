@@ -64,6 +64,7 @@ function PlayerManager:Initialize()
     --table.insert(self.ProductIdsOwned, 1178916298)  -- aing testing Fox
     --table.insert(self.ProductIdsOwned, 1178952971)  -- aing testing Bear
     --table.insert(self.ProductIdsOwned, 1178968280)  -- aing testing Monkey
+    --table.insert(self.ProductIdsOwned, 1180009943)  -- aing testing Draconis
 
   else
     error("Cannot InitializePlayer because self.Player is not set")

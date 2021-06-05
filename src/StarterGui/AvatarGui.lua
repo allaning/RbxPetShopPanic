@@ -16,11 +16,15 @@ local SoundModule = require(ReplicatedStorage.SoundModule)
 local Avatars = require(ReplicatedStorage.Avatars)
 local Util = require(ReplicatedStorage.Util)
 
+local RunService = game:GetService("RunService")
+
 local StarterGui = game:GetService("StarterGui")
 local FrameFactory = require(StarterGui.FrameFactory)
 
 local SelectCharacterRequestEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SelectCharacterRequest")
 local UpdateCharacterEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("UpdateCharacter")
+local ProductIdsOwnedChangedEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ProductIdsOwnedChanged")
+local GetOwnedProductIdsFn = ReplicatedStorage:WaitForChild("RemoteFunctions"):WaitForChild("GetOwnedProductIds")
 
 local CharacterFolder = ReplicatedStorage:WaitForChild("Characters")
 
@@ -29,8 +33,8 @@ local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
 
-local CHARACTER_THUMB_SIZE_SCALE_X = 0.30
-local CHARACTER_THUMB_SIZE_SCALE_Y = 0.1
+local CHARACTER_THUMB_SIZE_SCALE_X = 0.18
+local CHARACTER_THUMB_SIZE_SCALE_Y = 0.07
 
 
 local AvatarGui = {}
@@ -95,24 +99,43 @@ function AvatarGui.Initialize()
             BackgroundTransparency = 1.0,
             LayoutOrder = layoutOrder,
           }, scrollingFrame)
-        local viewport = ViewportFrameFactory.GetViewportFrame(model, Vector3.new(0, 2.5, -6.0))
+        local viewport, clone = ViewportFrameFactory.GetViewportFrame(model, Vector3.new(-1.2, 2.0, -5.2))
         viewport.Parent = charFrame
 
         -- Thumbnail label
         local thumbLabel = model:GetAttribute(Avatars.THUMB_LABEL_ATTR_NAME)
+        local thumbTextLabel = nil
         if thumbLabel then
-          local thumbTextLabel = Util:CreateInstance("TextLabel", {
+          thumbTextLabel = Util:CreateInstance("TextLabel", {
               Name = "thumbTextLabel",
               AnchorPoint = Vector2.new(0.5, 0.5),
               Position = UDim2.new(0.5, 0, 0.89, 0),
               Size = UDim2.new(0.8, 0, 0.15, 0),
               BackgroundTransparency = 1.0,
-              TextColor3 = Themes[Themes.CurrentTheme].TextColor,
-              TextStrokeTransparency = false,
+              TextColor3 = Color3.fromRGB(190, 190, 49),
+              TextStrokeTransparency = 1.0,
               Font = Enum.Font.LuckiestGuy,
               TextScaled = true,
               Text = thumbLabel,
             }, charFrame)
+        end
+
+        -- If premium product, check if player owns product
+        local costRobux = model:GetAttribute(Avatars.COST_ROBUX_ATTR_NAME)
+        local productId = -1
+        local productList = {}
+        if costRobux then
+          productId = model:GetAttribute(Avatars.PRODUCT_ID_ATTR_NAME)
+          -- Update gui if products owned changes
+          local function updateThumbLabel(productList)
+            local isOwned = Util:Contains(productList, productId)
+            if isOwned then
+              thumbTextLabel.Text = "Owned"
+            end
+          end
+          productList = GetOwnedProductIdsFn:InvokeServer()
+          updateThumbLabel(productList)
+          ProductIdsOwnedChangedEvent.OnClientEvent:Connect(updateThumbLabel)
         end
 
         -- Thumbnail button
@@ -135,41 +158,64 @@ function AvatarGui.Initialize()
                 Name = infoFrameName,
                 AnchorPoint = Vector2.new(0.5, 0.5),
                 Position = UDim2.new(0.8, 0, 0.55, 0),
-                Size = UDim2.new(0.3, 0, 0.7, 0),
+                Size = UDim2.new(0.3, 0, 0.8, 0),
                 BackgroundTransparency = 0.0,
                 BackgroundColor3 = Themes[Themes.CurrentTheme].InnerFrameColor,
                 BorderSizePixel = 0,
               }, AvatarGui.Frame)
+
+            local cloneViewportFrame = Util:CreateInstance("Frame", {
+                Name = model.Name.. "CloneViewportFrame",
+                AnchorPoint = Vector2.new(0.5, 0.5),
+                Position = UDim2.new(0.5, 0, 0.45, 0),
+                Size = UDim2.new(0.9, 0, 0.9, 0),
+                BackgroundTransparency = 1.0,
+              }, infoFrame)
+            local viewportCopy, cloneCopy = ViewportFrameFactory.GetViewportFrame(model, Vector3.new(-1.2, 2.0, -5.2))
+            viewportCopy.Parent = cloneViewportFrame
+
+            -- Rotate model
+            local degreesPerSecond = 20
+            local function onHeartbeat(deltaTime)
+              if AvatarGui.OuterFrame.Active and cloneCopy and cloneCopy.PrimaryPart then
+                local deltaRotation = deltaTime * degreesPerSecond
+                cloneCopy:SetPrimaryPartCFrame(cloneCopy.PrimaryPart.CFrame * CFrame.Angles(0, math.rad(deltaRotation), 0))
+                --print("rotate: ".. model.Name)
+              end
+            end
+            RunService.Heartbeat:Connect(onHeartbeat)
+
             local charTitle = Util:CreateInstance("TextLabel", {
                 Name = "CharacterTitle",
                 AnchorPoint = Vector2.new(0.5, 0.5),
-                Position = UDim2.new(0.5, 0, 0.2, 0),
+                Position = UDim2.new(0.5, 0, 0.0, 0),
                 Size = UDim2.new(0.8, 0, 0.2, 0),
                 BackgroundTransparency = 1.0,
                 TextScaled = true,
                 Text = "",  -- This will be set to the selected model name and used in the remote event
                 TextColor3 = Themes[Themes.CurrentTheme].TextColor2,
+                TextStrokeTransparency = 1.0,
                 Font = Enum.Font.FredokaOne,
               }, infoFrame)
             local charDescription = Util:CreateInstance("TextLabel", {
                 Name = "CharacterDescription",
                 AnchorPoint = Vector2.new(0.5, 0.5),
-                Position = UDim2.new(0.5, 0, 0.5, 0),
+                Position = UDim2.new(0.5, 0, 0.85, 0),
                 Size = UDim2.new(0.85, 0, 0.2, 0),
                 BackgroundTransparency = 1.0,
                 TextColor3 = Themes[Themes.CurrentTheme].TextColor,
                 Font = Enum.Font.FredokaOne,
                 TextScaled = true,
                 --TextSize = 22,
-                TextXAlignment = Enum.TextXAlignment.Left,
+                TextXAlignment = Enum.TextXAlignment.Center,
                 TextYAlignment = Enum.TextYAlignment.Top,
                 Text = "",  -- This will be set when a character icon is clicked
               }, infoFrame)
             local charEquipBtn = Util:CreateInstance("TextButton", {
                 Name = "EquipCharacter",
                 AnchorPoint = Vector2.new(0.5, 0.5),
-                Position = UDim2.new(0.5, 0, 0.8, 0),
-                Size = UDim2.new(0.5, 0, 0.2, 0),
+                Position = UDim2.new(0.5, 0, 0.95, 0),
+                Size = UDim2.new(0.5, 0, 0.15, 0),
                 BackgroundTransparency = 0.0,
                 BackgroundColor3 = Themes[Themes.CurrentTheme].BorderColor,
                 BorderSizePixel = 0,
@@ -190,9 +236,19 @@ function AvatarGui.Initialize()
             if costPoints then
               charDescription.Text = "Stars needed: ".. tostring(costPoints).. "\n"
             end
-            local costRobux = model:GetAttribute(Avatars.COST_ROBUX_ATTR_NAME)
             if costRobux then
-              charDescription.Text = charDescription.Text.. "Robux: ".. tostring(costRobux).. "\n"
+              local function showIfOwnProduct(productList)
+                local isOwned = Util:Contains(productList, productId)
+                if isOwned then
+                  charDescription.Text = "Owned\n"
+                else
+                  charDescription.Text = charDescription.Text.. "Robux: ".. tostring(costRobux).. "\n"
+                end
+              end
+              productList = GetOwnedProductIdsFn:InvokeServer()
+              showIfOwnProduct(productList)
+              -- Update gui if products owned changes
+              ProductIdsOwnedChangedEvent.OnClientEvent:Connect(showIfOwnProduct)
             end
 
             charEquipBtn.Activated:Connect(function()

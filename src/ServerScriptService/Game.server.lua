@@ -34,8 +34,10 @@ local SessionResultsEvent = ReplicatedStorage.Events.SessionResults
 local SessionScoreEvent = ReplicatedStorage.Events.SessionScore
 local ShowMessagePopupEvent = ReplicatedStorage.Events.ShowMessagePopup
 local PlayerRemovingEvent = ReplicatedStorage.Events.PlayerRemoving
-local GetPlayerManagerInstanceBindableFn = ServerScriptService.GetPlayerManagerInstanceBindableFn
+local GetPlayerManagerInstanceBindableFn = ServerScriptService.GetPlayerManagerInstanceBindable
 local InsertProductIdBindableEvent = ServerScriptService.InsertProductIdBindable
+local GetOwnedProductIdsBindableFn = ServerScriptService.GetOwnedProductIdsBindable
+local GetOwnedProductIdsFn = ReplicatedStorage.RemoteFunctions.GetOwnedProductIds
 
 local Players = game:GetService("Players")
 
@@ -62,6 +64,16 @@ local function getPlayerManagerFromList(playerName)
   return PlayerManager.GetPlayerManagerFromList(playerManagers, playerName)
 end
 GetPlayerManagerInstanceBindableFn.OnInvoke = getPlayerManagerFromList
+
+-- Get products owned for specified Player.Name
+local function getOwnedProductIds(player)
+  local plrMgr = getPlayerManagerFromList(player.Name)
+  if plrMgr then
+    return plrMgr:GetProductIdsOwned()
+  end
+end
+GetOwnedProductIdsBindableFn.OnInvoke = getOwnedProductIds
+GetOwnedProductIdsFn.OnServerInvoke = getOwnedProductIds
 
 
 local session = nil
@@ -743,5 +755,4 @@ Players.PlayerRemoving:Connect(function(Player)
     end
   end
 end)
-
 

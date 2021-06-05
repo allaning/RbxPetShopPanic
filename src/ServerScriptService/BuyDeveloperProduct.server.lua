@@ -5,8 +5,9 @@ local Util = require(ReplicatedStorage.Util)
 
 local ServerScriptService = game:GetService("ServerScriptService")
 local PlayerManager = require(ServerScriptService.PlayerManager)
-local GetPlayerManagerInstanceBindableFn = ServerScriptService.GetPlayerManagerInstanceBindableFn
 local InsertProductIdBindableEvent = ServerScriptService.InsertProductIdBindable
+local ProductIdsOwnedChangedEvent = ReplicatedStorage.Events.ProductIdsOwnedChanged
+local GetOwnedProductIdsBindableFn = ServerScriptService.GetOwnedProductIdsBindable
 
 local CharacterFolder = ReplicatedStorage.Characters
 
@@ -45,6 +46,10 @@ end
 productFunctions[PRODUCT_TYPES.Avatar] = function(receipt, player)
   if player then
     InsertProductIdBindableEvent:Fire(player, receipt.ProductId)
+    local productsOwned = GetOwnedProductIdsBindableFn:Invoke(player)
+    if productsOwned then
+      ProductIdsOwnedChangedEvent:FireClient(player, productsOwned)
+    end
     return true
   end
 end
