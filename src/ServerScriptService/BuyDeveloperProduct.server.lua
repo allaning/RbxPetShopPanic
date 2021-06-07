@@ -9,7 +9,8 @@ local InsertProductIdBindableEvent = ServerScriptService.InsertProductIdBindable
 local ProductIdsOwnedChangedEvent = ReplicatedStorage.Events.ProductIdsOwnedChanged
 local GetOwnedProductIdsBindableFn = ServerScriptService.GetOwnedProductIdsBindable
 
-local CharacterFolder = ReplicatedStorage.Characters
+local CharacterFolder = ReplicatedStorage.Avatar.Characters
+local ShoulderPetFolder = ReplicatedStorage.Avatar.ShoulderPets
 
 local Players = game:GetService("Players")
 
@@ -19,11 +20,13 @@ local productFunctions = {}
 
 -- Product types
 local PRODUCT_TYPES = {
-  ["Avatar"] = 1,
+  ["Character"] = 1,
+  ["ShoulderPet"] = 2,
 }
 
 -- List of product IDs by type
 local avatarProductIds = {}
+local shoulderPetProductIds = {}
 
 -- Initialize avatarProductIds
 for _, subdir in pairs(CharacterFolder:GetChildren()) do
@@ -35,15 +38,27 @@ for _, subdir in pairs(CharacterFolder:GetChildren()) do
   end
 end
 
-
-local function getProductType(productId)
-  if Util:Contains(avatarProductIds, productId) then
-    return PRODUCT_TYPES.Avatar
+-- Initialize shoulderPetProductIds 
+for _, subdir in pairs(ShoulderPetFolder:GetChildren()) do
+  for __, shoulderPetModel in pairs(subdir:GetChildren()) do
+    local productId = shoulderPetModel:GetAttribute(Avatars.PRODUCT_ID_ATTR_NAME)
+    if productId then
+      table.insert(avatarProductIds, productId)
+    end
   end
 end
 
 
-productFunctions[PRODUCT_TYPES.Avatar] = function(receipt, player)
+local function getProductType(productId)
+  if Util:Contains(avatarProductIds, productId) then
+    return PRODUCT_TYPES.Character
+  elseif Util:Contains(shoulderPetProductIds, productId) then
+    return PRODUCT_TYPES.ShoulderPet
+  end
+end
+
+
+local function buyProduct(receipt, player)
   if player then
     InsertProductIdBindableEvent:Fire(player, receipt.ProductId)
     local productsOwned = GetOwnedProductIdsBindableFn:Invoke(player)
@@ -53,6 +68,7 @@ productFunctions[PRODUCT_TYPES.Avatar] = function(receipt, player)
     return true
   end
 end
+productFunctions[PRODUCT_TYPES.Character] = buyProduct
 
 
 -- The core 'ProcessReceipt' callback function

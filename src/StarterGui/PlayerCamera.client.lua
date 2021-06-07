@@ -17,10 +17,11 @@ local camera = Workspace.CurrentCamera
 local Player = Players.LocalPlayer
 
 local character = Player.Character or Player.CharacterAdded:wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
 -- Constant variable used to set the camera's offset from the player
 local X_ANGLE = 0
-local Y_HEIGHT_LIST = { 12, 20, 32 }
+local Y_HEIGHT_LIST = { 10, 20, 32 }
 local Z_ANGLE_LIST = { 12, 16, 18 }
 
 local currentIdx = 2  -- Start at medium height
@@ -34,7 +35,7 @@ if Settings.IsFixedCameraAngle then
   local function onRenderStep()
     -- Check if the player's character has spawned
     if character then
-      local playerPosition = character.HumanoidRootPart.Position
+      local playerPosition = humanoidRootPart.Position
       currentCameraOffset = Vector3.new(X_ANGLE, Y_HEIGHT_LIST[currentIdx], Z_ANGLE_LIST[currentIdx])
       local cameraPosition = playerPosition + currentCameraOffset
 

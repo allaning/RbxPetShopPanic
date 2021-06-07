@@ -16,7 +16,7 @@
         "$path": "shared",
         "$ignoreUnknownInstances": true
       },
-      "Characters": {
+      "Avatar": {
         "$className": "Folder",
         "$path": "shared",
         "$ignoreUnknownInstances": true

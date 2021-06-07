@@ -9,6 +9,12 @@ local Avatars = {
   -- MarketplaceService Product ID
   ['PRODUCT_ID_ATTR_NAME'] = "ProductId",
 
+  -- Template model name
+  ['TEMPLATE_MODEL_ATTR_NAME'] = "ModelTemplateName",
+
+  -- Color for copy of template model
+  ['TEMPLATE_COPY_COLOR_ATTR_NAME'] = "Color",
+
   -- Label to show on avatar thumbnail
   ['THUMB_LABEL_ATTR_NAME'] = "ThumbLabel",
 
