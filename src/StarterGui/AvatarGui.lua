@@ -137,7 +137,7 @@ end
 
 local function initializeTabButtons()
   initializeTabButton(AvatarGui.CharacterTabButton, "Character", 0.3, {AvatarGui.CharacterScrollingFrame})
-  initializeTabButton(AvatarGui.ShoulderPetTabButton, "Pet", 0.45, {AvatarGui.ShoulderPetScrollingFrame})
+  initializeTabButton(AvatarGui.ShoulderPetTabButton, "Shoulder Pet", 0.45, {AvatarGui.ShoulderPetScrollingFrame})
 end
 
 local function initializeCharacterFrame()

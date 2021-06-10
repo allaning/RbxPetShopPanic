@@ -21,6 +21,10 @@ local music = {
     "rbxassetid://1844779713",  -- https://www.roblox.com/library/1844779713/Boulevard
     "rbxassetid://1845765957",  -- https://www.roblox.com/library/1845765957/Happy-Music-Happy-People
   },
+  ['3'] = {
+    "rbxassetid://1847645014",  -- https://www.roblox.com/library/1847645014/8-Bit-Special-C
+    "rbxassetid://1847606521",  -- https://www.roblox.com/library/1847606521/Im-Gonna-Get-Up-Remix-C
+  },
 }
 
 
