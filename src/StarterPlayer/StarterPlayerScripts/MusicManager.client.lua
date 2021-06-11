@@ -2,8 +2,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Util = require(ReplicatedStorage.Util)
 local Promise = require(ReplicatedStorage.Vendor.Promise)
 
-local SessionCountdownBeginEvent = ReplicatedStorage.Events.SessionCountdownBegin
-local SessionEndedEvent = ReplicatedStorage.Events.SessionEnded
+local SessionCountdownBeginEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionCountdownBegin")
+local SessionEndedEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionEnded")
+local PlayMusicBindableEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("PlayMusicBindable")
 
 local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
@@ -49,6 +50,8 @@ local function playMusic(parentObject, soundId, volume)
     warn("Problem playing music: ".. soundId)
   end)
 end 
+PlayMusicBindableEvent.Event:Connect(playMusic)
+
 
 local function stopMusic()
   if currentMusic and currentMusic.IsPlaying then

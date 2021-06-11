@@ -34,9 +34,9 @@ local SessionResultsEvent = ReplicatedStorage.Events.SessionResults
 local SessionScoreEvent = ReplicatedStorage.Events.SessionScore
 local ShowMessagePopupEvent = ReplicatedStorage.Events.ShowMessagePopup
 local PlayerRemovingEvent = ReplicatedStorage.Events.PlayerRemoving
-local GetPlayerManagerInstanceBindableFn = ServerScriptService.GetPlayerManagerInstanceBindable
-local InsertProductIdBindableEvent = ServerScriptService.InsertProductIdBindable
-local GetOwnedProductIdsBindableFn = ServerScriptService.GetOwnedProductIdsBindable
+local GetPlayerManagerInstanceBindableFn = ServerScriptService.Bindable.GetPlayerManagerInstanceBindable
+local InsertProductIdBindableEvent = ServerScriptService.Bindable.InsertProductIdBindable
+local GetOwnedProductIdsBindableFn = ServerScriptService.Bindable.GetOwnedProductIdsBindable
 local GetOwnedProductIdsFn = ReplicatedStorage.RemoteFunctions.GetOwnedProductIds
 
 local Players = game:GetService("Players")

@@ -5,9 +5,9 @@ local Util = require(ReplicatedStorage.Util)
 
 local ServerScriptService = game:GetService("ServerScriptService")
 local PlayerManager = require(ServerScriptService.PlayerManager)
-local InsertProductIdBindableEvent = ServerScriptService.InsertProductIdBindable
+local InsertProductIdBindableEvent = ServerScriptService.Bindable.InsertProductIdBindable
 local ProductIdsOwnedChangedEvent = ReplicatedStorage.Events.ProductIdsOwnedChanged
-local GetOwnedProductIdsBindableFn = ServerScriptService.GetOwnedProductIdsBindable
+local GetOwnedProductIdsBindableFn = ServerScriptService.Bindable.GetOwnedProductIdsBindable
 
 local CharacterFolder = ReplicatedStorage.Avatar.Characters
 local ShoulderPetFolder = ReplicatedStorage.Avatar.ShoulderPets

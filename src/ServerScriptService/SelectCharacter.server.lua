@@ -16,7 +16,7 @@ local UpdateCharacterEvent = ReplicatedStorage.Events.UpdateCharacter
 
 local ServerScriptService = game:GetService("ServerScriptService")
 local PlayerManager = require(ServerScriptService.PlayerManager)
-local GetPlayerManagerInstanceBindableFn = ServerScriptService.GetPlayerManagerInstanceBindable
+local GetPlayerManagerInstanceBindableFn = ServerScriptService.Bindable.GetPlayerManagerInstanceBindable
 
 local CharacterFolder = ReplicatedStorage.Avatar.Characters
 local ShoulderPetFolder = ReplicatedStorage.Avatar.ShoulderPets

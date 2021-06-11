@@ -9,11 +9,14 @@ local DataStore2 = require(ServerScriptService.Vendor.DataStore2)
 
 -- DataStore names
 
--- Player Points (Stars)
+-- Player Points (Stars) as a single number
 local DB_POINTS_STORE = "Points"
 
 -- List of Marketplace Product IDs that player owns
 local DB_PRODUCT_IDS_OWNED_STORE = "ProductIdsOwned"
+
+-- Table of equipped items
+local DB_EQUIPPED_STORE = "EquippedItems"
 
 
 local DatabaseAdapter = {}
@@ -25,6 +28,7 @@ function DatabaseAdapter.Initialize()
   if Globals.USE_REAL_DATABASE then
     DataStore2.Combine(Globals.DATA_STORE_NAME, DB_POINTS_STORE)
     DataStore2.Combine(Globals.DATA_STORE_NAME, DB_PRODUCT_IDS_OWNED_STORE)
+    DataStore2.Combine(Globals.DATA_STORE_NAME, DB_EQUIPPED_STORE)
   end
 end
 
@@ -70,6 +74,25 @@ function DatabaseAdapter.SetProductIdsOwned(player, productIdsOwnedList)
   if Globals.USE_REAL_DATABASE then
     local productIdsOwnedStore = DataStore2(DB_PRODUCT_IDS_OWNED_STORE, player)
     productIdsOwnedStore:Set(productIdsOwnedList)
+  end
+end
+
+
+-- EquippedItems
+
+function DatabaseAdapter.GetEquippedItems(player)
+  if Globals.USE_REAL_DATABASE then
+    local equippedItemsStore = DataStore2(DB_EQUIPPED_STORE, player)
+    return equippedItemsStore:Get({})
+  else
+    return {}
+  end
+end
+
+function DatabaseAdapter.SetEquippedItems(player, equippedItemsList)
+  if Globals.USE_REAL_DATABASE then
+    local equippedItemsStore = DataStore2(DB_EQUIPPED_STORE, player)
+    equippedItemsStore:Set(equippedItemsList)
   end
 end
 

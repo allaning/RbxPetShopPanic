@@ -5,6 +5,8 @@ local ViewportFrameFactory = require(ReplicatedStorage.Gui.ViewportFrameFactory)
 local SoundModule = require(ReplicatedStorage.SoundModule)
 local Util = require(ReplicatedStorage.Util)
 
+local PlayMusicBindableEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("PlayMusicBindable")
+
 local StarterGui = game:GetService("StarterGui")
 local FrameFactory = require(StarterGui.FrameFactory)
 
@@ -15,6 +17,8 @@ local PlayerGui = Player:WaitForChild("PlayerGui")
 
 local STAR_IMAGE_ID = "rbxassetid://6865524956"  -- https://iconarchive.com/show/small-n-flat-icons-by-paomedia/star-icon.html
 local BLANK_STAR_IMAGE_ID = "rbxassetid://6865980124"
+
+local SCORE_GUI_MUSIC = "rbxassetid://1836797203"  -- https://www.roblox.com/library/1836797203/Golden-Swagger
 
 
 local ScoreGui = {}
@@ -336,6 +340,9 @@ function ScoreGui.GetCopy(pointsEarned, numTotal, numCompleted, numFailed, playe
           ZIndex = zIndex,
         }, assistsFrame)
     end
+
+    -- Play music
+    PlayMusicBindableEvent:Fire(ScoreGui.BackgroundFrame, SCORE_GUI_MUSIC)
 
   end
   return ScoreGui.BackgroundFrame

@@ -23,14 +23,36 @@ function PlayerManager.new(player)
   self.LeaderstatsFolder = nil
   self.PointsInstance = nil  -- Leaderstats points (versus per session points)
 
-  -- Database
-  self.Points = 0  -- Cached Points; When changing Points, also update PointsInstance
-  self.ProductIdsOwned = {}  -- Cached list of Marketplace Product IDs owned
-
   -- Session info
   self.IsInGameSession = false
   self.SessionScore = 0  -- Per session score for this player
   self.SessionAssists = 0  -- Per session transformations made for this player
+
+
+  -- Database
+
+  -- Cached Points; When changing Points, also update PointsInstance
+  self.Points = 0
+
+  -- Cached list of Marketplace Product IDs owned
+  -- Format: { 123, 456 }
+  self.ProductIdsOwned = {}
+
+  -- Cached table of equipped items
+  -- Format:
+  --[[
+      {
+        ['Character'] = {
+          ['Name'] = "Draconis",
+        },
+        ['ShoulderPet'] = {
+          ['Name'] = "Brown Bunny",
+          ['IsNeon'] = false,
+        },
+      }
+  ]]--
+  self.EquippedItems = {}
+
 
   return self
 end
@@ -45,14 +67,15 @@ end
 
 function PlayerManager:Initialize()
   if self.Player then
+    local player = self.Player
     -- Setup leaderboard
     local leaderstats = Instance.new("Folder")
     leaderstats.Name = "leaderstats"
-    leaderstats.Parent = self.Player
+    leaderstats.Parent = player
     self.LeaderstatsFolder = leaderstats
 
     -- Points
-    self.Points = DatabaseAdapter.GetPoints(self.Player)
+    self.Points = DatabaseAdapter.GetPoints(player)
     local pointsInstance = Instance.new("IntValue")
     pointsInstance.Name = Globals.LEADERBOARD_POINTS_NAME  -- Name of the in-game leaderboard stat
     pointsInstance.Value = self.Points
@@ -60,11 +83,14 @@ function PlayerManager:Initialize()
     self.PointsInstance = pointsInstance
 
     -- Product IDs Owned
-    self.ProductIdsOwned = DatabaseAdapter.GetProductIdsOwned(self.Player)
+    self.ProductIdsOwned = DatabaseAdapter.GetProductIdsOwned(player)
     --table.insert(self.ProductIdsOwned, 1178916298)  -- aing testing Fox
     --table.insert(self.ProductIdsOwned, 1178952971)  -- aing testing Bear
     --table.insert(self.ProductIdsOwned, 1178968280)  -- aing testing Monkey
     --table.insert(self.ProductIdsOwned, 1180009943)  -- aing testing Draconis
+
+    -- Equipped items
+    self.EquippedItems = DatabaseAdapter.GetEquippedItems(player)
 
   else
     error("Cannot InitializePlayer because self.Player is not set")
