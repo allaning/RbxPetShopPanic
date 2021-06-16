@@ -17,6 +17,8 @@ local UpdateCharacterEvent = ReplicatedStorage.Events.UpdateCharacter
 local ServerScriptService = game:GetService("ServerScriptService")
 local PlayerManager = require(ServerScriptService.PlayerManager)
 local GetPlayerManagerInstanceBindableFn = ServerScriptService.Bindable.GetPlayerManagerInstanceBindable
+local CharacterUpdatedBindableEvent = ServerScriptService.Bindable.CharacterUpdatedBindable
+local LoadCharacterBindableEvent = ServerScriptService.Bindable.LoadCharacterBindable
 
 local CharacterFolder = ReplicatedStorage.Avatar.Characters
 local ShoulderPetFolder = ReplicatedStorage.Avatar.ShoulderPets
@@ -48,8 +50,9 @@ local function transform(playerCharacter, characterModel)
       end
     end
     local cloneHumanoid = modelClone:WaitForChild("Humanoid", 1)
+    local hipheight = 2
     if cloneHumanoid then
-      local hipheight = cloneHumanoid.HipHeight
+      hipheight = cloneHumanoid.HipHeight
 
       local primary = modelClone.PrimaryPart
       for i,v in pairs(modelClone:GetChildren()) do
@@ -74,17 +77,28 @@ local function transform(playerCharacter, characterModel)
     playerCharacter.PrimaryPart = playerCharacter:WaitForChild("HumanoidRootPart")
     humanoid.HipHeight = hipheight
 
-    -- Copy description
-    --local description = humanoid:GetAppliedDescription()
-    --description.HeadScale = 1.0
-    --humanoid:ApplyDescription(description)
+    return hipheight, modelClone.Name
+  end
+end
 
-    local plr = Players:GetPlayerFromCharacter(playerCharacter)
-    if plr then
-      UpdateCharacterEvent:FireClient(plr, hipheight)
+
+local function onLoadCharacterEvent(player, characterName)
+  if player and characterName ~= "" then
+    local character = Util:GetCharacterFromPlayer(player)
+    if character then
+      -- Find model
+      for _, folder in pairs(CharacterFolder:GetChildren()) do --aing crashing here
+        for __, obj in pairs(folder:GetChildren()) do
+          if obj.Name == characterName then
+            transform(character, obj)
+            return
+          end
+        end
+      end
     end
   end
 end
+LoadCharacterBindableEvent.Event:Connect(onLoadCharacterEvent)
 
 local function checkSelectCharacterRequest(player, folderName, modelName)
   local character = Util:GetCharacterFromPlayer(player)
@@ -98,7 +112,7 @@ local function checkSelectCharacterRequest(player, folderName, modelName)
         -- Points
         local costPoints = characterModel:GetAttribute(Avatars.COST_POINTS_ATTR_NAME)
         if costPoints then
-          if PlayerManager.GetPoints(plrMgr) < costPoints then
+          if PlayerManager.GetPointsForPlayer(plrMgr) < costPoints then
             ShowMessagePopupEvent:FireClient(player, "Need ".. costPoints.. " stars", 2.0)
             return
           end
@@ -118,7 +132,9 @@ local function checkSelectCharacterRequest(player, folderName, modelName)
           end
         end
 
-        transform(character, characterModel)
+        local hipheight, modelCloneName = transform(character, characterModel)
+        UpdateCharacterEvent:FireClient(player)
+        CharacterUpdatedBindableEvent:Fire(player, modelCloneName)
       else
         warn("Could not get PlayerManager for ".. player.Name)
       end
@@ -141,7 +157,7 @@ local function checkSelectShoulderPetRequest(player, folderName, modelName)
         -- Points
         local costPoints = shoulderPetModel:GetAttribute(Avatars.COST_POINTS_ATTR_NAME)
         if costPoints then
-          if PlayerManager.GetPoints(plrMgr) < costPoints then
+          if PlayerManager.GetPointsForPlayer(plrMgr) < costPoints then
             ShowMessagePopupEvent:FireClient(player, "Need ".. costPoints.. " stars", 2.0)
             return
           end

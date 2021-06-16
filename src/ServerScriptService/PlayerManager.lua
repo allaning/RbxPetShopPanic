@@ -11,6 +11,21 @@ local PlayerManager = {}
 PlayerManager.__index = PlayerManager
 
 
+-- Example format for self.EquippedItems
+local DEFAULT_EQUIPPED_ITEMS = {
+  ['Character'] = {
+    ['Name'] = "",
+  },
+  ['ShoulderPet'] = {
+    ['Name'] = "",
+    ['IsNeon'] = false,
+  },
+  ['PetBoost'] = {
+    ['Name'] = "",
+  },
+}
+
+
 function PlayerManager.new(player)
   local self = {}
   setmetatable(self, PlayerManager)
@@ -39,20 +54,7 @@ function PlayerManager.new(player)
   self.ProductIdsOwned = {}
 
   -- Cached table of equipped items
-  -- Format:
-  --[[
-      {
-        ['Character'] = {
-          ['Name'] = "Draconis",
-        },
-        ['ShoulderPet'] = {
-          ['Name'] = "Brown Bunny",
-          ['IsNeon'] = false,
-        },
-      }
-  ]]--
   self.EquippedItems = {}
-
 
   return self
 end
@@ -91,6 +93,12 @@ function PlayerManager:Initialize()
 
     -- Equipped items
     self.EquippedItems = DatabaseAdapter.GetEquippedItems(player)
+    if #self.EquippedItems == 0 then
+      -- Use default table
+      if self.EquippedItems['Character'] == nil then
+        self.EquippedItems['Character'] = {}
+      end
+    end
 
   else
     error("Cannot InitializePlayer because self.Player is not set")
@@ -144,6 +152,35 @@ function PlayerManager:InsertProductIdOwned(productIdOwned)
 end
 
 
+-- EquippedItems
+
+-- Returns the whole EquippedItems table
+function PlayerManager:GetEquippedItems()
+  return self.EquippedItems
+end
+
+-- Sets the whole EquippedItems table
+function PlayerManager:SetEquippedItems(equippedItemsList)
+  self.EquippedItems = equippedItemsList
+  DatabaseAdapter.SetEquippedItems(self.Player, equippedItemsList)
+end
+
+-- Save EquippedItems to data store
+function PlayerManager:SaveEquippedItems()
+  DatabaseAdapter.SetEquippedItems(self.Player, self.EquippedItems)
+end
+
+function PlayerManager:GetEquippedCharacterName()
+  return self.EquippedItems['Character']['Name']
+end
+
+function PlayerManager:SetEquippedCharacterName(charName)
+  self.EquippedItems['Character']['Name'] = charName
+  self:SaveEquippedItems()
+  print("Saving player as character: ".. self.Player.Name.. " as ".. charName)
+end
+
+
 -- Other attributes
 
 function PlayerManager:GetIsInGameSession()
@@ -183,6 +220,7 @@ function PlayerManager:IncrementSessionAssists(increment)
 end
 
 
+
 -- Helper functions, since can't pass operations via BindableFunction
 -- NOTE: Only use getters here, not setters; Users of BindableFunction get a copy of object
 
@@ -214,11 +252,11 @@ function PlayerManager.GetPlayersWithBestScoreAndAssists(playerManagers)
   return playerWithBestScore, playerWithBestAssists
 end
 
-function PlayerManager.GetPoints(playerManager)
+function PlayerManager.GetPointsForPlayer(playerManager)
   return playerManager.Points
 end
 
-function PlayerManager.GetProductIdsOwned(playerManager)
+function PlayerManager.GetProductIdsOwnedForPlayer(playerManager)
   return playerManager.ProductIdsOwned
 end
 

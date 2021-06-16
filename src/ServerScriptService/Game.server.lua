@@ -38,6 +38,8 @@ local GetPlayerManagerInstanceBindableFn = ServerScriptService.Bindable.GetPlaye
 local InsertProductIdBindableEvent = ServerScriptService.Bindable.InsertProductIdBindable
 local GetOwnedProductIdsBindableFn = ServerScriptService.Bindable.GetOwnedProductIdsBindable
 local GetOwnedProductIdsFn = ReplicatedStorage.RemoteFunctions.GetOwnedProductIds
+local LoadCharacterBindableEvent = ServerScriptService.Bindable.LoadCharacterBindable
+local CharacterUpdatedBindableEvent = ServerScriptService.Bindable.CharacterUpdatedBindable
 
 local Players = game:GetService("Players")
 
@@ -727,6 +729,18 @@ Players.PlayerAdded:Connect(function(Player)
   local playerManager = PlayerManager.new(Player)
   playerManager:Initialize()
   table.insert(playerManagers, playerManager)
+
+  -- Check for equipped items
+  local charName = playerManager:GetEquippedCharacterName()
+  if charName ~= "" then
+    print("Load Character: ".. charName)
+    LoadCharacterBindableEvent:Fire(Player, charName)
+  end
+
+  -- Register for player updates
+  CharacterUpdatedBindableEvent.Event:Connect(function(player, newCharacterName)
+    playerManager:SetEquippedCharacterName(newCharacterName)
+  end)
 end)
 
 
