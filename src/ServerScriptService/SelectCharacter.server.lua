@@ -18,7 +18,9 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local PlayerManager = require(ServerScriptService.PlayerManager)
 local GetPlayerManagerInstanceBindableFn = ServerScriptService.Bindable.GetPlayerManagerInstanceBindable
 local CharacterUpdatedBindableEvent = ServerScriptService.Bindable.CharacterUpdatedBindable
+local ShoulderPetUpdatedBindableEvent = ServerScriptService.Bindable.ShoulderPetUpdatedBindable
 local LoadCharacterBindableEvent = ServerScriptService.Bindable.LoadCharacterBindable
+local LoadShoulderPetBindableEvent = ServerScriptService.Bindable.LoadShoulderPetBindable
 
 local CharacterFolder = ReplicatedStorage.Avatar.Characters
 local ShoulderPetFolder = ReplicatedStorage.Avatar.ShoulderPets
@@ -81,13 +83,12 @@ local function transform(playerCharacter, characterModel)
   end
 end
 
-
 local function onLoadCharacterEvent(player, characterName)
   if player and characterName ~= "" then
     local character = Util:GetCharacterFromPlayer(player)
     if character then
       -- Find model
-      for _, folder in pairs(CharacterFolder:GetChildren()) do --aing crashing here
+      for _, folder in pairs(CharacterFolder:GetChildren()) do
         for __, obj in pairs(folder:GetChildren()) do
           if obj.Name == characterName then
             transform(character, obj)
@@ -208,6 +209,7 @@ local function checkSelectShoulderPetRequest(player, folderName, modelName)
           -- Add new pet
           humanoid:AddAccessory(accessory:Clone())
           UpdateCharacterEvent:FireClient(player)
+          ShoulderPetUpdatedBindableEvent:Fire(player, modelName)
         else
           warn("Could not get Humanoid or Accessory for ".. player.Name.. ", ".. modelName)
         end
@@ -220,4 +222,52 @@ local function checkSelectShoulderPetRequest(player, folderName, modelName)
   end
 end
 SelectShoulderPetRequestEvent.OnServerEvent:Connect(checkSelectShoulderPetRequest)
+
+local function onLoadShoulderPetEvent(player, shoulderPetName)
+  if player and shoulderPetName ~= "" then
+    local character = Util:GetCharacterFromPlayer(player)
+    if character then
+      -- Find model
+      for _, folder in pairs(ShoulderPetFolder:GetChildren()) do
+        for __, shoulderPetModel in pairs(folder:GetChildren()) do
+          if shoulderPetModel.Name == shoulderPetName then
+            -- Check if the model is based on a template
+            local templateModelName = shoulderPetModel:GetAttribute(Avatars.TEMPLATE_MODEL_ATTR_NAME)
+            if templateModelName then
+              local existingAccessory = shoulderPetModel:FindFirstChildWhichIsA("Accessory")
+              if not existingAccessory then
+                local templateModel = ShoulderPetTemplateFolder:WaitForChild(templateModelName, 1)
+                if templateModel then
+                  local accessory = templateModel:FindFirstChildWhichIsA("Accessory")
+                  if accessory then
+                    local accessoryClone = accessory:Clone()
+                    accessoryClone.Parent = shoulderPetModel
+                    -- Set PrimaryPart and color parts
+                    ModelUtil.SetPrimaryPartAndColors(shoulderPetModel)
+                  end
+                end
+              end
+            end
+
+            local humanoid = character:WaitForChild("Humanoid")
+            local accessory = shoulderPetModel:FindFirstChildWhichIsA("Accessory")
+            if humanoid and accessory then
+              -- Remove old pets if any
+              for i,v in pairs(character:GetChildren()) do
+                if string.find(v.Name, "ShoulderPet") then
+                  v:Destroy()
+                end
+              end
+
+              -- Add new pet
+              humanoid:AddAccessory(accessory:Clone())
+              return
+            end
+          end
+        end
+      end
+    end
+  end
+end
+LoadShoulderPetBindableEvent.Event:Connect(onLoadShoulderPetEvent)
 

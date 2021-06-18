@@ -17,7 +17,28 @@ local DATA_STORE_NAME = "DATA00"
 -- Commands for players that are NOT IN GAME
 --
 
--- NOTE: THIS HAS NOT BEEN TESTED YET
+local function showOrderedDataPage(theData)
+  print("a:".. tostring(theData))
+  for __, col in pairs(theData) do
+    print("  b:"..tostring(__))
+    if type(theData[__]) == "table" then
+      local c = ""
+      for ___, spec in pairs(theData[__]) do
+        if type(spec) == "number" then
+          c = c..tostring(___)..":"..tostring(spec)..", "
+        elseif type(spec) == "table" then
+          c = c.. "  ['".. tostring(___).. "'] = "
+          for ____, item in pairs(spec) do
+            c = c..tostring(____).."="..tostring(item)..", "
+          end
+        end
+      end
+      print("    c: "..tostring(c))
+    else
+      print("    c: "..tostring(theData[__]))
+    end
+  end
+end
 
 -- View latest data
 -- Usage: Cmd.ShowLatestData(500841057) -- WhoooDattt
@@ -27,29 +48,14 @@ function Cmd.ShowLatestData(userId)
   local playerData = DataStoreService:GetDataStore(DATA_STORE_NAME.."/"..userId)
   if playerData then
     local pages = orderedDataStore:GetSortedAsync(false, 100)
-    local data = pages:GetCurrentPage()
-    for _, pair in pairs(data) do
+    local pageData = pages:GetCurrentPage()
+    for _, pair in pairs(pageData) do
       print(("key: %d, value: %s"):format(pair.key, type(pair.value)))
-      local collection = playerData:GetAsync(pair.key)
-      if collection then
-        print("a:".. tostring(collection))
-        for __, col in pairs(collection) do
-          print("  b:"..tostring(__))
-          if type(collection[__]) == "table" then
-            local c = ""
-            for ___, spec in pairs(collection[__]) do
-              if type(spec) == "number" then
-                spec = string.format("0x%x", spec)
-              end
-              c = c..tostring(___)..":"..tostring(spec)..", "
-            end
-            print("    c:"..tostring(c))
-          else
-            print("    c:"..tostring(collection[__]))
-          end
-        end
+      local theData = playerData:GetAsync(pair.key)
+      if theData then
+        showOrderedDataPage(theData)
+        break
       end
-      break
     end
     print(("Finished (%d: %s)"):format(userId, DATA_STORE_NAME))
   else
@@ -72,29 +78,14 @@ function Cmd.ShowHistory(userId, numRecords)
     local iter = 0
     while true do
       local pages = orderedDataStore:GetSortedAsync(false, 100)
-      local data = pages:GetCurrentPage()
-      for _, pair in pairs(data) do
+      local pageData = pages:GetCurrentPage()
+      for _, pair in pairs(pageData) do
         print(("key: %d, value: %s"):format(pair.key, type(pair.value)))
-        local collection = playerData:GetAsync(pair.key)
-        if collection then
-          print("a:".. tostring(collection))
-          for __, col in pairs(collection) do
-            print("  b:"..tostring(__))
-            if type(collection[__]) == "table" then
-              local c = ""
-              for ___, spec in pairs(collection[__]) do
-                if type(spec) == "number" then
-                  spec = string.format("0x%x", spec)
-                end
-                c = c..tostring(___)..":"..tostring(spec)..", "
-              end
-              print("    c:"..tostring(c))
-            else
-              print("    c:"..tostring(collection[__]))
-            end
-          end
+        local theData = playerData:GetAsync(pair.key)
+        if theData then
+          showOrderedDataPage(theData)
           iter = iter + 1
-          if iter > numRecords then
+          if iter >= numRecords then
             print("Returning after ".. tostring(numRecords).." records.")
             return
           end

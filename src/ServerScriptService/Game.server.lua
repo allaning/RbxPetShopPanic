@@ -39,7 +39,9 @@ local InsertProductIdBindableEvent = ServerScriptService.Bindable.InsertProductI
 local GetOwnedProductIdsBindableFn = ServerScriptService.Bindable.GetOwnedProductIdsBindable
 local GetOwnedProductIdsFn = ReplicatedStorage.RemoteFunctions.GetOwnedProductIds
 local LoadCharacterBindableEvent = ServerScriptService.Bindable.LoadCharacterBindable
+local LoadShoulderPetBindableEvent = ServerScriptService.Bindable.LoadShoulderPetBindable
 local CharacterUpdatedBindableEvent = ServerScriptService.Bindable.CharacterUpdatedBindable
+local ShoulderPetUpdatedBindableEvent = ServerScriptService.Bindable.ShoulderPetUpdatedBindable
 
 local Players = game:GetService("Players")
 
@@ -736,10 +738,18 @@ Players.PlayerAdded:Connect(function(Player)
     print("Load Character: ".. charName)
     LoadCharacterBindableEvent:Fire(Player, charName)
   end
+  local shoulderPetName = playerManager:GetEquippedShoulderPetName()
+  if shoulderPetName ~= "" then
+    print("Load ShoulderPet: ".. shoulderPetName)
+    LoadShoulderPetBindableEvent:Fire(Player, shoulderPetName)
+  end
 
   -- Register for player updates
   CharacterUpdatedBindableEvent.Event:Connect(function(player, newCharacterName)
     playerManager:SetEquippedCharacterName(newCharacterName)
+  end)
+  ShoulderPetUpdatedBindableEvent.Event:Connect(function(player, newShoulderPetName)
+    playerManager:SetEquippedShoulderPetName(newShoulderPetName)
   end)
 end)
 

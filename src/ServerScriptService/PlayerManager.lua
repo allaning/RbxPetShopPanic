@@ -98,6 +98,9 @@ function PlayerManager:Initialize()
       if self.EquippedItems['Character'] == nil then
         self.EquippedItems['Character'] = {}
       end
+      if self.EquippedItems['ShoulderPet'] == nil then
+        self.EquippedItems['ShoulderPet'] = {}
+      end
     end
 
   else
@@ -177,7 +180,17 @@ end
 function PlayerManager:SetEquippedCharacterName(charName)
   self.EquippedItems['Character']['Name'] = charName
   self:SaveEquippedItems()
-  print("Saving player as character: ".. self.Player.Name.. " as ".. charName)
+  print("Saving player Character name: ".. self.Player.Name.. " as ".. charName)
+end
+
+function PlayerManager:GetEquippedShoulderPetName()
+  return self.EquippedItems['ShoulderPet']['Name']
+end
+
+function PlayerManager:SetEquippedShoulderPetName(shoulderPetName)
+  self.EquippedItems['ShoulderPet']['Name'] = shoulderPetName
+  self:SaveEquippedItems()
+  print("Saving player ShoulderPet name: ".. self.Player.Name.. " as ".. shoulderPetName)
 end
 
 
