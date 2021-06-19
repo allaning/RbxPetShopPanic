@@ -44,6 +44,9 @@ Consumer.__index = Consumer
 -- Default time after requesting an input before quitting
 Consumer.DEFAULT_EXPIRE_TIME_SEC = 50
 
+-- For each level of difficulty above 1, reduce expire time by this amount
+Consumer.EXPIRE_TIME_ADJUSTMENT_PER_DIFFICULTY_LEVEL = 5
+
 -- Show first warning when this much time left
 Consumer.YELLOW_WARNING_TIME_SEC_BEFORE_EXPIRING = 20
 Consumer.YELLOW_WARNING_COLOR = Color3.new(0.7, 0.7, 0)
@@ -106,7 +109,7 @@ Consumer.UID_ATTRIBUTE_NAME = "UID"
 
 Consumer.UID_UNINITIALIZED = -1
 
-function Consumer.new()
+function Consumer.new(difficultyLevel)
   local self = {}
   setmetatable(self, Consumer)
 
@@ -116,6 +119,9 @@ function Consumer.new()
   self.uid = Consumer.UID_UNINITIALIZED
 
   self.expireTimeSec = Consumer.DEFAULT_EXPIRE_TIME_SEC
+
+  -- Difficulty level (higher number is more difficult) makes expireTimeSec faster
+  self.difficultyLevel = difficultyLevel or 1
 
   -- Input product for this consumer (string type), e.g. "Carrot || Water" for a Bunny consumer
   self.inputProductStr = ""
@@ -415,7 +421,8 @@ function Consumer:OnInputConsumed(instance)
     local rand = Random.new()
     local randNum = rand:NextNumber(Consumer.MIN_INPUT_REQUEST_DELAY_SEC, Consumer.MAX_INPUT_REQUEST_DELAY_SEC)
     Promise.delay(extraDelaySec + randNum):andThen(function()
-      print(self:GetName().. " self.itsAwaitingInputHandler = self:ShowInputRequest(model, self:GetProductModel())")
+      -- Request another product
+      --print(self:GetName().. " self.itsAwaitingInputHandler = self:ShowInputRequest(model, self:GetProductModel())")
       local productModel = self:GetProductModel()
       self.itsAwaitingInputHandler = self:ShowInputRequest(model, productModel)
     end)
@@ -458,6 +465,14 @@ function Consumer:Run()
       if customExpireTimeSec then
         self.expireTimeSec = customExpireTimeSec
       end
+
+      -- Adjust for difficulty
+      local adjustedDifficultyLevel = self.difficultyLevel - 1
+      if 0 < adjustedDifficultyLevel and adjustedDifficultyLevel < 99 then
+        local difficultyAdjustment = adjustedDifficultyLevel * Consumer.EXPIRE_TIME_ADJUSTMENT_PER_DIFFICULTY_LEVEL
+        self.expireTimeSec -= difficultyAdjustment
+      end
+      print(self:GetName().. ": Difficulty level = ".. self.difficultyLevel.. "; Expire time = ".. self.expireTimeSec)
 
       self:RunIdleAnimation(model)
 

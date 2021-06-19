@@ -2,10 +2,10 @@ local Consumer = require(script.Parent.Consumer)
 local DefaultConsumer = setmetatable({}, {__index = Consumer})
 DefaultConsumer.__index = DefaultConsumer
 
-function DefaultConsumer.new(model)
+function DefaultConsumer.new(difficultyLevel)
   local self = setmetatable(Consumer.new(), DefaultConsumer)
 
-  self.itsModel = model
+  self.difficultyLevel = difficultyLevel
 
   return self
 end

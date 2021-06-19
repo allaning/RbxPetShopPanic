@@ -130,9 +130,10 @@ function MapManager.ColorizeMap(map)
   end
 end
 
-local function createConsumer(consumerModel, inputStr, map, currentConsumerUid)
+local function createConsumer(consumerModel, inputStr, map, currentConsumerUid, difficultyLevel)
+  print("aing function createConsumer(consumerModel, inputStr, map, currentConsumerUid, difficultyLevel=".. difficultyLevel)
   currentConsumerUid = currentConsumerUid or consumerClass.UID_UNINITIALIZED
-  local consumerInstance = consumerFactory.GetConsumer(consumerModel.Name, inputStr)
+  local consumerInstance = consumerFactory.GetConsumer(consumerModel.Name, inputStr, difficultyLevel)
   local consumerClone = consumerModel:Clone()
   consumerInstance:SetModel(consumerClone)
   consumerInstance:SetUid(currentConsumerUid)
@@ -297,13 +298,15 @@ function MapManager.Cleanup(map)
   destroyObjectList(wsTrashBinsFolder:GetChildren())
 end
 
-function MapManager.InitializeMap(level)
+function MapManager.InitializeMap(level, playerCount)
+  local playerCount = playerCount or 1
+
   -- Choose random map of specified level
   local rand = Random.new()
   local levelMapFolder = serverMapsFolder:WaitForChild(level)
   local levelMaps = levelMapFolder:GetChildren()
   local randomMap = levelMaps[ rand:NextInteger(1, #levelMaps) ]
-  --aing randomMap = serverMapsFolder["2"]:FindFirstChild("2.2") --aing testing specific map
+  --aing randomMap = serverMapsFolder["3"]:FindFirstChild("3.2") --aing testing specific map
 
   -- Create map
   local map = randomMap:Clone()
@@ -322,7 +325,7 @@ function MapManager.InitializeMap(level)
     print("Consumer: ".. consumerModel.Name.. "; Input=".. inputAttribute)
 
     -- Create consumer
-    local consumerInstance = createConsumer(consumerModel, inputAttribute, map, currentConsumerUid)
+    local consumerInstance = createConsumer(consumerModel, inputAttribute, map, currentConsumerUid, playerCount)
     currentConsumerUid += 1
     table.insert(MapManager.consumers, consumerInstance)
 

@@ -481,11 +481,12 @@ ConsumerTimerExpiredEvent.Event:Connect(onConsumerTimerExpired)
 
 local function onGameStart(winningLevel)
   print("In onGameStart")
-  -- Select a map
-  local map = MapManager.InitializeMap(winningLevel)
-
   session = Session.new()
   session:SetIsActive(true)
+
+  -- Select a map
+  local mapPlayerList = Players:GetPlayers()
+  local map = MapManager.InitializeMap(winningLevel, #mapPlayerList)
 
   -- Set current players 'in game' status
   for _, plrMgr in pairs(playerManagers) do

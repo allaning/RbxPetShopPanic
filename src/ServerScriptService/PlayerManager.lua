@@ -97,9 +97,12 @@ function PlayerManager:Initialize()
       -- Use default table
       if self.EquippedItems['Character'] == nil then
         self.EquippedItems['Character'] = {}
+        self.EquippedItems['Character']['Name'] = ""
       end
       if self.EquippedItems['ShoulderPet'] == nil then
         self.EquippedItems['ShoulderPet'] = {}
+        self.EquippedItems['ShoulderPet']['Name'] = ""
+        self.EquippedItems['ShoulderPet']['IsNeon'] = false
       end
     end
 
