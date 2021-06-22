@@ -189,13 +189,16 @@ SessionUpdateTimerCountdownEvent.OnClientEvent:Connect(updateAlreadyInSessionCou
 
 
 -- Show score gui (takes up whole screen) on top of other guis
-local function showScoreGui(pointsEarned, numTotal, numCompleted, numFailed, playerWithBestScore, playerWithBestAssists)
+local function showScoreGui(pointsEarned, numTotal, numCompleted, numFailed, mapLevel, playerWithBestScore, playerWithBestAssists)
   Promise.try(function()
-    local scoreScreenGui = Util:CreateInstance("ScreenGui", {
-        Name = "ScoreScreenGui",
-        DisplayOrder = 1,
-      }, PlayerGui)
-    local scoreGui = ScoreGui.GetCopy(pointsEarned, numTotal, numCompleted, numFailed, playerWithBestScore, playerWithBestAssists)
+    local scoreScreenGui = PlayerGui:FindFirstChild("ScoreScreenGui")
+    if not scoreScreenGui then
+      scoreScreenGui = Util:CreateInstance("ScreenGui", {
+          Name = "ScoreScreenGui",
+          DisplayOrder = 1,
+        }, PlayerGui)
+    end
+    local scoreGui = ScoreGui.GetCopy(pointsEarned, numTotal, numCompleted, numFailed, mapLevel, playerWithBestScore, playerWithBestAssists)
     scoreGui.Parent = scoreScreenGui 
   end)
 end
@@ -205,8 +208,8 @@ local function showLobbyGui()
   lobbyScreenGui.Enabled = true
 end
 
-local function showSessionResults(pointsEarned, numTotal, numCompleted, numFailed, playerWithBestScore, playerWithBestAssists)
-  showScoreGui(pointsEarned, numTotal, numCompleted, numFailed, playerWithBestScore, playerWithBestAssists)
+local function showSessionResults(pointsEarned, numTotal, numCompleted, numFailed, mapLevel, playerWithBestScore, playerWithBestAssists)
+  showScoreGui(pointsEarned, numTotal, numCompleted, numFailed, mapLevel, playerWithBestScore, playerWithBestAssists)
   showLobbyGui()
   setIsLocalPlayerInGameSession(false)
 

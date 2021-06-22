@@ -1,5 +1,8 @@
 local Avatars = {
 
+  -- Default model name if player hasn't set one yet
+  ['DEFAULT_MODEL_ATTR_NAME'] = "Boy",
+
   -- Cost for avatar in points (see StarterGui/AvatarGui.lua)
   ['COST_POINTS_ATTR_NAME'] = "CostPoints",
 

@@ -2,8 +2,10 @@ local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Themes = require(ReplicatedStorage.Themes)
 local ViewportFrameFactory = require(ReplicatedStorage.Gui.ViewportFrameFactory)
+local TweenGuiFactory = require(ReplicatedStorage.Gui.TweenGuiFactory)
 local SoundModule = require(ReplicatedStorage.SoundModule)
 local Util = require(ReplicatedStorage.Util)
+local Promise = require(ReplicatedStorage.Vendor.Promise)
 
 local PlayMusicBindableEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("PlayMusicBindable")
 
@@ -40,7 +42,7 @@ local function getIcon(imageId, parent)
   return pointsIcon
 end
 
-function ScoreGui.GetCopy(pointsEarned, numTotal, numCompleted, numFailed, playerWithBestScore, playerWithBestAssists)
+function ScoreGui.GetCopy(pointsEarned, numTotal, numCompleted, numFailed, mapLevel, playerWithBestScore, playerWithBestAssists)
   if pointsEarned then
     local zIndex = 5
     ScoreGui.BackgroundFrame = Util:CreateInstance("Frame", {
@@ -141,7 +143,6 @@ function ScoreGui.GetCopy(pointsEarned, numTotal, numCompleted, numFailed, playe
         ZIndex = zIndex,
       }, pointsFrame)
 
-
     -- Add star icons
     local starIconId = BLANK_STAR_IMAGE_ID
     local starPositionsX = { 0.25, 0.5, 0.75 }
@@ -153,7 +154,7 @@ function ScoreGui.GetCopy(pointsEarned, numTotal, numCompleted, numFailed, playe
       starIconId = BLANK_STAR_IMAGE_ID
     end
     local pointsIcon = getIcon(starIconId, pointsFrame)
-    pointsIcon.Position = UDim2.new(starPositionsX[1], 0, 0.8, 0)
+    pointsIcon.Position = UDim2.new(starPositionsX[1], 0, 0.74, 0)
     pointsIcon.ZIndex = zIndex
 
     zIndex += 1
@@ -163,7 +164,7 @@ function ScoreGui.GetCopy(pointsEarned, numTotal, numCompleted, numFailed, playe
       starIconId = BLANK_STAR_IMAGE_ID
     end
     local pointsIcon = getIcon(starIconId, pointsFrame)
-    pointsIcon.Position = UDim2.new(starPositionsX[2], 0, 0.8, 0)
+    pointsIcon.Position = UDim2.new(starPositionsX[2], 0, 0.74, 0)
     pointsIcon.ZIndex = zIndex
 
     zIndex += 1
@@ -173,8 +174,33 @@ function ScoreGui.GetCopy(pointsEarned, numTotal, numCompleted, numFailed, playe
       starIconId = BLANK_STAR_IMAGE_ID
     end
     local pointsIcon = getIcon(starIconId, pointsFrame)
-    pointsIcon.Position = UDim2.new(starPositionsX[3], 0, 0.8, 0)
+    pointsIcon.Position = UDim2.new(starPositionsX[3], 0, 0.74, 0)
     pointsIcon.ZIndex = zIndex
+
+
+    -- Map level bonus
+    if mapLevel > 1 then
+      zIndex += 1
+      local mapLevelBonus = Util:CreateInstance("TextLabel", {
+          Name = "mapLevelBonus",
+          AnchorPoint = Vector2.new(0.5, 0.5),
+          Position = UDim2.new(0.5, 0, 0.92, 0),
+          Size = UDim2.new(0.8, 0, 0.1, 0),
+          BackgroundTransparency = 1.0,
+          TextScaled = true,
+          Text = "Map Level Bonus: x".. tostring(mapLevel).. "!",
+          TextColor3 = Themes[Themes.CurrentTheme].TextColor,
+          Font = Enum.Font.FredokaOne,
+          ZIndex = zIndex,
+        }, pointsFrame)
+      local scale = Util:CreateInstance("UIScale", {
+          Scale = 0.0,
+        }, mapLevelBonus)
+      Promise.delay(0.8):andThen(function()
+        TweenGuiFactory.ScaleIn(scale, 0.07, Enum.EasingStyle.Linear, Enum.EasingDirection.In, false)
+        SoundModule.PlayDrip(PlayerGui)
+      end)
+    end
 
 
     -- OK button
@@ -198,7 +224,7 @@ function ScoreGui.GetCopy(pointsEarned, numTotal, numCompleted, numFailed, playe
       }, okBtn)
     okBtn.Activated:Connect(function()
         SoundModule.PlayMouseClick(PlayerGui)
-        ScoreGui.BackgroundFrame:Destroy()
+        ScoreGui.BackgroundFrame.Parent:Destroy()
       end)
     local okBtnShadow = Util:CreateInstance("TextLabel", {
         Name = "OK Button Shadow",

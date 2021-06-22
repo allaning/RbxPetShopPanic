@@ -1,3 +1,5 @@
+-- This is the main script for the server
+
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
@@ -6,6 +8,7 @@ local ProximityPromptService = game:GetService("ProximityPromptService")
 local AnimationModule = require(ReplicatedStorage.AnimationModule)
 local PlayerManager = require(ServerScriptService.PlayerManager)
 local DatabaseAdapter = require(ServerScriptService.DatabaseAdapter)
+local Avatars = require(ReplicatedStorage.Avatars)
 
 local Globals = require(ReplicatedStorage.Globals)
 local Util = require(ReplicatedStorage.Util)
@@ -51,6 +54,9 @@ local PRODUCT_PLAYER_WELD_NAME = "ProductPlayerWeld"
 
 -- Initialize the database
 DatabaseAdapter.Initialize()
+
+-- Initialize the maps
+MapManager.Initialize()
 
 
 -- Keep track of player level votes; List of players and their votes
@@ -552,15 +558,21 @@ local function onGameStart(winningLevel)
       playerWithBestAssistsCharacter = Util:GetCharacterFromPlayer(playerWithBestAssists)
       playerWithBestAssistsCharacter.Archivable = true
     end
+    -- Get session stats
     local pointsEarned, numTotal, numCompleted, numFailed = session:GetStats(2) -- (MapManager.GetNumConsumers())
+    -- Check for map level difficulty bonus
+    local mapLevel = map:GetAttribute(MapManager.MAP_LEVEL_ATTRIBUTE_NAME) or 1
+    -- Award players
     for _, plrMgr in pairs(playerManagers) do
       if plrMgr:GetIsInGameSession() == true then
-        plrMgr:IncrementPoints(pointsEarned)
         local plr = plrMgr:GetPlayer()
         if plr then
           -- Show score, MVP and Most Assists
-          SessionResultsEvent:FireClient(plr, pointsEarned, numTotal, numCompleted, numFailed, playerWithBestScoreCharacter, playerWithBestAssistsCharacter)
+          SessionResultsEvent:FireClient(plr, pointsEarned, numTotal, numCompleted, numFailed, mapLevel, playerWithBestScoreCharacter, playerWithBestAssistsCharacter)
         end
+        pointsEarned = pointsEarned * (mapLevel * MapManager.MAP_LEVEL_MULTIPLIER)
+        print(string.format("aing  pointsEarned = pointsEarned * (mapLevel * MapManager.MAP_LEVEL_MULTIPLIER)"), pointsEarned, mapLevel)
+        plrMgr:IncrementPoints(pointsEarned)
       end
     end
 
@@ -738,6 +750,10 @@ Players.PlayerAdded:Connect(function(Player)
   if charName ~= "" then
     print("Load Character: ".. charName)
     LoadCharacterBindableEvent:Fire(Player, charName)
+  else
+    -- Load default character
+    -- This makes character walk up for some reason...
+    --LoadCharacterBindableEvent:Fire(Player, Avatars.DEFAULT_MODEL_ATTR_NAME)
   end
   local shoulderPetName = playerManager:GetEquippedShoulderPetName()
   if shoulderPetName ~= "" then

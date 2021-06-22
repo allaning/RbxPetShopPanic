@@ -1,8 +1,11 @@
+-- Maps should be in folders divided by level. The folders should be named as the level, e.g. "1", "2", etc.
+
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 local Themes = require(ReplicatedStorage.Themes)
 local Util = require(ReplicatedStorage.Util)
+local Promise = require(ReplicatedStorage.Vendor.Promise)
 
 local wsMapsFolder = Workspace:WaitForChild("Maps")
 local wsConsumersFolder = Workspace:WaitForChild("Consumers")
@@ -38,11 +41,13 @@ local TRASH_BIN_PLOT_STR = "TrashBinPlot"
 local TABLE_PLOT_STR = "TablePlot"
 local SPAWN_PLOT_STR = "SpawnPlot"
 
-
 local MAX_SEARCH_FOR_PLOTS = 1000
 
 
 local MapManager = {}
+
+MapManager.MAP_LEVEL_ATTRIBUTE_NAME = "Level"
+MapManager.MAP_LEVEL_MULTIPLIER = 1
 
 
 -- List of inputs
@@ -318,93 +323,100 @@ function MapManager.InitializeMap(level, playerCount)
   end
   map.Parent = wsMapsFolder
 
+  -- Get map level
+  local mapLevel = map:GetAttribute(MapManager.MAP_LEVEL_ATTRIBUTE_NAME) or 1
+
   -- Look for the consumers and find their producers
   local currentConsumerUid = 1
   for consumerModelIdx, consumerModel in pairs(serverConsumersFolder:GetChildren()) do
     local inputAttribute = consumerModel:GetAttribute(consumerClass.INPUT_ATTR_NAME)
     print("Consumer: ".. consumerModel.Name.. "; Input=".. inputAttribute)
 
-    -- Create consumer
-    local consumerInstance = createConsumer(consumerModel, inputAttribute, map, currentConsumerUid, playerCount)
-    currentConsumerUid += 1
-    table.insert(MapManager.consumers, consumerInstance)
+    -- Check if consumer has a map level requirement
+    local consumerMapLevel = consumerModel:GetAttribute(consumerClass.MINIMUM_MAP_LEVEL) or 1
+    if mapLevel >= consumerMapLevel then
+      -- Create consumer
+      local consumerInstance = createConsumer(consumerModel, inputAttribute, map, currentConsumerUid, playerCount)
+      currentConsumerUid += 1
+      table.insert(MapManager.consumers, consumerInstance)
 
-    -- Process multiple inputs
-    -- TODO: Make sure it creats all product factories
-    local consumerInputs = string.split(inputAttribute, consumerClass.INPUT_DELIMITER_STR)
-    for _, inputStr in ipairs(consumerInputs) do
-      inputStr = Util:Trim(inputStr)
-      print("In MapManager.InitializeMap() inputStr=".. inputStr)
+      -- Process multiple inputs
+      -- Make sure it creats all product factories
+      local consumerInputs = string.split(inputAttribute, consumerClass.INPUT_DELIMITER_STR)
+      for _, inputStr in ipairs(consumerInputs) do
+        inputStr = Util:Trim(inputStr)
+        print("In MapManager.InitializeMap() inputStr=".. inputStr)
 
-      -- Find the producers of the input (the names should match)
-      -- Everything should start from a Factory (versus Transformer or Aggregator)
-      local isDoneFindingFactory = false
-      local count = 0
-      while not isDoneFindingFactory do
-        for _, transformerModel in pairs(serverTransformersFolder:GetChildren()) do
-          -- Note that for Transformers, the Transformer name is the name of the output product
-          if transformerModel.Name == inputStr then
-            -- Found Transformer that outputs product named inputStr
+        -- Find the producers of the input (the names should match)
+        -- Everything should start from a Factory (versus Transformer or Aggregator)
+        local isDoneFindingFactory = false
+        local count = 0
+        while not isDoneFindingFactory do
+          for _, transformerModel in pairs(serverTransformersFolder:GetChildren()) do
+            -- Note that for Transformers, the Transformer name is the name of the output product
+            if transformerModel.Name == inputStr then
+              -- Found Transformer that outputs product named inputStr
 
-            -- Check if this is a new Transformer or a repeat
-            if not containsInstanceNamed(MapManager.transformers, inputStr) then
-              -- This is a new Transformer
-              local transformerInstance, productInstance, newInputStr = createTransformer(transformerModel, inputStr, map)
-              if transformerInstance and productInstance and newInputStr then
-                -- Update current Consumer with the product info
-                consumerInstance:SetInput(inputStr)
-                consumerInstance:SetInputModel(productInstance:GetModel()) -- TODO: refactor
-                print("consumerInstance:SetInputModel(productInstance:GetModel() ".. productInstance:GetName())
+              -- Check if this is a new Transformer or a repeat
+              if not containsInstanceNamed(MapManager.transformers, inputStr) then
+                -- This is a new Transformer
+                local transformerInstance, productInstance, newInputStr = createTransformer(transformerModel, inputStr, map)
+                if transformerInstance and productInstance and newInputStr then
+                  -- Update current Consumer with the product info
+                  consumerInstance:SetInput(inputStr)
+                  consumerInstance:SetInputModel(productInstance:GetModel()) -- TODO: refactor
+                  print("consumerInstance:SetInputModel(productInstance:GetModel() ".. productInstance:GetName())
 
-                table.insert(MapManager.transformers, transformerInstance)
-                table.insert(MapManager.products, productInstance)
-                table.insert(MapManager.inputs, inputStr)
-                inputStr = newInputStr
-                break
-              end
-            else
-              -- This Transformer was already processed
-              -- Get its input to follow the chain all the way back to the factory
-              local transformerInputStr = transformerModel:GetAttribute(consumerClass.INPUT_ATTR_NAME)
-              if transformerInputStr then
-                inputStr = transformerInputStr
-                break
+                  table.insert(MapManager.transformers, transformerInstance)
+                  table.insert(MapManager.products, productInstance)
+                  table.insert(MapManager.inputs, inputStr)
+                  inputStr = newInputStr
+                  break
+                end
+              else
+                -- This Transformer was already processed
+                -- Get its input to follow the chain all the way back to the factory
+                local transformerInputStr = transformerModel:GetAttribute(consumerClass.INPUT_ATTR_NAME)
+                if transformerInputStr then
+                  inputStr = transformerInputStr
+                  break
+                end
               end
             end
           end
-        end
-        for _, factoryModel in pairs(serverFactoriesFolder:GetChildren()) do
-          if factoryModel.Name == inputStr then
-            -- Check if this is a new Factory or a repeat
-            if not containsInstanceNamed(MapManager.factories, inputStr) then
-              -- This is a new Factory
-              local factoryInstance, productInstance = createFactory(factoryModel, inputStr, map)
-              if factoryInstance and productInstance then
-                table.insert(MapManager.factories, factoryInstance)
-                table.insert(MapManager.products, productInstance)
-                table.insert(MapManager.inputs, inputStr)
+          for _, factoryModel in pairs(serverFactoriesFolder:GetChildren()) do
+            if factoryModel.Name == inputStr then
+              -- Check if this is a new Factory or a repeat
+              if not containsInstanceNamed(MapManager.factories, inputStr) then
+                -- This is a new Factory
+                local factoryInstance, productInstance = createFactory(factoryModel, inputStr, map)
+                if factoryInstance and productInstance then
+                  table.insert(MapManager.factories, factoryInstance)
+                  table.insert(MapManager.products, productInstance)
+                  table.insert(MapManager.inputs, inputStr)
 
-                isDoneFindingFactory = true
-                break
+                  isDoneFindingFactory = true
+                  break
+                end
+              else
+                -- This Factory was already processed
+                -- Do nothing
               end
-            else
-              -- This Factory was already processed
-              -- Do nothing
             end
           end
-        end
 
-        count += 1
-        if count > MAX_SEARCH_FOR_PLOTS then
-          isDoneFindingFactory = true
-        end
-      end -- while
-    end
+          count += 1
+          if count > MAX_SEARCH_FOR_PLOTS then
+            isDoneFindingFactory = true
+          end
+        end -- while
+      end
 
-    -- Start the consumer
-    consumerInstance:Run()
+      -- Start the consumer
+      consumerInstance:Run()
 
-  end -- consumer
+    end -- consumer
+  end -- consumerMapLevel
 
 
   -- Place tables and trash bins
@@ -421,18 +433,18 @@ function MapManager.InitializeMap(level, playerCount)
   end
 
   -- Fill in empty producer plots
-  local emptyConsumerPlot = getAvailableProducerPlot(map)
-  while emptyConsumerPlot do
-    emptyConsumerPlot:SetAttribute("AssetName", "Table")
+  local emptyProducererPlot = getAvailableProducerPlot(map)
+  while emptyProducererPlot do
+    emptyProducererPlot:SetAttribute("AssetName", "Table")
 
     -- Copy table
     local tableClone = serverTablesFolder:FindFirstChild("Table"):Clone()
 
     -- Move to workspace
-    tableClone:SetPrimaryPartCFrame(emptyConsumerPlot.CFrame)
+    tableClone:SetPrimaryPartCFrame(emptyProducererPlot.CFrame)
     tableClone.Parent = wsTablesFolder
 
-    emptyConsumerPlot = getAvailableProducerPlot(map)
+    emptyProducererPlot = getAvailableProducerPlot(map)
   end
 
   -- Put spawn plots in table
@@ -458,6 +470,18 @@ function MapManager.InitializeMap(level, playerCount)
 
   return map
 
+end
+
+function MapManager.Initialize()
+  for idx, mapFolder in pairs(serverMapsFolder:GetChildren()) do
+    Promise.try(function()
+      local mapLevel = tonumber(mapFolder.Name)
+      -- Set map models to level based on mapFolder name
+      for _, mapModel in pairs(mapFolder:GetChildren()) do
+        mapModel:SetAttribute(MapManager.MAP_LEVEL_ATTRIBUTE_NAME, mapLevel)
+      end
+    end)
+  end
 end
 
 return MapManager

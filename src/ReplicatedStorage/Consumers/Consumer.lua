@@ -19,6 +19,7 @@ Consumer rules:
   - Optional: Add an Attribute named ProximityHoldAnimationId (string) to specify animation ID to play during HoldDuration
   - Optional: Add a Part named ProximityHoldTargetPart to specify direction player sould face during HoldDuration
   - Optional: Add Vector3 Attribute named PrimaryPartPositionOffset to specify custom position offset for PrimaryPart vs. plot
+  - Optional: Add a number Attribute named MinimumMapLevel to specify minimum map level to spawn this consumer
 ]]--
 
 
@@ -102,6 +103,9 @@ Consumer.PROXIMITY_HOLD_ANIMATION_ATTR_NAME = "ProximityHoldAnimationId"
 
 -- Part that player should face during Proximity HoldDuration
 Consumer.PROXIMITY_HOLD_TARGET_PART_NAME = "ProximityHoldTargetPart"
+
+-- Minimum map level required for this consumer to be spawned
+Consumer.MINIMUM_MAP_LEVEL = "MinimumMapLevel"
 
 -- Name of UID Attribute
 -- This can be used to identify the consumer on the client side, etc.
