@@ -191,15 +191,11 @@ SessionUpdateTimerCountdownEvent.OnClientEvent:Connect(updateAlreadyInSessionCou
 -- Show score gui (takes up whole screen) on top of other guis
 local function showScoreGui(pointsEarned, numTotal, numCompleted, numFailed, mapLevel, playerWithBestScore, playerWithBestAssists)
   Promise.try(function()
-    local scoreScreenGui = PlayerGui:FindFirstChild("ScoreScreenGui")
-    if not scoreScreenGui then
-      scoreScreenGui = Util:CreateInstance("ScreenGui", {
-          Name = "ScoreScreenGui",
-          DisplayOrder = 1,
-        }, PlayerGui)
-    end
-    local scoreGui = ScoreGui.GetCopy(pointsEarned, numTotal, numCompleted, numFailed, mapLevel, playerWithBestScore, playerWithBestAssists)
-    scoreGui.Parent = scoreScreenGui 
+    local scoreScreenGui = Util:CreateInstance("ScreenGui", {
+        Name = "ScoreScreenGui",
+        DisplayOrder = 1,
+      }, PlayerGui)
+    ScoreGui.Show(scoreScreenGui, pointsEarned, numTotal, numCompleted, numFailed, mapLevel, playerWithBestScore, playerWithBestAssists)
   end)
 end
 

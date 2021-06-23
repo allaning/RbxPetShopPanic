@@ -8,6 +8,7 @@ local SoundModule = require(ReplicatedStorage.SoundModule)
 local Promise = require(ReplicatedStorage.Vendor.Promise)
 
 -- Events
+local ShowTitleMessageEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ShowTitleMessage")
 local SessionCountdownBeginEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionCountdownBegin")
 local SessionEndedEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionEnded")
 local ShowMessagePopupEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ShowMessagePopup")
@@ -62,6 +63,39 @@ local function showMessagePopup(message, duration)
 end
 ShowMessagePopupEvent.OnClientEvent:Connect(showMessagePopup)
 ShowMessagePopupBindableEvent.Event:Connect(showMessagePopup)
+
+
+local function showTitle(message, durationSec)
+  local duration = durationSec or 2.0
+
+  local titleGui = Util:CreateInstance("ScreenGui", {
+      Name = "TitleGui",
+    }, PlayerGui)
+
+  local textLabel = Util:CreateInstance("TextLabel", {
+      Text = message,
+      Font = Enum.Font.Bangers,
+      --Font = Enum.Font.LuckiestGuy,
+      AnchorPoint = Vector2.new(0.5, 0.5),
+      Position = UDim2.new(0.5, 0, 0.4, 0),
+      Size = UDim2.new(0.4, 0, 0.2, 0),
+      TextColor3 = FONT_COLOR_DEFAULT,
+      TextStrokeColor3 = FONT_BORDER_COLOR_DEFAULT,
+      TextStrokeTransparency = 0.0,
+      TextScaled = true,
+      BackgroundTransparency = 1,
+    }, titleGui)
+  local scale = Util:CreateInstance("UIScale", {
+      Scale = 1.0,
+    }, textLabel)
+
+  Promise.delay(duration):andThen(function()
+    TweenGuiFactory.ScaleOut(scale, 0.05, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, false)
+    textLabel:Destroy()
+    titleGui:Destroy()
+  end)
+end
+ShowTitleMessageEvent.OnClientEvent:Connect(showTitle)
 
 
 local function getAnnouncementTextLabel(screenGui, message, backgroundTransparency, scale)

@@ -2,6 +2,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Util = require(ReplicatedStorage.Util)
 local Promise = require(ReplicatedStorage.Vendor.Promise)
 
+local LobbyMusicBeginBindableEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("LobbyMusicBeginBindable")
 local SessionCountdownBeginEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionCountdownBegin")
 local SessionEndedEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionEnded")
 local PlayMusicBindableEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("PlayMusicBindable")
@@ -10,6 +11,8 @@ local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
+
+local lobbyMusic = "rbxassetid://1835276362"  -- https://www.roblox.com/library/1835276362/Many-Hands-Make-Light-Work-Main
 
 local music = {
   ['1'] = {
@@ -25,6 +28,12 @@ local music = {
   ['3'] = {
     "rbxassetid://1847645014",  -- https://www.roblox.com/library/1847645014/8-Bit-Special-C
     "rbxassetid://1847606521",  -- https://www.roblox.com/library/1847606521/Im-Gonna-Get-Up-Remix-C
+    "rbxassetid://1843384340",  -- https://www.roblox.com/library/1843384340/Morning-Run
+  },
+  ['4'] = {
+    "rbxassetid://1838857104",  -- https://www.roblox.com/library/1838857104/Roselita
+    "rbxassetid://1838529052",  -- https://www.roblox.com/library/1838529052/Ska-Wah
+    "rbxassetid://1837720187",  -- https://www.roblox.com/library/1837720187/The-Secret-Room
   },
 }
 
@@ -56,11 +65,21 @@ PlayMusicBindableEvent.Event:Connect(playMusic)
 local function stopMusic()
   if currentMusic and currentMusic.IsPlaying then
     currentMusic:Stop()
+    currentMusic:Destroy()
   end
 end
+SessionEndedEvent.OnClientEvent:Connect(stopMusic)
+
+
+local function playLobbyMusic()
+  playMusic(PlayerGui, lobbyMusic)
+end
+LobbyMusicBeginBindableEvent.Event:Connect(playLobbyMusic)
 
 
 local function playSessionMusic(duration, levelName)
+  stopMusic()
+
   -- Choose music
   local rand = Random.new()
   local randIdx = rand:NextInteger(1, #(music[levelName]))
@@ -68,8 +87,6 @@ local function playSessionMusic(duration, levelName)
 end
 SessionCountdownBeginEvent.OnClientEvent:Connect(playSessionMusic)
 
-local function stopSessionMusic()
-  stopMusic()
-end
-SessionEndedEvent.OnClientEvent:Connect(stopSessionMusic)
+
+playLobbyMusic()
 

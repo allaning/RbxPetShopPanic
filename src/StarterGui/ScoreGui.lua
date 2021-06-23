@@ -7,6 +7,7 @@ local SoundModule = require(ReplicatedStorage.SoundModule)
 local Util = require(ReplicatedStorage.Util)
 local Promise = require(ReplicatedStorage.Vendor.Promise)
 
+local LobbyMusicBeginBindableEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("LobbyMusicBeginBindable")
 local PlayMusicBindableEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("PlayMusicBindable")
 
 local StarterGui = game:GetService("StarterGui")
@@ -42,7 +43,7 @@ local function getIcon(imageId, parent)
   return pointsIcon
 end
 
-function ScoreGui.GetCopy(pointsEarned, numTotal, numCompleted, numFailed, mapLevel, playerWithBestScore, playerWithBestAssists)
+function ScoreGui.Show(scoreScreenGui, pointsEarned, numTotal, numCompleted, numFailed, mapLevel, playerWithBestScore, playerWithBestAssists)
   if pointsEarned then
     local zIndex = 5
     ScoreGui.BackgroundFrame = Util:CreateInstance("Frame", {
@@ -224,7 +225,8 @@ function ScoreGui.GetCopy(pointsEarned, numTotal, numCompleted, numFailed, mapLe
       }, okBtn)
     okBtn.Activated:Connect(function()
         SoundModule.PlayMouseClick(PlayerGui)
-        ScoreGui.BackgroundFrame.Parent:Destroy()
+        scoreScreenGui:Destroy()
+        LobbyMusicBeginBindableEvent:Fire()
       end)
     local okBtnShadow = Util:CreateInstance("TextLabel", {
         Name = "OK Button Shadow",
@@ -278,7 +280,7 @@ function ScoreGui.GetCopy(pointsEarned, numTotal, numCompleted, numFailed, mapLe
     zIndex += 1
     if playerWithBestScore then
       local viewport, scoreClone = ViewportFrameFactory.GetViewportFrame(playerWithBestScore, Vector3.new(0, 2.5, -6.0))
-      viewport.Position = UDim2.new(0.25, 0, 0.7, 0)
+      viewport.Position = UDim2.new(0.25, 0, 0.65, 0)
       viewport.BackgroundTransparency = 1.0
       viewport.ZIndex = zIndex
       viewport.Parent = mvpFrame
@@ -334,7 +336,7 @@ function ScoreGui.GetCopy(pointsEarned, numTotal, numCompleted, numFailed, mapLe
     local assistsTitle = Util:CreateInstance("TextLabel", {
         Name = "AssistsTitle",
         AnchorPoint = Vector2.new(0.5, 0.5),
-        Position = UDim2.new(0.25, 0, 0.14, 0),
+        Position = UDim2.new(0.25, 0, 0.10, 0),
         Size = UDim2.new(0.5, 0, 0.18, 0),
         BackgroundTransparency = 1.0,
         TextScaled = true,
@@ -347,7 +349,7 @@ function ScoreGui.GetCopy(pointsEarned, numTotal, numCompleted, numFailed, mapLe
     zIndex += 1
     if playerWithBestAssists then
       local viewport, assistsClone = ViewportFrameFactory.GetViewportFrame(playerWithBestAssists, Vector3.new(0, 2.5, -6.0))
-      viewport.Position = UDim2.new(0.25, 0, 0.75, 0)
+      viewport.Position = UDim2.new(0.25, 0, 0.70, 0)
       viewport.BackgroundTransparency = 1.0
       viewport.ZIndex = zIndex
       viewport.Parent = assistsFrame
@@ -371,7 +373,8 @@ function ScoreGui.GetCopy(pointsEarned, numTotal, numCompleted, numFailed, mapLe
     PlayMusicBindableEvent:Fire(ScoreGui.BackgroundFrame, SCORE_GUI_MUSIC)
 
   end
-  return ScoreGui.BackgroundFrame
+
+  ScoreGui.BackgroundFrame.Parent = scoreScreenGui
 end
 
 return ScoreGui

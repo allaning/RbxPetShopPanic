@@ -152,6 +152,10 @@ local function createConsumer(consumerModel, inputStr, map, currentConsumerUid, 
 
     -- Set consumer direction to face the middle
     local targetPos = Vector3.new(0, consumerClone.PrimaryPart.Position.Y, consumerClone.PrimaryPart.Position.Z)
+    if -12 <= consumerClone.PrimaryPart.Position.X and consumerClone.PrimaryPart.Position.X <= 12 then
+      -- Consumer is near the center, so face up or down (versus sideways)
+      targetPos = Vector3.new(consumerClone.PrimaryPart.Position.X, consumerClone.PrimaryPart.Position.Y, 0)
+    end
     consumerClone.PrimaryPart.CFrame = CFrame.new(consumerClone.PrimaryPart.Position, targetPos)
 
     -- consumerClone.PrimaryPart.CFrame = consumerPlot.CFrame -- This will work if model is welded
@@ -311,7 +315,7 @@ function MapManager.InitializeMap(level, playerCount)
   local levelMapFolder = serverMapsFolder:WaitForChild(level)
   local levelMaps = levelMapFolder:GetChildren()
   local randomMap = levelMaps[ rand:NextInteger(1, #levelMaps) ]
-  --aing randomMap = serverMapsFolder["3"]:FindFirstChild("3.2") --aing testing specific map
+  --aing randomMap = serverMapsFolder["4"]:FindFirstChild("4.1") --aing testing specific map
 
   -- Create map
   local map = randomMap:Clone()

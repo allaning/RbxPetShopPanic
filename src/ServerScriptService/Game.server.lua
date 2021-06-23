@@ -29,6 +29,7 @@ local ConsumerTimerExpiredEvent = ReplicatedStorage.Events.ConsumerTimerExpired
 local SelectLevelRequestEvent = ReplicatedStorage.Events.SelectLevelRequest
 local LevelRequestVotesEvent = ReplicatedStorage.Events.LevelRequestVotes
 local SessionMapLevelSelectedEvent = ReplicatedStorage.Events.SessionMapLevelSelected
+local ShowTitleMessageEvent = ReplicatedStorage.Events.ShowTitleMessage
 local SessionCountdownBeginEvent = ReplicatedStorage.Events.SessionCountdownBegin
 local SessionUpdateTimerCountdownEvent = ReplicatedStorage.Events.SessionUpdateTimerCountdown
 local SessionBeginEvent = ReplicatedStorage.Events.SessionBegin
@@ -528,6 +529,7 @@ local function onGameStart(winningLevel)
   -- Start
   Promise.try(function()
     --print("session:GetDuration()=".. tostring(session:GetDuration())) --aing
+    ShowTitleMessageEvent:FireAllClients("Map ".. map.Name, 4)
     SessionCountdownBeginEvent:FireAllClients(session:GetDuration(), winningLevel)
     Util:RealWait(Globals.READY_SET_GO_COUNTDOWN_SEC)  -- Wait for "Ready" countdown
     SessionBeginEvent:FireAllClients()
