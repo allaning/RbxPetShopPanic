@@ -248,17 +248,6 @@ local function initializeCharacterFrame()
           local viewportCopy, cloneCopy = ViewportFrameFactory.GetViewportFrame(model, Vector3.new(-1.2, 2.0, -5.2))
           viewportCopy.Parent = cloneViewportFrame
 
-          -- Rotate model
-          local degreesPerSecond = 20
-          local function onHeartbeat(deltaTime)
-            if AvatarGui.OuterFrame.Active and cloneCopy and cloneCopy.PrimaryPart then
-              local deltaRotation = deltaTime * degreesPerSecond
-              cloneCopy:SetPrimaryPartCFrame(cloneCopy.PrimaryPart.CFrame * CFrame.Angles(0, math.rad(deltaRotation), 0))
-              --print("rotate: ".. model.Name)
-            end
-          end
-          RunService.Heartbeat:Connect(onHeartbeat)
-
           local charTitle = Util:CreateInstance("TextLabel", {
               Name = "CharacterTitle",
               AnchorPoint = Vector2.new(0.5, 0.5),
@@ -330,6 +319,18 @@ local function initializeCharacterFrame()
             SelectCharacterRequestEvent:FireServer(subdirNameList[subdirIdx], charTitle.Text)
             --print(string.format("SelectCharacterRequestEvent:FireServer(subdirNameList[subdirIdx] %s, charTitle.Text %s)", subdirNameList[subdirIdx], charTitle.Text))
           end)
+
+          -- Rotate model
+          local degreesPerSecond = 20
+          local function onHeartbeat(deltaTime)
+            if AvatarGui.OuterFrame.Active and cloneCopy and cloneCopy.PrimaryPart then
+              local deltaRotation = deltaTime * degreesPerSecond
+              cloneCopy:SetPrimaryPartCFrame(cloneCopy.PrimaryPart.CFrame * CFrame.Angles(0, math.rad(deltaRotation), 0))
+              --print("rotate: ".. model.Name)
+            end
+          end
+          RunService.Heartbeat:Connect(onHeartbeat)
+
         end)
       layoutOrder += 1
     end
@@ -465,17 +466,6 @@ local function initializeShoulderPetFrame()
           local viewportCopy, cloneCopy = ViewportFrameFactory.GetViewportFrame(model, Vector3.new(-1.0, 1.0, -3.6))
           viewportCopy.Parent = cloneViewportFrame
 
-          -- Rotate model
-          local degreesPerSecond = 20
-          local function onHeartbeat(deltaTime)
-            if AvatarGui.OuterFrame.Active and cloneCopy and cloneCopy.PrimaryPart then
-              local deltaRotation = deltaTime * degreesPerSecond
-              cloneCopy:SetPrimaryPartCFrame(cloneCopy.PrimaryPart.CFrame * CFrame.Angles(0, math.rad(deltaRotation), 0))
-              --print("rotate: ".. model.Name)
-            end
-          end
-          RunService.Heartbeat:Connect(onHeartbeat)
-
           local charTitle = Util:CreateInstance("TextLabel", {
               Name = "CharacterTitle",
               AnchorPoint = Vector2.new(0.5, 0.5),
@@ -547,6 +537,18 @@ local function initializeShoulderPetFrame()
             SelectShoulderPetRequestEvent:FireServer(subdirNameList[subdirIdx], charTitle.Text)
             --print(string.format("SelectShoulderPetRequestEvent:FireServer(subdirNameList[subdirIdx] %s, charTitle.Text %s)", subdirNameList[subdirIdx], charTitle.Text))
           end)
+
+          -- Rotate model
+          local degreesPerSecond = 20
+          local function onHeartbeat(deltaTime)
+            if AvatarGui.OuterFrame.Active and cloneCopy and cloneCopy.PrimaryPart then
+              local deltaRotation = deltaTime * degreesPerSecond
+              cloneCopy:SetPrimaryPartCFrame(cloneCopy.PrimaryPart.CFrame * CFrame.Angles(0, math.rad(deltaRotation), 0))
+              --print("rotate: ".. model.Name)
+            end
+          end
+          RunService.Heartbeat:Connect(onHeartbeat)
+
         end)
       layoutOrder += 1
     end
