@@ -31,9 +31,11 @@ local function isLocalPlayerInGameSession()
 end
 
 local function showMessagePopup(message, duration)
+  local duration = duration or 2
   SoundModule.PlayAssetIdStr(Character, SoundModule.SOUND_ID_ERROR, 0.5)
 
   local screenGui = Instance.new("ScreenGui")
+  screenGui.DisplayOrder = 2
   screenGui.Parent = PlayerGui
   local frame = Util:CreateInstance("Frame", {
       BackgroundColor3 = Color3.new(1, 1, 1),

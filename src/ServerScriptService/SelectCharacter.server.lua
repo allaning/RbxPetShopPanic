@@ -96,6 +96,7 @@ local function onLoadCharacterEvent(player, characterName)
           end
         end
       end
+      ShowMessagePopupEvent:FireClient(player, "Error loading avatar ".. characterName.. ", try another server", 6)
     end
   end
 end
@@ -266,6 +267,7 @@ local function onLoadShoulderPetEvent(player, shoulderPetName)
           end
         end
       end
+      ShowMessagePopupEvent:FireClient(player, "Error loading pet ".. shoulderPetName.. ", try another server", 3)
     end
   end
 end

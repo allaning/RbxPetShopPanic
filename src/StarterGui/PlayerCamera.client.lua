@@ -61,7 +61,16 @@ local function handleAction(actionName, inputState, inputObj)
   -- this one.
 end
 
+
 -- Bind the action to the handler
+
 -- Ref: https://developer.roblox.com/en-us/api-reference/function/ContextActionService/BindAction
 ContextActionService:BindAction("BoundAction", handleAction, false, Enum.KeyCode.Space)
+
+-- Ref: https://devforum.roblox.com/t/bind-function-to-mobile-jump-button/767565
+local jumpButton = Player:WaitForChild("PlayerGui"):WaitForChild("TouchGui"):WaitForChild("TouchControlFrame"):WaitForChild("JumpButton")
+local function startedToHold()
+  handleAction(nil, Enum.UserInputState.Begin, nil)
+end
+jumpButton.MouseButton1Down:Connect(startedToHold)
 
