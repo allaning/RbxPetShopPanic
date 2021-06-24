@@ -11,8 +11,10 @@ local FrameFactory = require(StarterGui.FrameFactory)
 
 local MapsFolder = Workspace:WaitForChild("Maps")
 
+local ShowMessagePopupBindableEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ShowMessagePopupBindable")
 local SelectLevelRequestEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SelectLevelRequest")
 local SelectLevelRequestSentEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SelectLevelRequestSent")
+local GetPlayerPointsFn = ReplicatedStorage:WaitForChild("RemoteFunctions"):WaitForChild("GetPlayerPoints")
 
 local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
@@ -58,6 +60,7 @@ function PlayGui.Initialize()
         ScrollBarImageColor3 = Themes[Themes.CurrentTheme].BorderColor,
       }, PlayGui.Frame)
     local uiListLayout = Util:CreateInstance("UIListLayout", {
+        Padding = UDim.new(0.01, 0),
       }, scrollingFrame)
 
     -- Add level buttons
@@ -72,6 +75,13 @@ function PlayGui.Initialize()
     table.sort(levelNames)
     -- Add level names to gui
     for idx = 1, #levelNames do
+      -- Get point requirement
+      local minPointsForLevel = 0
+      local levelFolder = MapsFolder:WaitForChild(levelNames[idx], 1)
+      if levelFolder then
+        minPointsForLevel = levelFolder:GetAttribute(Globals.POINTS_REQUIRED_ATTRIBUTE_NAME) or 0
+      end
+      -- Setup button
       local levelButton = Util:CreateInstance("TextButton", {
           Name = levelNames[idx].."Button",
           Position = UDim2.new(0.0, 0, 0.0, 0),
@@ -80,13 +90,28 @@ function PlayGui.Initialize()
           TextScaled = true,
           Text = Globals.LEVEL_NAME_PREFIX.. levelNames[idx],
           Font = Enum.Font.FredokaOne,
-          TextColor3 = Themes[Themes.CurrentTheme].TextColor,
+          TextColor3 = Themes[Themes.CurrentTheme].TextColor2,
         }, scrollingFrame)
+      local levelRequirementLabel = Util:CreateInstance("TextLabel", {
+          Name = "StarsNeeded",
+          AnchorPoint = Vector2.new(0.5, 0.5),
+          Position = UDim2.new(0.5, 0, 0.95, 0),
+          Size = UDim2.new(0.7, 0, 0.25, 0),
+          BackgroundTransparency = 1.0,
+          TextScaled = true,
+          Text = "Stars Needed: ".. tostring(minPointsForLevel),
+          Font = Enum.Font.FredokaOne,
+          TextColor3 = Themes[Themes.CurrentTheme].TextColor,
+        }, levelButton)
       levelButton.Activated:Connect(function()
-          print("Clicked levelButton.Text = ".. levelButton.Text)
           SoundModule.PlayMouseClick(PlayerGui)
-          SelectLevelRequestSentEvent:Fire()
-          SelectLevelRequestEvent:FireServer(levelNames[idx])
+          local playerPoints = GetPlayerPointsFn:InvokeServer() or 0
+          if playerPoints >= minPointsForLevel then
+            SelectLevelRequestSentEvent:Fire()
+            SelectLevelRequestEvent:FireServer(levelNames[idx])
+          else
+            ShowMessagePopupBindableEvent:Fire("Need ".. tostring(minPointsForLevel).. " stars to vote for level ".. tostring(levelNames[idx]))
+          end
         end)
     end
 

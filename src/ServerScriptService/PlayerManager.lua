@@ -268,7 +268,7 @@ function PlayerManager.GetPlayersWithBestScoreAndAssists(playerManagers)
   return playerWithBestScore, playerWithBestAssists
 end
 
-function PlayerManager.GetPointsForPlayer(playerManager)
+function PlayerManager.GetPointsForPlayerFromPlayerManager(playerManager)
   return playerManager.Points
 end
 

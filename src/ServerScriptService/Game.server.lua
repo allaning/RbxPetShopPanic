@@ -22,6 +22,7 @@ local TransformerClass = require(ReplicatedStorage.Transformers.Transformer)
 local Session = require(ReplicatedStorage.Session)
 
 local GetSessionStatusFn = ReplicatedStorage.RemoteFunctions.GetSessionStatus
+local GetPlayerPointsFn = ReplicatedStorage.RemoteFunctions.GetPlayerPoints
 local GetLevelRequestVotesFn = ReplicatedStorage.RemoteFunctions.GetLevelRequestVotes
 local ConsumerInputReceivedEvent = ReplicatedStorage.Events.ConsumerInputReceived
 local ConsumerNewRequestEvent = ReplicatedStorage.Events.ConsumerNewRequest
@@ -528,7 +529,6 @@ local function onGameStart(winningLevel)
 
   -- Start
   Promise.try(function()
-    --print("session:GetDuration()=".. tostring(session:GetDuration())) --aing
     ShowTitleMessageEvent:FireAllClients("Map ".. map.Name, 4)
     SessionCountdownBeginEvent:FireAllClients(session:GetDuration(), winningLevel)
     Util:RealWait(Globals.READY_SET_GO_COUNTDOWN_SEC)  -- Wait for "Ready" countdown
@@ -563,7 +563,7 @@ local function onGameStart(winningLevel)
     -- Get session stats
     local pointsEarned, numTotal, numCompleted, numFailed = session:GetStats(2) -- (MapManager.GetNumConsumers())
     -- Check for map level difficulty bonus
-    local mapLevel = map:GetAttribute(MapManager.MAP_LEVEL_ATTRIBUTE_NAME) or 1
+    local mapLevel = map:GetAttribute(Globals.MAP_LEVEL_ATTRIBUTE_NAME) or 1
     -- Award players
     for _, plrMgr in pairs(playerManagers) do
       if plrMgr:GetIsInGameSession() == true then
@@ -573,7 +573,6 @@ local function onGameStart(winningLevel)
           SessionResultsEvent:FireClient(plr, pointsEarned, numTotal, numCompleted, numFailed, mapLevel, playerWithBestScoreCharacter, playerWithBestAssistsCharacter)
         end
         pointsEarned = pointsEarned * (mapLevel * MapManager.MAP_LEVEL_MULTIPLIER)
-        print(string.format("aing  pointsEarned = pointsEarned * (mapLevel * MapManager.MAP_LEVEL_MULTIPLIER)"), pointsEarned, mapLevel)
         plrMgr:IncrementPoints(pointsEarned)
       end
     end
@@ -723,6 +722,14 @@ local function getSessionStatus()
   end
 end
 GetSessionStatusFn.OnServerInvoke = getSessionStatus
+
+local function getPlayerPoints(player)
+  local plrMgr = getPlayerManagerFromList(player.Name)
+  if plrMgr then
+    return PlayerManager.GetPointsForPlayerFromPlayerManager(plrMgr)
+  end
+end
+GetPlayerPointsFn.OnServerInvoke = getPlayerPoints
 
 local function getGetLevelRequestVotes()
   return playerLevelVotes

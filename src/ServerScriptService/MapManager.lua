@@ -3,6 +3,7 @@
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
+local Globals = require(ReplicatedStorage.Globals)
 local Themes = require(ReplicatedStorage.Themes)
 local Util = require(ReplicatedStorage.Util)
 local Promise = require(ReplicatedStorage.Vendor.Promise)
@@ -46,7 +47,6 @@ local MAX_SEARCH_FOR_PLOTS = 1000
 
 local MapManager = {}
 
-MapManager.MAP_LEVEL_ATTRIBUTE_NAME = "Level"
 MapManager.MAP_LEVEL_MULTIPLIER = 1
 
 
@@ -136,7 +136,7 @@ function MapManager.ColorizeMap(map)
 end
 
 local function createConsumer(consumerModel, inputStr, map, currentConsumerUid, difficultyLevel)
-  print("aing function createConsumer(consumerModel, inputStr, map, currentConsumerUid, difficultyLevel=".. difficultyLevel)
+  --print("createConsumer(consumerModel, inputStr, map, currentConsumerUid, difficultyLevel=".. difficultyLevel)
   currentConsumerUid = currentConsumerUid or consumerClass.UID_UNINITIALIZED
   local consumerInstance = consumerFactory.GetConsumer(consumerModel.Name, inputStr, difficultyLevel)
   local consumerClone = consumerModel:Clone()
@@ -328,7 +328,7 @@ function MapManager.InitializeMap(level, playerCount)
   map.Parent = wsMapsFolder
 
   -- Get map level
-  local mapLevel = map:GetAttribute(MapManager.MAP_LEVEL_ATTRIBUTE_NAME) or 1
+  local mapLevel = map:GetAttribute(Globals.MAP_LEVEL_ATTRIBUTE_NAME) or 1
 
   -- Look for the consumers and find their producers
   local currentConsumerUid = 1
@@ -482,7 +482,7 @@ function MapManager.Initialize()
       local mapLevel = tonumber(mapFolder.Name)
       -- Set map models to level based on mapFolder name
       for _, mapModel in pairs(mapFolder:GetChildren()) do
-        mapModel:SetAttribute(MapManager.MAP_LEVEL_ATTRIBUTE_NAME, mapLevel)
+        mapModel:SetAttribute(Globals.MAP_LEVEL_ATTRIBUTE_NAME, mapLevel)
       end
     end)
   end

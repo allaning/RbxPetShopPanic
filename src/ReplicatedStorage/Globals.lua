@@ -1,7 +1,7 @@
 local Globals = {
 
   -- If true, then use real database (can use false for offline testing)
-  ['USE_REAL_DATABASE'] = true,
+  ['USE_REAL_DATABASE'] = false,
 
   -- Datastore name
   ['DATA_STORE_NAME'] = "DATA00",  -- TODO Use real database
@@ -20,6 +20,13 @@ local Globals = {
 
   -- Level name prefix (to go in front of number)
   ['LEVEL_NAME_PREFIX'] = "Level ",
+
+  -- Map Attribute name for setting map level
+  ['MAP_LEVEL_ATTRIBUTE_NAME'] = "Level",
+
+  -- Map Attribute name for minimum points required for player to select map
+  ['POINTS_REQUIRED_ATTRIBUTE_NAME'] = "PointsRequired",
+
 
   -- Uninitialized values
   ['UNINIT_STRING'] = "UNINITIALIZED",

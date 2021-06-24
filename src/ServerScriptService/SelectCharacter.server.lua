@@ -114,7 +114,7 @@ local function checkSelectCharacterRequest(player, folderName, modelName)
         -- Points
         local costPoints = characterModel:GetAttribute(Avatars.COST_POINTS_ATTR_NAME)
         if costPoints then
-          if PlayerManager.GetPointsForPlayer(plrMgr) < costPoints then
+          if PlayerManager.GetPointsForPlayerFromPlayerManager(plrMgr) < costPoints then
             ShowMessagePopupEvent:FireClient(player, "Need ".. costPoints.. " stars", 2.0)
             return
           end
@@ -159,7 +159,7 @@ local function checkSelectShoulderPetRequest(player, folderName, modelName)
         -- Points
         local costPoints = shoulderPetModel:GetAttribute(Avatars.COST_POINTS_ATTR_NAME)
         if costPoints then
-          if PlayerManager.GetPointsForPlayer(plrMgr) < costPoints then
+          if PlayerManager.GetPointsForPlayerFromPlayerManager(plrMgr) < costPoints then
             ShowMessagePopupEvent:FireClient(player, "Need ".. costPoints.. " stars", 2.0)
             return
           end
