@@ -14,6 +14,7 @@ local ScoreGui = require(StarterGui.ScoreGui)
 local TweenGuiFactory = require(ReplicatedStorage.Gui.TweenGuiFactory)
 
 local GetSessionStatusFn = ReplicatedStorage:WaitForChild("RemoteFunctions"):WaitForChild("GetSessionStatus")
+local GetNamesOfPlayersInSessionFn = ReplicatedStorage:WaitForChild("RemoteFunctions"):WaitForChild("GetNamesOfPlayersInSession")
 local GetLevelRequestVotesFn = ReplicatedStorage:WaitForChild("RemoteFunctions"):WaitForChild("GetLevelRequestVotes")
 local SelectLevelRequestSentEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SelectLevelRequestSent")
 local LevelRequestVotesEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("LevelRequestVotes")
@@ -51,11 +52,18 @@ local avatarIcon = nil
 local avatarIconId = "rbxassetid://6847150302"  -- https://icon-icons.com/icon/avatar-default-user/92824
 local playIcon = nil
 local playIconId = "rbxassetid://6855026893"  -- https://graphiccave.com/project/play-icon-vector-and-png-free-download/
+local spectateIcon = nil
+local spectateIconId = "rbxassetid://6999948582"  -- https://www.flaticon.com/free-icon/eye-close-up_63568
+local spectateTargetTextLabel = nil  -- TextLabel showing spectate target
 
 -- For late joiners, show countdown for an existing game in session
 local alreadyInSessionCountdownFrame = nil
 local alreadyInSessionCountdownTitle = "Game in session -- Time remaining:"
 local alreadyInSessionCountdownValue = nil
+
+-- List of players already in game session
+local playerNamesInSession = {}
+
 
 local lobbyFrames = {
   avatarFrame = nil,
@@ -127,7 +135,7 @@ local function initializeLobbyGui()
         Name = "AlreadyInSessionCountdownFrame",
         AnchorPoint = Vector2.new(0.5, 0.5),
         Position = UDim2.new(0.5, 0, 0.85, 0),
-        Size = UDim2.new(0.5, 0, 0.3, 0),
+        Size = UDim2.new(1.0, 0, 0.3, 0),
         BackgroundTransparency = 1.0,
         BorderSizePixel = 0,
         Active = false,
@@ -155,6 +163,37 @@ local function initializeLobbyGui()
         TextColor3 = Color3.new(1, 1, 1),
         TextScaled = true,
       }, alreadyInSessionCountdownFrame)
+
+    spectateIcon = Util:CreateInstance("ImageButton", {
+        Name = "spectateIcon",
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Position = UDim2.new(0.9, 0, 0.5, 0),
+        Size = UDim2.new(0.42, 0, 0.42, 0),
+        SizeConstraint = Enum.SizeConstraint.RelativeYY,
+        Image = spectateIconId,
+        BackgroundTransparency = 1.0,
+      }, alreadyInSessionCountdownFrame)
+    local spectateIconScale = Util:CreateInstance("UIScale", {
+        Scale = 1.0,
+      }, spectateIcon)
+    spectateTargetTextLabel = Util:CreateInstance("TextLabel", {
+        Name = "spectateTargetTextLabel",
+        Text = "Click to Spectate",
+        Font = Enum.Font.SourceSansSemibold,
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Position = UDim2.new(0.5, 0, 1.0, 0),
+        Size = UDim2.new(2.5, 0, 0.3, 0),
+        BackgroundTransparency = 1.0,
+        TextColor3 = Color3.new(1, 1, 1),
+        TextScaled = true,
+      }, spectateIcon)
+
+    addEnlargeOnMouseHover(spectateIcon, spectateIconScale)
+
+    if true then -- Disabled for now
+      spectateIcon.Visible = false
+      spectateIcon.Active = false
+    end
   end
 end
 
@@ -172,7 +211,6 @@ local function hideAlreadyInSessionCountdownFrame()
     alreadyInSessionCountdownFrame.Visible = false
   end
 end
-
 SessionEndedEvent.OnClientEvent:Connect(hideAlreadyInSessionCountdownFrame)
 
 -- For players not in game session, show game countdown
@@ -255,6 +293,26 @@ local function onPlayIconClick()
 end
 playIcon.Activated:Connect(onPlayIconClick)
 
+
+local function onSpectateIconClick()
+  local isSessionActive = GetSessionStatusFn:InvokeServer()
+  if isSessionActive then
+    for idx = 1, #playerNamesInSession do
+      local iPlayerName = playerNamesInSession[idx]
+      print("aing iPlayerName=".. iPlayerName)
+      if iPlayerName ~= Player.Name then
+        if spectateTargetTextLabel then
+          spectateTargetTextLabel.Text = iPlayerName
+          -- TODO
+          -- Get player
+          -- Set camera
+        end
+      end
+    end
+  end
+end
+spectateIcon.Activated:Connect(onSpectateIconClick)
+
 local function hidePlayGui()
   PlayGui.Close()
 end
@@ -263,6 +321,9 @@ SelectLevelRequestSentEvent.Event:Connect(hidePlayGui)
 
 -- Start by showing lobby gui
 showLobbyGui()
+
+-- Get list of players currently in session, if any
+playerNamesInSession = GetNamesOfPlayersInSessionFn:InvokeServer()
 
 
 
@@ -414,7 +475,7 @@ end
 LevelRequestVotesEvent.OnClientEvent:Connect(onLevelRequestVotesEvent)
 
 
--- Make random frames visible
+-- Make random map level voting frames visible
 local function showRandomFrames(frameList, frequency, durationSec)
   --print("In showRandomFrames")
   local rand = Random.new()

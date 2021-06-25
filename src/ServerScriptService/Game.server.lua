@@ -23,6 +23,7 @@ local Session = require(ReplicatedStorage.Session)
 
 local GetSessionStatusFn = ReplicatedStorage.RemoteFunctions.GetSessionStatus
 local GetPlayerPointsFn = ReplicatedStorage.RemoteFunctions.GetPlayerPoints
+local GetNamesOfPlayersInSessionFn = ReplicatedStorage.RemoteFunctions.GetNamesOfPlayersInSession
 local GetLevelRequestVotesFn = ReplicatedStorage.RemoteFunctions.GetLevelRequestVotes
 local ConsumerInputReceivedEvent = ReplicatedStorage.Events.ConsumerInputReceived
 local ConsumerNewRequestEvent = ReplicatedStorage.Events.ConsumerNewRequest
@@ -70,6 +71,9 @@ local playerLevelVotes = {}
 
 -- List of PlayerManager instances
 local playerManagers = {}
+
+-- List of players in current game session
+local sessionPlayerList = {}
 
 -- Get PlayerManager for specified Player.Name
 local function getPlayerManagerFromList(playerName)
@@ -501,34 +505,34 @@ local function onGameStart(winningLevel)
     plrMgr:SetIsInGameSession(true)
   end
 
-  -- Spawn players into map
-  local playerList = {}
-  local spawns = MapManager.GetSpawns()
-  if spawns and #spawns > 0 then
-    playerList = Players:GetPlayers()
-    session:SetPlayerList(playerList)
-    for idx, spawn in pairs(spawns) do
-      if playerList[idx] then
-        print("Spawning into game map: ".. playerList[idx].Name)
-        local torso = Util:GetTorsoFromPlayer(playerList[idx])
-        if torso then
-          local yOffset = 6
-          local humanoid = Util:GetHumanoid(playerList[idx])
-          if humanoid then
-            yOffset = humanoid.HipHeight + 4
+  Promise.try(function()
+    -- Spawn players into map
+    sessionPlayerList = {}
+    local spawns = MapManager.GetSpawns()
+    if spawns and #spawns > 0 then
+      sessionPlayerList = Players:GetPlayers()
+      session:SetPlayerList(sessionPlayerList)
+      for idx, spawn in pairs(spawns) do
+        if sessionPlayerList[idx] then
+          print("Spawning into game map: ".. sessionPlayerList[idx].Name)
+          local torso = Util:GetTorsoFromPlayer(sessionPlayerList[idx])
+          if torso then
+            local yOffset = 6
+            local humanoid = Util:GetHumanoid(sessionPlayerList[idx])
+            if humanoid then
+              yOffset = humanoid.HipHeight + 4
+            end
+            torso.CFrame = CFrame.new(spawn.Position + Vector3.new(0, yOffset, 0))
+          else
+            error("Unable to find torso for ".. sessionPlayerList[idx].Name)
           end
-          torso.CFrame = CFrame.new(spawn.Position + Vector3.new(0, yOffset, 0))
-        else
-          error("Unable to find torso for ".. playerList[idx].Name)
         end
       end
+    else
+      error("Unable to get spawn plots from MapManager")
     end
-  else
-    error("Unable to get spawn plots from MapManager")
-  end
 
-  -- Start
-  Promise.try(function()
+    -- Start
     ShowTitleMessageEvent:FireAllClients("Map ".. map.Name, 4)
     SessionCountdownBeginEvent:FireAllClients(session:GetDuration(), winningLevel)
     Util:RealWait(Globals.READY_SET_GO_COUNTDOWN_SEC)  -- Wait for "Ready" countdown
@@ -585,25 +589,27 @@ local function onGameStart(winningLevel)
     end
 
     -- Spawn players into lobby
-    for idx, player in pairs(playerList) do
-      -- Remove any product player might be holding
-      local character, product = getPlayersCharacterAndCurrentProduct(player)
-      if product then
-        product:Destroy()
-      end
-
-      print("Spawning into lobby: ".. playerList[idx].Name)
-      local torso = Util:GetTorsoFromPlayer(playerList[idx])
-      if torso then
-        local xOffset = 6
-        local yOffset = 4
-        local humanoid = Util:GetHumanoid(playerList[idx])
-        if humanoid then
-          yOffset = humanoid.HipHeight + 1
+    for idx, player in pairs(sessionPlayerList) do
+      if player then
+        -- Remove any product player might be holding
+        local character, product = getPlayersCharacterAndCurrentProduct(player)
+        if product then
+          product:Destroy()
         end
-        torso.CFrame = CFrame.new(lobbySpawn.Position + Vector3.new(idx * xOffset, yOffset, 0))
-      else
-        error("Unable to find torso for ".. playerList[idx].Name)
+
+        print("Spawning into lobby: ".. player.Name)
+        local torso = Util:GetTorsoFromPlayer(player)
+        if torso then
+          local xOffset = 6
+          local yOffset = 4
+          local humanoid = Util:GetHumanoid(player)
+          if humanoid then
+            yOffset = humanoid.HipHeight + 1
+          end
+          torso.CFrame = CFrame.new(lobbySpawn.Position + Vector3.new(idx * xOffset, yOffset, 0))
+        else
+          error("Unable to find torso for ".. player.Name)
+        end
       end
     end
 
@@ -731,10 +737,20 @@ local function getPlayerPoints(player)
 end
 GetPlayerPointsFn.OnServerInvoke = getPlayerPoints
 
-local function getGetLevelRequestVotes()
+local function getLevelRequestVotes()
   return playerLevelVotes
 end
-GetLevelRequestVotesFn.OnServerInvoke = getGetLevelRequestVotes
+GetLevelRequestVotesFn.OnServerInvoke = getLevelRequestVotes
+
+
+local function getNamesOfPlayersInSession()
+  local playerNames = {}
+  for _, plr in pairs(sessionPlayerList) do
+    table.insert(playerNames, plr.Name)
+  end
+  return playerNames
+end
+GetNamesOfPlayersInSessionFn.OnServerInvoke = getNamesOfPlayersInSession
 
 
 local function onInsertProductIdBindableEvent(player, productId)
