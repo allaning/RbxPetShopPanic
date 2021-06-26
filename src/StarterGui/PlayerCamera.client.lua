@@ -77,3 +77,5 @@ if touchGui then
   jumpButton.MouseButton1Down:Connect(startedToHold)
 end
 
+-- WILL NOT REACH HERE IF NOT MOBILE DEVICE
+

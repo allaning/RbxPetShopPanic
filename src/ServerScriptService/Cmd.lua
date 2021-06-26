@@ -103,7 +103,7 @@ end
 
 
 -- Add item
--- Usage: Cmd.AddItem(500841057, "ProductIdsOwned", 0x123) -- WhoooDattt, 2x Cash
+-- Usage: Cmd.AddItem(500841057, "ProductIdsOwned", 1184683292) -- WhoooDattt, Green Arctic Fox Shoulder Pet
 function Cmd.AddItem(userId, collectionType, itemId)
   if not userId or not collectionType or not itemId then
     warn("ERROR: Missing arg")
@@ -178,7 +178,7 @@ end
 
 
 -- Remove item
--- Usage: Cmd.RemoveItem(500841057, "ProductIdsOwned", 0x123) -- WhoooDattt, 2x Cash
+-- Usage: Cmd.RemoveItem(500841057, "ProductIdsOwned", 1184683292) -- WhoooDattt, Green Arctic Fox Shoulder Pet
 function Cmd.RemoveItem(userId, collectionType, itemId)
   local orderedDataStore = DataStoreService:GetOrderedDataStore(DATA_STORE_NAME .. "/" .. userId)
   local playerData = DataStoreService:GetDataStore(DATA_STORE_NAME.."/"..userId)

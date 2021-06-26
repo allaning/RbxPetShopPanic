@@ -228,7 +228,7 @@ local function showGuis(duration)
       }, nil)
     local thumb = UserThumbnailGui.GetImageThumbnail(Assets.CHARACTER_SMILING, UDim2.new(0.3, 0, 0.3, 0), nil, 3)
     local introText = "Give the customer and animals the items they need. Good luck!"
-    local msg = FrameFactory.GetMessageFrame(introText, UDim2.new(0.5, 0, 0.2, 0), nil, 2)
+    local msg = FrameFactory.GetMessageFrame(introText, UDim2.new(0.5, 0, 0.2, 0), nil, 2, false)
     if thumb and msg then
       screenGui.Parent = PlayerGui
       thumb.Position = UDim2.new(0.2, 0, 0.6, 0)
@@ -236,16 +236,16 @@ local function showGuis(duration)
       msg.Position = UDim2.new(0.3, 0, 0.65, 0)
       msg.Parent = screenGui
 
-      local exitButton = Util:CreateInstance("TextButton", {
-          Name = "Button",
-          Position = UDim2.new(0.0, 0, 0.0, 0),
-          Size = UDim2.new(0.9, 0, 0.9, 0),
-          BackgroundTransparency = 1.0,
-        }, screenGui)
-      exitButton.Activated:Connect(function()
-        screenGui:Destroy()
-      end)
-      Promise.delay(4):andThen(function()
+    local exitButton = Util:CreateInstance("TextButton", {
+        Name = "ExitButton",
+        Position = UDim2.new(0.0, 0, 0.0, 0),
+        Size = UDim2.new(1.0, 0, 1.0, 0),
+        BackgroundTransparency = 1.0,
+      }, msg)
+    exitButton.Activated:Connect(function()
+      screenGui:Destroy()
+    end)
+      Promise.delay(8):andThen(function()
         if screenGui then
           screenGui:Destroy()
         end

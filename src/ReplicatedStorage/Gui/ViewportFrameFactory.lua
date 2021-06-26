@@ -12,7 +12,7 @@ local ViewportFrameFactory = {}
 function ViewportFrameFactory.GetViewportFrame(model, cameraPositionOffset)
   if model then
     local cameraPosition = model:GetAttribute("ViewportCameraPosition") or cameraPositionOffset or Vector3.new(0, 0.5, 1.9)
-    --print(string.format("aing ******** cameraPosition= %d, %d, %d", cameraPosition.X, cameraPosition.Y, cameraPosition.Z))
+    --print(string.format("cameraPosition= %d, %d, %d", cameraPosition.X, cameraPosition.Y, cameraPosition.Z))
     local targetPositionOffset = model:GetAttribute("ViewportTargetPositionOffset") or Vector3.new(0, 0, 0)
 
     local viewportFrame = Instance.new("ViewportFrame")

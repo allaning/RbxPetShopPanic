@@ -49,7 +49,7 @@ function FrameFactory.GetLargeLobbyFrame()
   return FrameFactory.GetDefaultLobbyFrame(UDim2.new(0.6, 0, 0.7, 0))
 end
 
-function FrameFactory.GetMessageFrame(message, sizeDim, color, zIndex)
+function FrameFactory.GetMessageFrame(message, sizeDim, color, zIndex, clickToExit)
   sizeDim = sizeDim or UDim2.new(0.3, 0, 0.3, 0)
   color = color or Color3.fromRGB(255, 255, 255)
   zIndex = zIndex or 1
@@ -87,6 +87,18 @@ function FrameFactory.GetMessageFrame(message, sizeDim, color, zIndex)
         TextScaled = true,
         ZIndex = zIndex,
       }, frameInner)
+  end
+
+  if clickToExit then
+    local exitButton = Util:CreateInstance("TextButton", {
+        Name = "ExitButton",
+        Position = UDim2.new(0.0, 0, 0.0, 0),
+        Size = UDim2.new(1.0, 0, 1.0, 0),
+        BackgroundTransparency = 1.0,
+      }, frameInner)
+    exitButton.Activated:Connect(function()
+      frameOuter:Destroy()
+    end)
   end
 
   return frameOuter

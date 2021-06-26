@@ -1,4 +1,3 @@
-local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Promise = require(ReplicatedStorage.Vendor.Promise)
 local Util = require(ReplicatedStorage.Util)
@@ -32,14 +31,6 @@ local Humanoid = Character:WaitForChild("Humanoid");
 local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart");
 
 
-Promise.try(function()
-  -- Update things in Workspace
-  local baseplate = Workspace:WaitForChild("Baseplate", 8)
-  if baseplate then
-    baseplate.Color = Color3.fromRGB(80, 109, 84)
-  end
-end)
-
 if Settings.IsJumpDisabled then
   -- Disable jumping
   Humanoid.Changed:Connect(function()
@@ -48,10 +39,12 @@ if Settings.IsJumpDisabled then
 end
 
 -- Create place for SurfaceGuis
-local surfaceGuiFolder = Instance.new("Folder", PlayerGui)
-surfaceGuiFolder.Name = "SurfaceGuis"
-surfaceGuiFolder.Parent = PlayerGui
-
+local surfaceGuiFolder = PlayerGui:FindFirstChild("SurfaceGuis")
+if not surfaceGuiFolder then
+  surfaceGuiFolder = Instance.new("Folder", PlayerGui)
+  surfaceGuiFolder.Name = "SurfaceGuis"
+  surfaceGuiFolder.Parent = PlayerGui
+end
 
 local function getSurfaceGuiName(uid)
   local uid = uid or ""
@@ -72,6 +65,12 @@ local function destroySurfaceGui(uid)
   local gui = findSurfaceGui(uid)
   if gui then
     gui:Destroy()
+  end
+end
+
+local function cleanupSurfaceGuis()
+  for _, obj in pairs(surfaceGuiFolder:GetChildren()) do
+    obj:Destroy()
   end
 end
 
@@ -290,6 +289,7 @@ local function onSessionEndedEvent()
   setPlayerAnchored(true)
   Util:RealWait(Session.POST_GAME_COOLDOWN_PERIOD_SEC)
   setPlayerAnchored(false)
+  cleanupSurfaceGuis()
 end
 SessionEndedEvent.OnClientEvent:Connect(onSessionEndedEvent)
 

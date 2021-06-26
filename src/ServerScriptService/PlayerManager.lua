@@ -77,7 +77,7 @@ function PlayerManager:Initialize()
     self.LeaderstatsFolder = leaderstats
 
     -- Points
-    self.Points = 500--aing DatabaseAdapter.GetPoints(player)
+    self.Points = DatabaseAdapter.GetPoints(player)
     local pointsInstance = Instance.new("IntValue")
     pointsInstance.Name = Globals.LEADERBOARD_POINTS_NAME  -- Name of the in-game leaderboard stat
     pointsInstance.Value = self.Points
@@ -86,10 +86,10 @@ function PlayerManager:Initialize()
 
     -- Product IDs Owned
     self.ProductIdsOwned = DatabaseAdapter.GetProductIdsOwned(player)
-    --table.insert(self.ProductIdsOwned, 1178916298)  -- aing testing Fox
-    --table.insert(self.ProductIdsOwned, 1178952971)  -- aing testing Bear
-    --table.insert(self.ProductIdsOwned, 1178968280)  -- aing testing Monkey
-    --table.insert(self.ProductIdsOwned, 1180009943)  -- aing testing Draconis
+    --table.insert(self.ProductIdsOwned, 1178916298)  -- testing Fox
+    --table.insert(self.ProductIdsOwned, 1178952971)  -- testing Bear
+    --table.insert(self.ProductIdsOwned, 1178968280)  -- testing Monkey
+    --table.insert(self.ProductIdsOwned, 1180009943)  -- testing Draconis
 
     -- Equipped items
     self.EquippedItems = DatabaseAdapter.GetEquippedItems(player)

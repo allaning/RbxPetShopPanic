@@ -5,6 +5,7 @@ local SoundModule = require(ReplicatedStorage.SoundModule)
 local Util = require(ReplicatedStorage.Util)
 local Promise = require(ReplicatedStorage.Vendor.Promise)
 local Globals = require(ReplicatedStorage.Globals)
+local Assets = require(ReplicatedStorage.Assets)
 
 local StarterGui = game:GetService("StarterGui")
 local AvatarGui = require(StarterGui.AvatarGui)
@@ -12,7 +13,9 @@ local PlayGui = require(StarterGui.PlayGui)
 local UserThumbnailGui = require(StarterGui.UserThumbnailGui)
 local ScoreGui = require(StarterGui.ScoreGui)
 local TweenGuiFactory = require(ReplicatedStorage.Gui.TweenGuiFactory)
+local FrameFactory = require(StarterGui.FrameFactory)
 
+local GetPlayerPointsFn = ReplicatedStorage:WaitForChild("RemoteFunctions"):WaitForChild("GetPlayerPoints")
 local GetSessionStatusFn = ReplicatedStorage:WaitForChild("RemoteFunctions"):WaitForChild("GetSessionStatus")
 local GetNamesOfPlayersInSessionFn = ReplicatedStorage:WaitForChild("RemoteFunctions"):WaitForChild("GetNamesOfPlayersInSession")
 local GetLevelRequestVotesFn = ReplicatedStorage:WaitForChild("RemoteFunctions"):WaitForChild("GetLevelRequestVotes")
@@ -90,7 +93,7 @@ local function initializeLobbyGui()
         Position = UDim2.new(0.91, 0, 0.34, 0),
         Size = UDim2.new(0.14, 0, 0.34, 0),
         BackgroundTransparency = 0.0,
-        BackgroundColor3 = Color3.fromRGB(65, 65, 65),
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
         BorderSizePixel = 0,
       }, lobbyScreenGui)
     local uiCorner = Util:CreateInstance("UICorner", {
@@ -299,7 +302,7 @@ local function onSpectateIconClick()
   if isSessionActive then
     for idx = 1, #playerNamesInSession do
       local iPlayerName = playerNamesInSession[idx]
-      print("aing iPlayerName=".. iPlayerName)
+      --print("iPlayerName=".. iPlayerName)
       if iPlayerName ~= Player.Name then
         if spectateTargetTextLabel then
           spectateTargetTextLabel.Text = iPlayerName
@@ -317,13 +320,6 @@ local function hidePlayGui()
   PlayGui.Close()
 end
 SelectLevelRequestSentEvent.Event:Connect(hidePlayGui)
-
-
--- Start by showing lobby gui
-showLobbyGui()
-
--- Get list of players currently in session, if any
-playerNamesInSession = GetNamesOfPlayersInSessionFn:InvokeServer()
 
 
 
@@ -387,11 +383,11 @@ local function onLevelRequestVotesEvent(playerLevelVotes)
   for _, plr in pairs(Players:GetPlayers()) do
     table.insert(playerNames, plr.Name)
     table.insert(playerNameToIdMap, { ['PlayerName'] = plr.Name, ['PlayerId'] = plr.UserId } )
-    --table.insert(playerNameToIdMap, { ['PlayerName'] = "WhoooDattt".."2", ['PlayerId'] = plr.UserId } )--aing
+    --table.insert(playerNameToIdMap, { ['PlayerName'] = "WhoooDattt".."2", ['PlayerId'] = plr.UserId } )-- testing
   end
-  --table.insert(playerNames, "WhoooDattt".."2") --aing
-  --table.insert(playerNames, "WhoooDattt".."3") --aing
-  --table.insert(playerNames, "WhoooDattt".."4") --aing
+  --table.insert(playerNames, "WhoooDattt".."2") -- testing
+  --table.insert(playerNames, "WhoooDattt".."3") -- testing
+  --table.insert(playerNames, "WhoooDattt".."4") -- testing
   table.sort(playerNames)
 
   -- Show user vote thumbnails
@@ -414,10 +410,10 @@ local function onLevelRequestVotesEvent(playerLevelVotes)
         plrName = playerVote['PlayerName']
         plrId = playerVote['PlayerId']
       end
-      --if currentPlayerName == "WhoooDattt3" then--aing
-      --  plrId = getPlayerIdFromName(playerNameToIdMap, "WhoooDattt")--aing
-      --  print("    ".. currentPlayerName.. " plrId=".. tostring(plrId))--aing
-      --end--aing
+      --if currentPlayerName == "WhoooDattt3" then-- testing
+      --  plrId = getPlayerIdFromName(playerNameToIdMap, "WhoooDattt")-- testing
+      --  print("    ".. currentPlayerName.. " plrId=".. tostring(plrId))-- testing
+      --end-- testing
       local screenGui = Util:CreateInstance("ScreenGui", {
           Name = plrName,
         }, nil)
@@ -540,4 +536,77 @@ local function onSessionMapLevelSelectedEvent(playerName, winningLevel)
 
 end
 SessionMapLevelSelectedEvent.OnClientEvent:Connect(onSessionMapLevelSelectedEvent)
+
+
+
+-- Start by showing lobby gui
+showLobbyGui()
+
+-- Get list of players currently in session, if any
+playerNamesInSession = GetNamesOfPlayersInSessionFn:InvokeServer()
+
+-- Check if should show new player message
+Util:RealWait(5)
+local playerPoints = GetPlayerPointsFn:InvokeServer() or 0
+if playerPoints == 0 then
+  local introScreenGui = Util:CreateInstance("ScreenGui", {
+      Name = "Intro",
+    }, nil)
+  local thumb = UserThumbnailGui.GetImageThumbnail(Assets.CHARACTER_SMILING_MOUTH_OPEN, UDim2.new(0.3, 0, 0.3, 0), nil, 3)
+  local introText = "Welcome! Choose your avatar and click the Play button when ready."
+  local msg = FrameFactory.GetMessageFrame(introText, UDim2.new(0.5, 0, 0.2, 0), nil, 2, false)
+  if thumb and msg then
+    introScreenGui.Parent = PlayerGui
+    thumb.Position = UDim2.new(0.2, 0, 0.5, 0)
+    thumb.Parent = introScreenGui
+    msg.Position = UDim2.new(0.3, 0, 0.55, 0)
+    msg.Parent = introScreenGui
+
+    local exitButton = Util:CreateInstance("TextButton", {
+        Name = "ExitButton",
+        Position = UDim2.new(0.0, 0, 0.0, 0),
+        Size = UDim2.new(1.0, 0, 1.0, 0),
+        BackgroundTransparency = 1.0,
+      }, msg)
+    exitButton.Activated:Connect(function()
+      if thumb then
+        thumb:Destroy()
+      end
+      msg:Destroy()
+    end)
+    Promise.delay(8):andThen(function()
+      if thumb then
+        thumb:Destroy()
+      end
+      if msg then
+        msg:Destroy()
+      end
+
+      local thumb2 = UserThumbnailGui.GetImageThumbnail(Assets.CHARACTER_SMILING_EYES_CLOSED, UDim2.new(0.3, 0, 0.3, 0), nil, 3)
+      local introText2 = "You change the camera zoom by hitting the Jump button."
+      local msg2 = FrameFactory.GetMessageFrame(introText2, UDim2.new(0.5, 0, 0.2, 0), nil, 2, false)
+      if thumb2 and msg2 then
+        thumb2.Position = UDim2.new(0.2, 0, 0.5, 0)
+        thumb2.Parent = introScreenGui
+        msg2.Position = UDim2.new(0.3, 0, 0.55, 0)
+        msg2.Parent = introScreenGui
+
+        local exitButton2 = Util:CreateInstance("TextButton", {
+            Name = "ExitButton",
+            Position = UDim2.new(0.0, 0, 0.0, 0),
+            Size = UDim2.new(1.0, 0, 1.0, 0),
+            BackgroundTransparency = 1.0,
+          }, msg2)
+        exitButton2.Activated:Connect(function()
+          introScreenGui:Destroy()
+        end)
+        Promise.delay(8):andThen(function()
+          if introScreenGui then
+            introScreenGui:Destroy()
+          end
+        end)
+      end
+    end)
+  end
+end
 

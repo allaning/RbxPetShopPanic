@@ -315,7 +315,7 @@ function MapManager.InitializeMap(level, playerCount)
   local levelMapFolder = serverMapsFolder:WaitForChild(level)
   local levelMaps = levelMapFolder:GetChildren()
   local randomMap = levelMaps[ rand:NextInteger(1, #levelMaps) ]
-  --aing randomMap = serverMapsFolder["4"]:FindFirstChild("4-1") --aing testing specific map
+  --aing randomMap = serverMapsFolder["4"]:FindFirstChild("4-1") -- testing specific map
 
   -- Create map
   local map = randomMap:Clone()

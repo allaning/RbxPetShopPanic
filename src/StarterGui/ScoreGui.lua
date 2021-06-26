@@ -112,7 +112,7 @@ function ScoreGui.Show(scoreScreenGui, pointsEarned, numTotal, numCompleted, num
         TextColor3 = Themes[Themes.CurrentTheme].TextColor,
         Font = Enum.Font.FredokaOne,
         ZIndex = zIndex,
-      }, pointsFrame)
+      }, nil) -- pointsFrame)
 
     -- Num completed
     zIndex += 1
@@ -142,7 +142,7 @@ function ScoreGui.Show(scoreScreenGui, pointsEarned, numTotal, numCompleted, num
         TextColor3 = Themes[Themes.CurrentTheme].TextColor,
         Font = Enum.Font.FredokaOne,
         ZIndex = zIndex,
-      }, pointsFrame)
+      }, nil) -- pointsFrame)
 
     -- Add star icons
     local starIconId = BLANK_STAR_IMAGE_ID
@@ -289,7 +289,7 @@ function ScoreGui.Show(scoreScreenGui, pointsEarned, numTotal, numCompleted, num
       --scoreClone.Parent = Workspace
       --local human = scoreClone:FindFirstChildOfClass("Humanoid")
       --if human then
-      --  print("aing *****************if human then")
+      --  print("*****************if human then")
       --  local animation = Instance.new("Animation")
       --  animation.AnimationId = "rbxassetid://656117400"
       --  local animationTrack = human:LoadAnimation(animation)

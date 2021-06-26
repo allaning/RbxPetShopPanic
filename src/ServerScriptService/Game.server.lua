@@ -672,9 +672,9 @@ local function onSelectLevelRequestEvent(player, levelRequest)
       if not plrVote then
         -- Add player's vote
         table.insert(playerLevelVotes, { ['PlayerName'] = player.Name, ['PlayerId'] = player.UserId, ['LevelVote'] = levelRequest })
-        --table.insert(playerLevelVotes, { ['PlayerName'] = player.Name.."2", ['PlayerId'] = player.UserId, ['LevelVote'] = levelRequest }) --aing
-        --table.insert(playerLevelVotes, { ['PlayerName'] = player.Name.."3", ['PlayerId'] = player.UserId, ['LevelVote'] = levelRequest }) --aing
-        --table.insert(playerLevelVotes, { ['PlayerName'] = player.Name.."4", ['PlayerId'] = player.UserId, ['LevelVote'] = levelRequest }) --aing
+        --table.insert(playerLevelVotes, { ['PlayerName'] = player.Name.."2", ['PlayerId'] = player.UserId, ['LevelVote'] = levelRequest }) -- testing
+        --table.insert(playerLevelVotes, { ['PlayerName'] = player.Name.."3", ['PlayerId'] = player.UserId, ['LevelVote'] = levelRequest }) -- testing
+        --table.insert(playerLevelVotes, { ['PlayerName'] = player.Name.."4", ['PlayerId'] = player.UserId, ['LevelVote'] = levelRequest }) -- testing
       end
     end
 
