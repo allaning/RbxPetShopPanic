@@ -62,5 +62,36 @@ function UserThumbnailGui.GetThumbnail(playerName, userId)
   return frame
 end
 
+function UserThumbnailGui.GetImageThumbnail(assetId, sizeDim, color, zIndex)
+  if assetId then
+    sizeDim = sizeDim or UDim2.new(0.3, 0, 0.3, 0)
+    color = color or Color3.fromRGB(255, 255, 255)
+    zIndex = zIndex or 1
+
+    local frame = Util:CreateInstance("Frame", {
+        Name = "Thumbnail",
+        Size = sizeDim,
+        SizeConstraint = Enum.SizeConstraint.RelativeYY,
+        BackgroundColor3 = color,
+        BackgroundTransparency = 0.0,
+        ZIndex = zIndex,
+      }, nil)
+    local uiCorner = Util:CreateInstance("UICorner", {
+        CornerRadius = UDim.new(1, 20),
+      }, frame)
+
+    -- Show thumbnail
+    zIndex += 1
+    local image = Util:CreateInstance("ImageLabel", {
+        Image = assetId,
+        Size = UDim2.new(1.0, 0, 1.0, 0),
+        BackgroundTransparency = 1.0,
+        ZIndex = zIndex,
+      }, frame)
+
+    return frame
+  end
+end
+
 return UserThumbnailGui
 

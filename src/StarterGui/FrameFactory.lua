@@ -49,5 +49,48 @@ function FrameFactory.GetLargeLobbyFrame()
   return FrameFactory.GetDefaultLobbyFrame(UDim2.new(0.6, 0, 0.7, 0))
 end
 
+function FrameFactory.GetMessageFrame(message, sizeDim, color, zIndex)
+  sizeDim = sizeDim or UDim2.new(0.3, 0, 0.3, 0)
+  color = color or Color3.fromRGB(255, 255, 255)
+  zIndex = zIndex or 1
+
+  local frameOuter = Util:CreateInstance("Frame", {
+      Name = "OuterMessageFrame",
+      BackgroundColor3 = color,
+      BorderSizePixel = 0,
+      Size = sizeDim,
+    }, nil)
+  local uiCorner = Util:CreateInstance("UICorner", {
+      CornerRadius = UDim.new(0, 15),
+    }, frameOuter)
+  local frameInner = Util:CreateInstance("Frame", {
+      Name = "InnerMessageFrame",
+      BackgroundColor3 = color,
+      BorderSizePixel = 0,
+      Position = UDim2.new(0.12, 0, 0.05, 0),
+      Size = UDim2.new(0.85, 0, 0.9, 0),
+      ZIndex = zIndex,
+    }, frameOuter)
+  local uiCorner = Util:CreateInstance("UICorner", {
+      CornerRadius = UDim.new(0, 15),
+    }, frameOuter)
+
+  zIndex += 1
+  if message and message ~= "" then
+    local textLabel = Util:CreateInstance("TextLabel", {
+        Text = message,
+        Font = Enum.Font.SourceSansSemibold,
+        Position = UDim2.new(0.0, 0, 0.0, 0),
+        Size = UDim2.new(1.0, 0, 1.0, 0),
+        BackgroundTransparency = 1.0,
+        TextColor3 = Color3.new(0.2, 0.5, 0.7),
+        TextScaled = true,
+        ZIndex = zIndex,
+      }, frameInner)
+  end
+
+  return frameOuter
+end
+
 return FrameFactory
 

@@ -1,10 +1,13 @@
 local Globals = {
 
   -- If true, then use real database (can use false for offline testing)
-  ['USE_REAL_DATABASE'] = false,
+  ['USE_REAL_DATABASE'] = true,
 
   -- Datastore name
   ['DATA_STORE_NAME'] = "DATA00",  -- TODO Use real database
+
+  -- Leaderboard DataStore name
+  ['LEADERBOARD_DATASTORE_NAME'] = "LeaderboardStars",
 
   -- Leaderboard stats names
   ['LEADERBOARD_POINTS_NAME'] = "Stars",

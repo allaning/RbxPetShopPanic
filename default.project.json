@@ -21,6 +21,11 @@
         "$path": "shared",
         "$ignoreUnknownInstances": true
       },
+      "ForWorkspace": {
+        "$className": "Folder",
+        "$path": "shared",
+        "$ignoreUnknownInstances": true
+      },
       "Vendor": {
         "$className": "Folder",
         "Promise": {

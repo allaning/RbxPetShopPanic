@@ -22,6 +22,7 @@ local TransformerClass = require(ReplicatedStorage.Transformers.Transformer)
 local Session = require(ReplicatedStorage.Session)
 
 local GetSessionStatusFn = ReplicatedStorage.RemoteFunctions.GetSessionStatus
+local GetCurrentMapLevelFn = ReplicatedStorage.RemoteFunctions.GetCurrentMapLevel
 local GetPlayerPointsFn = ReplicatedStorage.RemoteFunctions.GetPlayerPoints
 local GetNamesOfPlayersInSessionFn = ReplicatedStorage.RemoteFunctions.GetNamesOfPlayersInSession
 local GetLevelRequestVotesFn = ReplicatedStorage.RemoteFunctions.GetLevelRequestVotes
@@ -531,6 +532,12 @@ local function onGameStart(winningLevel)
     else
       error("Unable to get spawn plots from MapManager")
     end
+
+    -- Setup remote function
+    local function onGetCurrentMapLevelFn()
+      return map:GetAttribute(Globals.MAP_LEVEL_ATTRIBUTE_NAME) or 0
+    end
+    GetCurrentMapLevelFn.OnServerInvoke = onGetCurrentMapLevelFn
 
     -- Start
     ShowTitleMessageEvent:FireAllClients("Map ".. map.Name, 4)

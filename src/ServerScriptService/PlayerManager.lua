@@ -77,7 +77,7 @@ function PlayerManager:Initialize()
     self.LeaderstatsFolder = leaderstats
 
     -- Points
-    self.Points = DatabaseAdapter.GetPoints(player)
+    self.Points = 500--aing DatabaseAdapter.GetPoints(player)
     local pointsInstance = Instance.new("IntValue")
     pointsInstance.Name = Globals.LEADERBOARD_POINTS_NAME  -- Name of the in-game leaderboard stat
     pointsInstance.Value = self.Points

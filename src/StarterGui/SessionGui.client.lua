@@ -4,6 +4,11 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenGuiFactory = require(ReplicatedStorage.Gui.TweenGuiFactory)
 local Util = require(ReplicatedStorage.Util)
 local Promise = require(ReplicatedStorage.Vendor.Promise)
+local Assets = require(ReplicatedStorage.Assets)
+
+local StarterGui = game:GetService("StarterGui")
+local UserThumbnailGui = require(StarterGui.UserThumbnailGui)
+local FrameFactory = require(StarterGui.FrameFactory)
 
 -- Events
 local SessionCountdownBeginEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionCountdownBegin")
@@ -11,6 +16,7 @@ local SessionUpdateTimerCountdownEvent = ReplicatedStorage:WaitForChild("Events"
 local SessionEndedEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionEnded")
 local SessionScoreEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionScore")
 local ShowAnnouncementBindableEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ShowAnnouncement")
+local GetCurrentMapLevelFn = ReplicatedStorage:WaitForChild("RemoteFunctions"):WaitForChild("GetCurrentMapLevel")
 
 local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
@@ -102,14 +108,12 @@ local function showScoreGui()
     scoreTextLabel.Text = tostring(0)
   end
 end
-SessionCountdownBeginEvent.OnClientEvent:Connect(showScoreGui)
 
 local function hideScoreGui()
   if scoreGui then
     scoreGui.Enabled = false
   end
 end
-SessionEndedEvent.OnClientEvent:Connect(hideScoreGui)
 
 local function updateScore(increment)
   if scoreTextLabel then
@@ -211,14 +215,57 @@ local function showTimerGui(duration)
     timerTextLabel.Text = tostring(duration)
   end
 end
-SessionCountdownBeginEvent.OnClientEvent:Connect(showTimerGui)
+
+local function showGuis(duration)
+  showScoreGui()
+  showTimerGui(duration)
+
+  -- Check if show intro gui
+  local mapLevel = GetCurrentMapLevelFn:InvokeServer() or 2
+  if mapLevel == 1 then
+    local screenGui = Util:CreateInstance("ScreenGui", {
+        Name = "HowToPlay",
+      }, nil)
+    local thumb = UserThumbnailGui.GetImageThumbnail(Assets.CHARACTER_SMILING, UDim2.new(0.3, 0, 0.3, 0), nil, 3)
+    local introText = "Give the customer and animals the items they need. Good luck!"
+    local msg = FrameFactory.GetMessageFrame(introText, UDim2.new(0.5, 0, 0.2, 0), nil, 2)
+    if thumb and msg then
+      screenGui.Parent = PlayerGui
+      thumb.Position = UDim2.new(0.2, 0, 0.6, 0)
+      thumb.Parent = screenGui
+      msg.Position = UDim2.new(0.3, 0, 0.65, 0)
+      msg.Parent = screenGui
+
+      local exitButton = Util:CreateInstance("TextButton", {
+          Name = "Button",
+          Position = UDim2.new(0.0, 0, 0.0, 0),
+          Size = UDim2.new(0.9, 0, 0.9, 0),
+          BackgroundTransparency = 1.0,
+        }, screenGui)
+      exitButton.Activated:Connect(function()
+        screenGui:Destroy()
+      end)
+      Promise.delay(4):andThen(function()
+        if screenGui then
+          screenGui:Destroy()
+        end
+      end)
+    end
+  end
+end
+SessionCountdownBeginEvent.OnClientEvent:Connect(showGuis)
 
 local function hideTimerGui()
   if timerGui then
     timerGui.Enabled = false
   end
 end
-SessionEndedEvent.OnClientEvent:Connect(hideTimerGui)
+
+local function hideGuis()
+  hideScoreGui()
+  hideTimerGui()
+end
+SessionEndedEvent.OnClientEvent:Connect(hideGuis)
 
 
 local function updateTimer(timeSec)

@@ -92,17 +92,19 @@ function PlayGui.Initialize()
           Font = Enum.Font.FredokaOne,
           TextColor3 = Themes[Themes.CurrentTheme].TextColor2,
         }, scrollingFrame)
-      local levelRequirementLabel = Util:CreateInstance("TextLabel", {
-          Name = "StarsNeeded",
-          AnchorPoint = Vector2.new(0.5, 0.5),
-          Position = UDim2.new(0.5, 0, 0.95, 0),
-          Size = UDim2.new(0.7, 0, 0.25, 0),
-          BackgroundTransparency = 1.0,
-          TextScaled = true,
-          Text = "Stars Needed: ".. tostring(minPointsForLevel),
-          Font = Enum.Font.FredokaOne,
-          TextColor3 = Themes[Themes.CurrentTheme].TextColor,
-        }, levelButton)
+      if minPointsForLevel > 0 then
+        local levelRequirementLabel = Util:CreateInstance("TextLabel", {
+            Name = "StarsNeeded",
+            AnchorPoint = Vector2.new(0.5, 0.5),
+            Position = UDim2.new(0.5, 0, 0.95, 0),
+            Size = UDim2.new(0.7, 0, 0.25, 0),
+            BackgroundTransparency = 1.0,
+            TextScaled = true,
+            Text = "Stars Needed: ".. tostring(minPointsForLevel),
+            Font = Enum.Font.FredokaOne,
+            TextColor3 = Themes[Themes.CurrentTheme].TextColor,
+          }, levelButton)
+      end
       levelButton.Activated:Connect(function()
           SoundModule.PlayMouseClick(PlayerGui)
           local playerPoints = GetPlayerPointsFn:InvokeServer() or 0
