@@ -546,15 +546,15 @@ showLobbyGui()
 playerNamesInSession = GetNamesOfPlayersInSessionFn:InvokeServer()
 
 -- Check if should show new player message
-Util:RealWait(5)
+Util:RealWait(Globals.LOADING_SCREEN_LENGTH + 5)
 local playerPoints = GetPlayerPointsFn:InvokeServer() or 0
-if playerPoints == 0 then
+if playerPoints < 10 then
   local introScreenGui = Util:CreateInstance("ScreenGui", {
       Name = "Intro",
     }, nil)
   local thumb = UserThumbnailGui.GetImageThumbnail(Assets.CHARACTER_SMILING_MOUTH_OPEN, UDim2.new(0.3, 0, 0.3, 0), nil, 3)
-  local introText = "Welcome! Choose your avatar and click the Play button when ready."
-  local msg = FrameFactory.GetMessageFrame(introText, UDim2.new(0.5, 0, 0.2, 0), nil, 2, false)
+  local introText = [[Welcome! Choose your <font color="rgb(19,153,255)">Avatar</font> and click the <font color="rgb(19,153,255)">Play</font> button when ready.]]
+  local msg = FrameFactory.GetTypedMessageFrame(introText, UDim2.new(0.5, 0, 0.2, 0), nil, 2, false)
   if thumb and msg then
     introScreenGui.Parent = PlayerGui
     thumb.Position = UDim2.new(0.2, 0, 0.5, 0)
@@ -583,8 +583,8 @@ if playerPoints == 0 then
       end
 
       local thumb2 = UserThumbnailGui.GetImageThumbnail(Assets.CHARACTER_SMILING_EYES_CLOSED, UDim2.new(0.3, 0, 0.3, 0), nil, 3)
-      local introText2 = "You change the camera zoom by hitting the Jump button."
-      local msg2 = FrameFactory.GetMessageFrame(introText2, UDim2.new(0.5, 0, 0.2, 0), nil, 2, false)
+      local introText2 = [[Pressing <font color="rgb(19,153,255)">Jump</font> will simply change the camera <font color="rgb(19,153,255)">Zoom</font>.]]
+      local msg2 = FrameFactory.GetTypedMessageFrame(introText2, UDim2.new(0.5, 0, 0.2, 0), nil, 2, false)
       if thumb2 and msg2 then
         thumb2.Position = UDim2.new(0.2, 0, 0.5, 0)
         thumb2.Parent = introScreenGui

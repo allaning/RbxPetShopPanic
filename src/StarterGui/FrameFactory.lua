@@ -1,7 +1,10 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Themes = require(ReplicatedStorage.Themes)
 local Util = require(ReplicatedStorage.Util)
+local Promise = require(ReplicatedStorage.Vendor.Promise)
 
+local StarterGui = game:GetService("StarterGui")
+local AnimateText = require(StarterGui:WaitForChild("AnimateText"))
 
 local FrameFactory = {}
 
@@ -49,7 +52,7 @@ function FrameFactory.GetLargeLobbyFrame()
   return FrameFactory.GetDefaultLobbyFrame(UDim2.new(0.6, 0, 0.7, 0))
 end
 
-function FrameFactory.GetMessageFrame(message, sizeDim, color, zIndex, clickToExit)
+function FrameFactory.GetTypedMessageFrame(message, sizeDim, color, zIndex, clickToExit)
   sizeDim = sizeDim or UDim2.new(0.3, 0, 0.3, 0)
   color = color or Color3.fromRGB(255, 255, 255)
   zIndex = zIndex or 1
@@ -78,15 +81,20 @@ function FrameFactory.GetMessageFrame(message, sizeDim, color, zIndex, clickToEx
   zIndex += 1
   if message and message ~= "" then
     local textLabel = Util:CreateInstance("TextLabel", {
-        Text = message,
+        Text = "",--aing message,
         Font = Enum.Font.SourceSansSemibold,
         Position = UDim2.new(0.0, 0, 0.0, 0),
         Size = UDim2.new(1.0, 0, 1.0, 0),
         BackgroundTransparency = 1.0,
         TextColor3 = Color3.new(0.2, 0.5, 0.7),
         TextScaled = true,
+        RichText = true,
         ZIndex = zIndex,
       }, frameInner)
+    Promise.try(function()
+      -- The following call blocks, so use a Promise
+      AnimateText.typeWrite(textLabel, message, 0.05)
+    end)
   end
 
   if clickToExit then

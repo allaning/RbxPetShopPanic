@@ -3,8 +3,14 @@ local Globals = {
   -- If true, then use real database (can use false for offline testing)
   ['USE_REAL_DATABASE'] = true,
 
+  -- Place ID for real game
+  ['MAIN_PLACE_ID'] = 5528357894,  -- TODO Update
+
   -- Datastore name
   ['DATA_STORE_NAME'] = "DATA00",  -- TODO Use real database
+
+  -- Number of seconds to show loading screen
+  ['LOADING_SCREEN_LENGTH'] = 6,
 
   -- Leaderboard DataStore name
   ['LEADERBOARD_DATASTORE_NAME'] = "LeaderboardStars",

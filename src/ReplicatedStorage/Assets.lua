@@ -1,5 +1,8 @@
 local Assets = {
 
+  -- Logo
+  ['LOGO_700x700_8BIT'] = "rbxassetid://7009675409",
+
   -- Anime character smiling with mouth closed
   ['CHARACTER_SMILING'] = "rbxassetid://7007964032",
 

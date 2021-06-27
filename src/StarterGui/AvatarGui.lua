@@ -60,6 +60,8 @@ AvatarGui.CharacterTabButton = nil
 AvatarGui.CharacterScrollingFrame = nil
 AvatarGui.ShoulderPetTabButton = nil
 AvatarGui.ShoulderPetScrollingFrame = nil
+AvatarGui.BoostsTabButton = nil
+AvatarGui.BoostsScrollingFrame = nil
 
 -- List of frames for this gui
 local avatarFrames = {}
@@ -133,11 +135,30 @@ local function initializeTabButton(buttonObject, title, yPositionScale, dependen
     disableAvatarFrames(dependentFrameList)
   end)
 
+  -- aing -- Temporary
+  if title == "Boosts" then
+    local comingSoon = Util:CreateInstance("TextLabel", {
+        Name = "ComingSoon",
+        Text = "Coming Soon",
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Position = UDim2.new(0.4, 0, 0.5, 0),
+        Size = UDim2.new(0.8, 0, 0.5, 0),
+        BackgroundTransparency = 1.0,
+        TextScaled = true,
+        TextColor3 = Color3.new(1, 1, 0),
+        Font = Enum.Font.FredokaOne,
+        TextStrokeTransparency = 0.0,
+        Rotation = -30,
+        ZIndex = zIndex,
+      }, buttonObject)
+  end
+
 end
 
 local function initializeTabButtons()
-  initializeTabButton(AvatarGui.CharacterTabButton, "Character", 0.3, {AvatarGui.CharacterScrollingFrame})
+  initializeTabButton(AvatarGui.CharacterTabButton, "Character", 0.30, {AvatarGui.CharacterScrollingFrame})
   initializeTabButton(AvatarGui.ShoulderPetTabButton, "Shoulder Pet", 0.45, {AvatarGui.ShoulderPetScrollingFrame})
+  initializeTabButton(AvatarGui.BoostsTabButton, "Boosts", 0.60, {AvatarGui.BoostsScrollingFrame})
 end
 
 local function initializeCharacterFrame()

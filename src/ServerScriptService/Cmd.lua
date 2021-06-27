@@ -4,13 +4,15 @@
 
 
 local DataStoreService = game:GetService("DataStoreService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Globals = require(ReplicatedStorage.Globals)
 
 
 -- See above for instructions on including this module
 local Cmd = {}
 
 
-local DATA_STORE_NAME = "DATA00"
+local DATA_STORE_NAME = Globals.DATA_STORE_NAME
 
 
 --
