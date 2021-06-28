@@ -180,7 +180,7 @@ function ScoreGui.Show(scoreScreenGui, pointsEarned, numTotal, numCompleted, num
 
 
     -- Map level bonus
-    if mapLevel > 1 then
+    if mapLevel > 1 and pointsEarned > 0 then
       zIndex += 1
       local mapLevelBonus = Util:CreateInstance("TextLabel", {
           Name = "mapLevelBonus",
@@ -285,6 +285,21 @@ function ScoreGui.Show(scoreScreenGui, pointsEarned, numTotal, numCompleted, num
       viewport.ZIndex = zIndex
       viewport.Parent = mvpFrame
 
+      -- MVP Player Name
+      zIndex += 1
+      local mvpPlayerName = Util:CreateInstance("TextLabel", {
+          Name = "MvpPlayerName",
+          AnchorPoint = Vector2.new(0.5, 0.5),
+          Position = UDim2.new(0.25, 0, 0.26, 0),
+          Size = UDim2.new(0.6, 0, 0.18, 0),
+          BackgroundTransparency = 1.0,
+          TextScaled = true,
+          Text = playerWithBestScore.Name,
+          TextColor3 = Themes[Themes.CurrentTheme].TextColor2,
+          Font = Enum.Font.Bangers,
+          ZIndex = zIndex,
+        }, mvpFrame)
+
       -- Animate (can't get this to work)
       --scoreClone.Parent = Workspace
       --local human = scoreClone:FindFirstChildOfClass("Humanoid")
@@ -353,6 +368,22 @@ function ScoreGui.Show(scoreScreenGui, pointsEarned, numTotal, numCompleted, num
       viewport.BackgroundTransparency = 1.0
       viewport.ZIndex = zIndex
       viewport.Parent = assistsFrame
+
+      -- Assists Player Name
+      zIndex += 1
+      local assistsPlayerName = Util:CreateInstance("TextLabel", {
+          Name = "AssistsPlayerName",
+          AnchorPoint = Vector2.new(0.5, 0.5),
+          Position = UDim2.new(0.25, 0, 0.24, 0),
+          Size = UDim2.new(0.6, 0, 0.18, 0),
+          BackgroundTransparency = 1.0,
+          TextScaled = true,
+          Text = playerWithBestAssists.Name,
+          TextColor3 = Themes[Themes.CurrentTheme].TextColor2,
+          Font = Enum.Font.Bangers,
+          ZIndex = zIndex,
+        }, assistsFrame)
+
     else
       zIndex += 1
       local sadFace = Util:CreateInstance("TextLabel", {

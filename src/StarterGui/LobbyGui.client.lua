@@ -23,11 +23,13 @@ local SelectLevelRequestSentEvent = ReplicatedStorage:WaitForChild("Events"):Wai
 local LevelRequestVotesEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("LevelRequestVotes")
 local SessionMapLevelSelectedEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionMapLevelSelected")
 local SessionCountdownBeginEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionCountdownBegin")
+local SessionBeingSkippedEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionBeingSkipped")
 local SessionUpdateTimerCountdownEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionUpdateTimerCountdown")
 local SessionEndedEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionEnded")
 local SessionResultsEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionResults")
 local UpdateCharacterEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("UpdateCharacter")
 local ShowMessagePopupBindableEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ShowMessagePopupBindable")
+local ShowAnnouncementBindableEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ShowAnnouncement")
 
 local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
@@ -214,7 +216,17 @@ local function hideAlreadyInSessionCountdownFrame()
     alreadyInSessionCountdownFrame.Visible = false
   end
 end
-SessionEndedEvent.OnClientEvent:Connect(hideAlreadyInSessionCountdownFrame)
+
+local function showLobbyGui()
+  lobbyScreenGui.Enabled = true
+end
+
+local function onSessionEndedEvent()
+  hideAlreadyInSessionCountdownFrame()
+  Util:RealWait(3) -- Give time for ScoreGui to show
+  showLobbyGui()
+end
+SessionEndedEvent.OnClientEvent:Connect(onSessionEndedEvent)
 
 -- For players not in game session, show game countdown
 local function updateAlreadyInSessionCountdown(timeLeft)
@@ -241,10 +253,6 @@ local function showScoreGui(pointsEarned, numTotal, numCompleted, numFailed, map
 end
 
 
-local function showLobbyGui()
-  lobbyScreenGui.Enabled = true
-end
-
 local function showSessionResults(pointsEarned, numTotal, numCompleted, numFailed, mapLevel, playerWithBestScore, playerWithBestAssists)
   showScoreGui(pointsEarned, numTotal, numCompleted, numFailed, mapLevel, playerWithBestScore, playerWithBestAssists)
   showLobbyGui()
@@ -267,6 +275,17 @@ end
 SessionCountdownBeginEvent.OnClientEvent:Connect(hideLobbyGui)
 
 
+local function onSessionBeingSkippedEvent()
+  -- Remove vote thumbnails
+  for _, obj in pairs(UserThumbsFolder:GetChildren()) do
+    obj:Destroy()
+  end
+end
+SessionBeingSkippedEvent.OnClientEvent:Connect(onSessionBeingSkippedEvent)
+
+
+
+-- Initialize elements before continuing
 initializeLobbyGui()
 
 
@@ -346,7 +365,7 @@ local posOrderedListScaleX = {
 }
 
 -- See Game.server.lua for playerLevelVotes format
-local function onLevelRequestVotesEvent(playerLevelVotes)
+local function onLevelRequestVotesEvent(playerLevelVotes, playerName)
   print("Received LevelRequestVotesEvent")
 
   -- If player is in game session, then do nothing
@@ -354,8 +373,8 @@ local function onLevelRequestVotesEvent(playerLevelVotes)
     return
   end
 
-  -- Check if this was triggered by a new player
-  if not playerLevelVotes then
+  -- Check if this was triggered by a player adding or removing from game
+  if playerLevelVotes == nil then
     local isSessionActive = GetSessionStatusFn:InvokeServer()
     if isSessionActive then
       print("Session is active")
@@ -368,13 +387,26 @@ local function onLevelRequestVotesEvent(playerLevelVotes)
 
     -- Request vote info
     playerLevelVotes = GetLevelRequestVotesFn:InvokeServer()
-    print("playerLevelVotes = GetLevelRequestVotesFn:InvokeServer()")
+    --print("playerLevelVotes = GetLevelRequestVotesFn:InvokeServer()")
+  else
+    if #playerLevelVotes > 0 then
+      -- Someone actually voted
+      -- Only show if I'm not the one who voted
+      if Player.Name ~= playerName and playerName ~= Globals.UNINIT_STRING then
+        ShowAnnouncementBindableEvent:Fire("Player Voted!", true, 1.0)
+      end
+    end
   end
 
   if true then -- Debug
     for _, pv in pairs(playerLevelVotes) do
-      print(string.format("  playerLevelVotes: Player %s (%d) votes for %s", pv['PlayerName'], pv['PlayerId'], pv['LevelVote']))
+      print(string.format("  playerLevelVotes: Player %s (%d) votes for level %s", pv['PlayerName'], pv['PlayerId'], pv['LevelVote']))
     end
+  end
+
+  -- Remove old thumbnails
+  for _, oldThumb in pairs(UserThumbsFolder:GetChildren()) do
+    oldThumb:Destroy()
   end
 
   -- Create sorted list of player names and another list with corresponding user IDs
@@ -452,11 +484,6 @@ local function onLevelRequestVotesEvent(playerLevelVotes)
             CornerRadius = UDim.new(0, 25),
           }, voteTextBackground)
 
-        -- Remove old thumbnail
-        local oldThumb = UserThumbsFolder:FindFirstChild(plrName)
-        if oldThumb then
-          oldThumb:Destroy()
-        end
         -- Add new thumbnail to screen
         screenGui.Parent = UserThumbsFolder
         thumb.Position = UDim2.new(posOrderedListScaleX[#playerNames][currentPosX], 0, POS_Y, 0)
@@ -481,7 +508,9 @@ local function showRandomFrames(frameList, frequency, durationSec)
       local randIdx = rand:NextInteger(1, #frameList)
       for idx = 1, #frameList do
         if idx == randIdx then
-          frameList[idx].Visible = true
+          if frameList[idx].Parent.Vote.Text ~= "Vote: _" then
+            frameList[idx].Visible = true
+          end
         else
           frameList[idx].Visible = false
         end
@@ -545,8 +574,9 @@ showLobbyGui()
 -- Get list of players currently in session, if any
 playerNamesInSession = GetNamesOfPlayersInSessionFn:InvokeServer()
 
+
 -- Check if should show new player message
-Util:RealWait(Globals.LOADING_SCREEN_LENGTH + 5)
+Util:RealWait(Globals.LOADING_SCREEN_LENGTH + 3)
 local playerPoints = GetPlayerPointsFn:InvokeServer() or 0
 if playerPoints < 10 then
   local introScreenGui = Util:CreateInstance("ScreenGui", {

@@ -81,7 +81,7 @@ function FrameFactory.GetTypedMessageFrame(message, sizeDim, color, zIndex, clic
   zIndex += 1
   if message and message ~= "" then
     local textLabel = Util:CreateInstance("TextLabel", {
-        Text = "",--aing message,
+        Text = "", -- message will be typed below
         Font = Enum.Font.SourceSansSemibold,
         Position = UDim2.new(0.0, 0, 0.0, 0),
         Size = UDim2.new(1.0, 0, 1.0, 0),

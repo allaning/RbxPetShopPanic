@@ -1,6 +1,5 @@
 local Util = {}
 
-local BadgeService = game:GetService("BadgeService")
 local RunService = game:GetService("RunService")
 
 local StarterGui = game:GetService("StarterGui")
@@ -389,28 +388,6 @@ function Util:GetProductPrice(productId)
     warn("Error getting price for product ".. tostring(productId)..": ".. tostring(err))
   end
   return price
-end
-
-
-
-function Util:AwardBadge(playerId, badgeID)
-  local hasBadge = false
-
-  -- Check if the player already has the badge
-  local success, message = pcall(function()
-    hasBadge = BadgeService:UserHasBadgeAsync(playerId, badgeID)
-  end)
-
-  -- If there's an error, issue a warning and exit the function
-  if not success then
-    warn("Error while checking if player has badge: " .. tostring(message))
-    return
-  end
-
-  if hasBadge == false and BadgeService:IsLegal(badgeID) and not BadgeService:IsDisabled(badgeID) then
-    print("Badge awarded to playerId=".. playerId.. ", badgeID = ".. badgeID)
-    BadgeService:AwardBadge(playerId, badgeID)
-  end
 end
 
 

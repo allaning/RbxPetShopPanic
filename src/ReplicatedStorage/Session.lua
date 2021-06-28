@@ -9,7 +9,7 @@ Session.__index = Session
 
 
 -- Default game session length
-Session.DEFAULT_TIME_PER_SESSION_SEC = (60 * 2) + 30
+Session.DEFAULT_TIME_PER_SESSION_SEC = 60 * 2
 
 -- Delay that occurs when game session ends
 Session.POST_GAME_COOLDOWN_PERIOD_SEC = 2

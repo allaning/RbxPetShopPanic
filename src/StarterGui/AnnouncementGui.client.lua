@@ -12,6 +12,7 @@ local ShowTitleMessageEvent = ReplicatedStorage:WaitForChild("Events"):WaitForCh
 local SessionCountdownBeginEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionCountdownBegin")
 local SessionEndedEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionEnded")
 local ShowMessagePopupEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ShowMessagePopup")
+local ShowNotificationEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ShowNotification")
 local ShowMessagePopupBindableEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ShowMessagePopupBindable")
 local ShowAnnouncementBindableEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ShowAnnouncement")
 
@@ -65,6 +66,42 @@ local function showMessagePopup(message, duration)
 end
 ShowMessagePopupEvent.OnClientEvent:Connect(showMessagePopup)
 ShowMessagePopupBindableEvent.Event:Connect(showMessagePopup)
+
+
+local function showNotification(message, duration, color)
+  local duration = duration or 2
+  local color = color or Color3.fromRGB(255, 255, 255)
+
+  local screenGui = Instance.new("ScreenGui")
+  screenGui.DisplayOrder = 2
+  screenGui.Parent = PlayerGui
+  local frame = Util:CreateInstance("Frame", {
+      AnchorPoint = Vector2.new(0.5, 0.5),
+      Position = UDim2.new(0.9, 0, 0.85, 0),
+      Size = UDim2.new(0.1, 0, 0.1, 0),
+      BackgroundTransparency = 1.0,
+    }, screenGui)
+  local textLabel = Util:CreateInstance("TextLabel", {
+      AnchorPoint = Vector2.new(0.5, 0.5),
+      Position = UDim2.new(0.0, 0, 0.0, 0),
+      Size = UDim2.new(1.0, 0, 1.0, 0),
+      BackgroundTransparency = 1.0,
+      TextColor3 = color,
+      TextScaled = true,
+      Font = Enum.Font.SourceSansSemibold,
+      Text = message,
+    }, frame)
+  local scale = Util:CreateInstance("UIScale", {
+      Scale = 0.0,
+    }, textLabel)
+  TweenGuiFactory.ScaleIn(scale, 0.07, Enum.EasingStyle.Linear, Enum.EasingDirection.In, false)
+
+  Promise.delay(duration):andThen(function()
+    TweenGuiFactory.ScaleOut(scale, 0.07, Enum.EasingStyle.Linear, Enum.EasingDirection.In, true)
+    screenGui:Destroy()
+  end)
+end
+ShowNotificationEvent.OnClientEvent:Connect(showNotification)
 
 
 local function showTitle(message, durationSec)

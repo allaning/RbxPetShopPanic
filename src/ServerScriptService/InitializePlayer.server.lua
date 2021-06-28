@@ -1,7 +1,9 @@
 -- Animation IDs: https://developer.roblox.com/en-us/articles/catalog-animations
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
+local BadgeUtil = require(ServerScriptService.BadgeUtil)
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LevelRequestVotesEvent = ReplicatedStorage.Events.LevelRequestVotes
 local PlayerRemovingEvent = ReplicatedStorage.Events.PlayerRemoving
 
@@ -15,6 +17,8 @@ Players.PlayerAdded:Connect(function(Player)
 
   -- Show user vote thumbnails; Send to all so they can adjust count
   LevelRequestVotesEvent:FireAllClients()
+
+  BadgeUtil.AwardWelcomeBadge(Player)
 
 
   -- CharacterAdded

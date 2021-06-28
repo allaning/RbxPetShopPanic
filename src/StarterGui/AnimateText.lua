@@ -1,3 +1,5 @@
+-- Ref: https://developer.roblox.com/en-us/articles/animating-text
+
 local LocalizationService = game:GetService("LocalizationService")
 local Players = game:GetService("Players")
 

@@ -21,24 +21,29 @@ local ConsumerClass = require(ReplicatedStorage.Consumers.Consumer)
 local TransformerClass = require(ReplicatedStorage.Transformers.Transformer)
 local Session = require(ReplicatedStorage.Session)
 
+local GetLevelRequestVotesFn = ReplicatedStorage.RemoteFunctions.GetLevelRequestVotes
+local LevelRequestVotesEvent = ReplicatedStorage.Events.LevelRequestVotes
+local MapVotingBeginBindableEvent = ServerScriptService.Bindable.MapVotingBeginBindable
+local MapVotingTimeoutBindableEvent = ServerScriptService.Bindable.MapVotingTimeoutBindable
 local GetSessionStatusFn = ReplicatedStorage.RemoteFunctions.GetSessionStatus
 local GetCurrentMapLevelFn = ReplicatedStorage.RemoteFunctions.GetCurrentMapLevel
-local GetPlayerPointsFn = ReplicatedStorage.RemoteFunctions.GetPlayerPoints
-local GetNamesOfPlayersInSessionFn = ReplicatedStorage.RemoteFunctions.GetNamesOfPlayersInSession
-local GetLevelRequestVotesFn = ReplicatedStorage.RemoteFunctions.GetLevelRequestVotes
-local ConsumerInputReceivedEvent = ReplicatedStorage.Events.ConsumerInputReceived
-local ConsumerNewRequestEvent = ReplicatedStorage.Events.ConsumerNewRequest
-local ConsumerTimerExpiredEvent = ReplicatedStorage.Events.ConsumerTimerExpired
 local SelectLevelRequestEvent = ReplicatedStorage.Events.SelectLevelRequest
-local LevelRequestVotesEvent = ReplicatedStorage.Events.LevelRequestVotes
 local SessionMapLevelSelectedEvent = ReplicatedStorage.Events.SessionMapLevelSelected
-local ShowTitleMessageEvent = ReplicatedStorage.Events.ShowTitleMessage
+local SessionBeingSkippedEvent = ReplicatedStorage.Events.SessionBeingSkipped
 local SessionCountdownBeginEvent = ReplicatedStorage.Events.SessionCountdownBegin
+local MapVotingTimerCancelBindableEvent = ServerScriptService.Bindable.MapVotingTimerCancelBindable
 local SessionUpdateTimerCountdownEvent = ReplicatedStorage.Events.SessionUpdateTimerCountdown
 local SessionBeginEvent = ReplicatedStorage.Events.SessionBegin
 local SessionEndedEvent = ReplicatedStorage.Events.SessionEnded
 local SessionResultsEvent = ReplicatedStorage.Events.SessionResults
 local SessionScoreEvent = ReplicatedStorage.Events.SessionScore
+
+local GetPlayerPointsFn = ReplicatedStorage.RemoteFunctions.GetPlayerPoints
+local GetNamesOfPlayersInSessionFn = ReplicatedStorage.RemoteFunctions.GetNamesOfPlayersInSession
+local ConsumerInputReceivedEvent = ReplicatedStorage.Events.ConsumerInputReceived
+local ConsumerNewRequestEvent = ReplicatedStorage.Events.ConsumerNewRequest
+local ConsumerTimerExpiredEvent = ReplicatedStorage.Events.ConsumerTimerExpired
+local ShowTitleMessageEvent = ReplicatedStorage.Events.ShowTitleMessage
 local ShowMessagePopupEvent = ReplicatedStorage.Events.ShowMessagePopup
 local PlayerRemovingEvent = ReplicatedStorage.Events.PlayerRemoving
 local GetPlayerManagerInstanceBindableFn = ServerScriptService.Bindable.GetPlayerManagerInstanceBindable
@@ -95,6 +100,7 @@ GetOwnedProductIdsFn.OnServerInvoke = getOwnedProductIds
 
 local session = nil
 local lobbySpawn = nil
+local sessionCount = 0  -- Number of sessions played
 
 
 -- Remove Player ForceField
@@ -496,22 +502,25 @@ local function onGameStart(winningLevel)
   print("In onGameStart")
   session = Session.new()
   session:SetIsActive(true)
+  sessionCount += 1
 
   -- Select a map
-  local mapPlayerList = Players:GetPlayers()
-  local map = MapManager.InitializeMap(winningLevel, #mapPlayerList)
+  local map = MapManager.InitializeMap(winningLevel, #sessionPlayerList)
 
-  -- Set current players 'in game' status
-  for _, plrMgr in pairs(playerManagers) do
-    plrMgr:SetIsInGameSession(true)
+  -- Set players 'in game' status
+  for _, plr in pairs(sessionPlayerList) do
+    for __, plrMgr in pairs(playerManagers) do
+      if plrMgr:GetPlayerName() == plr.Name then
+        plrMgr:SetIsInGameSession(true)
+        break
+      end
+    end
   end
 
   Promise.try(function()
     -- Spawn players into map
-    sessionPlayerList = {}
     local spawns = MapManager.GetSpawns()
     if spawns and #spawns > 0 then
-      sessionPlayerList = Players:GetPlayers()
       session:SetPlayerList(sessionPlayerList)
       for idx, spawn in pairs(spawns) do
         if sessionPlayerList[idx] then
@@ -540,10 +549,16 @@ local function onGameStart(winningLevel)
     GetCurrentMapLevelFn.OnServerInvoke = onGetCurrentMapLevelFn
 
     -- Start
-    ShowTitleMessageEvent:FireAllClients("Map ".. map.Name, 4)
-    SessionCountdownBeginEvent:FireAllClients(session:GetDuration(), winningLevel)
+    for _, plr in pairs(sessionPlayerList) do
+      ShowTitleMessageEvent:FireClient(plr, "Map ".. map.Name, 4)
+      SessionCountdownBeginEvent:FireClient(plr, session:GetDuration(), winningLevel, sessionCount)
+    end
+    MapVotingTimerCancelBindableEvent:Fire()  -- Abort voting timeout
+
     Util:RealWait(Globals.READY_SET_GO_COUNTDOWN_SEC)  -- Wait for "Ready" countdown
-    SessionBeginEvent:FireAllClients()
+    for _, plr in pairs(sessionPlayerList) do
+      SessionBeginEvent:FireClient(plr)
+    end
 
     local timerUpdateIntervalSec = 1
     session:Start()
@@ -623,6 +638,7 @@ local function onGameStart(winningLevel)
     LevelRequestVotesEvent:FireAllClients({})  -- Make client show user thumbnails
 
     -- Cleanup
+    sessionPlayerList = {}
     MapManager.Cleanup(map)
 
     -- Remove map before allowing players to click the Play icon
@@ -645,6 +661,20 @@ local function getPlayerVote(playerName)
   end
 end
 
+-- Get Nth player vote
+local function getPlayerVoteByCount(count)
+  local idx = 1
+  for _, playerVote in pairs(playerLevelVotes) do
+    if idx == count then
+      local name = playerVote['PlayerName']
+      local id = playerVote['PlayerId']
+      local vote = playerVote['LevelVote']
+      return name, id, vote
+    end
+    idx += 1
+  end
+end
+
 -- Remove player vote
 local function removePlayerVote(playerName)
   for idx, playerVote in pairs(playerLevelVotes) do
@@ -656,25 +686,35 @@ local function removePlayerVote(playerName)
   return false
 end
 
-local function onSelectLevelRequestEvent(player, levelRequest)
+
+-- This can be called under the following conditions:
+-- 1. A player voted: player not nil
+-- 2. A player added/removed self: nil args
+-- 3. Voting timeout: nil args
+local function onSelectLevelRequestEvent(player, levelRequest, isTimedOut)
   if not session or session:GetIsActive() == false then
     local levelRequest = levelRequest or Globals.UNINIT_STRING
-    print(string.format("Player %s voted for %s", player.Name, levelRequest))
+    local playerName = Globals.UNINIT_STRING
 
-    -- If no levelRequest provided (e.g. on Player Removing event), then remove vote
-    if levelRequest == Globals.UNINIT_STRING then
-      removePlayerVote(player.Name)
-    else
-      -- Process player vote
+    if player then
+      print(string.format("Player %s voted for %s", player.Name, levelRequest))
+      playerName = player.Name
 
-      -- Find player vote, if any
-      local plrName, plrId, plrVote = getPlayerVote(player.Name)
-      if not plrVote then
-        -- Add player's vote
-        table.insert(playerLevelVotes, { ['PlayerName'] = player.Name, ['PlayerId'] = player.UserId, ['LevelVote'] = levelRequest })
-        --table.insert(playerLevelVotes, { ['PlayerName'] = player.Name.."2", ['PlayerId'] = player.UserId, ['LevelVote'] = levelRequest }) -- testing
-        --table.insert(playerLevelVotes, { ['PlayerName'] = player.Name.."3", ['PlayerId'] = player.UserId, ['LevelVote'] = levelRequest }) -- testing
-        --table.insert(playerLevelVotes, { ['PlayerName'] = player.Name.."4", ['PlayerId'] = player.UserId, ['LevelVote'] = levelRequest }) -- testing
+      -- If no levelRequest provided (e.g. on Player Removing event), then remove vote
+      if levelRequest == Globals.UNINIT_STRING then
+        removePlayerVote(player.Name)
+      else
+        -- Process player vote
+
+        -- Find player vote, if any
+        local plrName, plrId, plrVote = getPlayerVote(player.Name)
+        if not plrVote then
+          -- Add player's vote
+          table.insert(playerLevelVotes, { ['PlayerName'] = player.Name, ['PlayerId'] = player.UserId, ['LevelVote'] = levelRequest })
+          --table.insert(playerLevelVotes, { ['PlayerName'] = player.Name.."2", ['PlayerId'] = player.UserId, ['LevelVote'] = levelRequest }) -- testing
+          --table.insert(playerLevelVotes, { ['PlayerName'] = player.Name.."3", ['PlayerId'] = player.UserId, ['LevelVote'] = levelRequest }) -- testing
+          --table.insert(playerLevelVotes, { ['PlayerName'] = player.Name.."4", ['PlayerId'] = player.UserId, ['LevelVote'] = levelRequest }) -- testing
+        end
       end
     end
 
@@ -685,31 +725,59 @@ local function onSelectLevelRequestEvent(player, levelRequest)
     end
 
     -- Send clients a list of players and their level votes
-    LevelRequestVotesEvent:FireAllClients(playerLevelVotes)
+    LevelRequestVotesEvent:FireAllClients(playerLevelVotes, playerName)
+
+    -- Start or restart voting timer
+    MapVotingBeginBindableEvent:Fire()
 
     -- If all players voted, then choose random vote
     local winningLevel = Globals.UNINIT_STRING
     local playerList = Players:GetPlayers()
     local numPlayers = Util:TableLength(playerList)
-    if numPlayers == Util:TableLength(playerLevelVotes) and numPlayers > 0 then
+    if (numPlayers == Util:TableLength(playerLevelVotes) or isTimedOut) and #playerLevelVotes > 0 then
+      local numVotes = #playerLevelVotes
+      local plrName, plrId, plrVote = getPlayerVote(playerLevelVotes[1]['PlayerName'])
       if numPlayers == 1 then
-        winningLevel = levelRequest
+        winningLevel = plrVote
       else
         -- Choose random vote
         local rand = Random.new()
-        local randPlayer = rand:NextInteger(1, numPlayers)
-        print("  randPlayer=".. tostring(randPlayer))
-        local plrName, plrId, plrVote = getPlayerVote(playerList[randPlayer].Name)
+        local randPlayerVote = rand:NextInteger(1, #playerLevelVotes)
+        print("  randPlayerVote=".. tostring(randPlayerVote).. " of ".. tostring(#playerLevelVotes).. " players")
+        plrName, plrId, plrVote = getPlayerVoteByCount(randPlayerVote)
         print(string.format("Chose %s vote: %s", plrName, plrVote))
-        if plrVote then
-          SessionMapLevelSelectedEvent:FireAllClients(plrName, plrVote)
-          winningLevel = plrVote
-        else
-          warn("Error choosing random voter. Using current voter: ".. player.Name)
-          SessionMapLevelSelectedEvent:FireAllClients(player.Name, levelRequest)
-          winningLevel = levelRequest
+        if not plrVote then
+          warn("Error choosing random voter. Using first player: ".. playerList[1].Name)
+          plrName, plrId, plrVote = getPlayerVote(playerList[1].Name)
         end
+        winningLevel = plrVote
+      end
 
+      -- For each player in game, send event depending on if they voted
+      for _, plr in pairs(playerList) do
+        -- Check if player voted
+        local voted = false
+        for __, currentVote in pairs(playerLevelVotes) do
+          if currentVote['PlayerName'] == plr.Name then
+            -- Player is joining session
+            table.insert(sessionPlayerList, plr)
+            voted = true
+            if numVotes > 1 then
+              -- Only need to show selection if more than one player
+              SessionMapLevelSelectedEvent:FireClient(plr, plrName, plrVote)
+
+              MapVotingTimerCancelBindableEvent:Fire()  -- Abort voting timeout
+            end
+            break
+          end
+        end
+        if not voted then
+          -- Player is not joining session
+          SessionBeingSkippedEvent:FireClient(plr)
+        end
+      end
+
+      if numVotes > 1 then
         -- Delay to show random vote being chosen
         Util:RealWait(Globals.RANDOM_LEVEL_SELECTION_DISPLAY_DELAY_SEC + 1)
       end
@@ -725,6 +793,7 @@ local function onSelectLevelRequestEvent(player, levelRequest)
 end
 SelectLevelRequestEvent.OnServerEvent:Connect(onSelectLevelRequestEvent)
 PlayerRemovingEvent.Event:Connect(onSelectLevelRequestEvent)
+MapVotingTimeoutBindableEvent.Event:Connect(onSelectLevelRequestEvent)
 
 
 local function getSessionStatus()
@@ -806,22 +875,31 @@ end)
 Players.PlayerRemoving:Connect(function(Player)
   -- Remove PlayerManager instance
   for idx, plr in pairs(playerManagers) do
-    table.remove(playerManagers, idx)
+    if plr:GetPlayerName() == Player.Name then
+      print("Removing PlayerManager for ".. plr:GetPlayerName())
+      table.remove(playerManagers, idx)
+      break
+    end
   end
 
-  -- Remove from session player list
+  -- Remove from session player lists
   if session then
     session:RemoveFromPlayerList(Player.Name)
   end
-
-  -- Check if all players in session left
-  local inSessionCount = 0
-  for _, plr in pairs(playerManagers) do
-    if plr:GetIsInGameSession() then
-      inSessionCount += 1
+  for idx, plr in pairs(sessionPlayerList) do
+    if plr.Name == Player.Name then
+      print("Removing from sessionPlayerList: ".. plr.Name)
+      table.remove(sessionPlayerList, idx)
+      break
     end
   end
-  if inSessionCount == 0 then
+
+  if #playerLevelVotes == 0 then
+    MapVotingTimerCancelBindableEvent:Fire()  -- Abort voting timeout
+  end
+
+  -- Check if all players in session left
+  if #sessionPlayerList == 0 then
     -- End the session
     if session then
       session:SetDuration(1)

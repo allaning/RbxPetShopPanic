@@ -1,5 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Util = require(ReplicatedStorage.Util)
+local Globals = require(ReplicatedStorage.Globals)
 local Promise = require(ReplicatedStorage.Vendor.Promise)
 
 local LobbyMusicBeginBindableEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("LobbyMusicBeginBindable")
@@ -16,8 +17,8 @@ local lobbyMusic = "rbxassetid://1835276362"  -- https://www.roblox.com/library/
 
 local music = {
   ['1'] = {
-    "rbxassetid://1843313385",  -- https://www.roblox.com/library/1843313385/Swing-it
     "rbxassetid://1846707136",  -- https://www.roblox.com/library/1846707136/Baby-Dwarf
+    "rbxassetid://1843313385",  -- https://www.roblox.com/library/1843313385/Swing-it
     "rbxassetid://1841212514",  -- https://www.roblox.com/library/1841212514/Shop-til-You-Flop-a
   },
   ['2'] = {
@@ -41,6 +42,10 @@ local music = {
 local currentMusic = nil
 
 
+local function isLocalPlayerInGameSession()
+  return Player:GetAttribute(Globals.PLAYER_IS_IN_GAME_SESSION_ATTRIBUTE_NAME)
+end
+
 local function playMusic(parentObject, soundId, volume)
   local volume = volume or 0.3
 
@@ -63,7 +68,7 @@ PlayMusicBindableEvent.Event:Connect(playMusic)
 
 
 local function stopMusic()
-  if currentMusic and currentMusic.IsPlaying then
+  if currentMusic and currentMusic.IsPlaying and isLocalPlayerInGameSession() then
     currentMusic:Stop()
     currentMusic:Destroy()
   end
@@ -77,13 +82,17 @@ end
 LobbyMusicBeginBindableEvent.Event:Connect(playLobbyMusic)
 
 
-local function playSessionMusic(duration, levelName)
+local function playSessionMusic(duration, levelName, sessionCount)
   stopMusic()
 
   -- Choose music
-  local rand = Random.new()
-  local randIdx = rand:NextInteger(1, #(music[levelName]))
-  playMusic(PlayerGui, music[levelName][randIdx])
+  local idx = (sessionCount % #(music[levelName])) + 1
+  if idx < 1 then
+    idx = 1
+  elseif idx > #(music[levelName]) then
+    idx = #(music[levelName])
+  end
+  playMusic(PlayerGui, music[levelName][idx])
 end
 SessionCountdownBeginEvent.OnClientEvent:Connect(playSessionMusic)
 

@@ -4,10 +4,10 @@ local Globals = {
   ['USE_REAL_DATABASE'] = true,
 
   -- Place ID for real game
-  ['MAIN_PLACE_ID'] = 5528357894,  -- TODO Update
+  ['MAIN_PLACE_ID'] = 7012541131,
 
   -- Datastore name
-  ['DATA_STORE_NAME'] = "DATA00",  -- TODO Use real database
+  ['DATA_STORE_NAME'] = "DATA",
 
   -- Number of seconds to show loading screen
   ['LOADING_SCREEN_LENGTH'] = 6,
@@ -17,6 +17,9 @@ local Globals = {
 
   -- Leaderboard stats names
   ['LEADERBOARD_POINTS_NAME'] = "Stars",
+
+  -- Number of seconds for map voting timeout
+  ['MAP_VOTING_TIMEOUT_SEC'] = 60,
 
   -- Number of seconds to show random map level vote being selected
   ['RANDOM_LEVEL_SELECTION_DISPLAY_DELAY_SEC'] = 4,
