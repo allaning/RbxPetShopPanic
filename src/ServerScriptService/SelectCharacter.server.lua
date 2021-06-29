@@ -208,7 +208,14 @@ local function checkSelectShoulderPetRequest(player, folderName, modelName)
           end
 
           -- Add new pet
-          humanoid:AddAccessory(accessory:Clone())
+          local petClone = accessory:Clone()
+          -- Remove TouchInterest parts (e.g. so accessories don't jump from player to player!)
+          for i, desc in pairs(petClone:GetDescendants()) do
+            if desc.Name == 'TouchInterest' then
+              desc:Destroy()
+            end
+          end
+          humanoid:AddAccessory(petClone)
           UpdateCharacterEvent:FireClient(player)
           ShoulderPetUpdatedBindableEvent:Fire(player, modelName)
         else
@@ -261,7 +268,14 @@ local function onLoadShoulderPetEvent(player, shoulderPetName)
               end
 
               -- Add new pet
-              humanoid:AddAccessory(accessory:Clone())
+              local petClone = accessory:Clone()
+              -- Remove TouchInterest parts (e.g. so accessories don't jump from player to player!)
+              for i, desc in pairs(petClone:GetDescendants()) do
+                if desc.Name == 'TouchInterest' then
+                  desc:Destroy()
+                end
+              end
+              humanoid:AddAccessory(petClone)
               return
             end
           end

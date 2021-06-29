@@ -123,10 +123,11 @@ function PlayerManager:SetPoints(points)
 
   if self.PointsInstance then
     self.PointsInstance.Value = points
-    DatabaseAdapter.SetPoints(self.Player, points)
   else
     error("PlayerManager:SetPoints: self.PointsInstance not initialized")
   end
+
+  DatabaseAdapter.SetPoints(self.Player, points)
 end
 
 function PlayerManager:IncrementPoints(points)
@@ -134,10 +135,12 @@ function PlayerManager:IncrementPoints(points)
 
   if self.PointsInstance then
     self.PointsInstance.Value += points
-    DatabaseAdapter.IncrementPoints(self.Player, points)
   else
     error("PlayerManager:IncrementPoints: self.PointsInstance not initialized")
   end
+
+  DatabaseAdapter.IncrementPoints(self.Player, points)
+  print("In PlayerManager:IncrementPoints(points ".. points.." ) self.Points=".. self.Points)
 end
 
 
@@ -180,20 +183,8 @@ function PlayerManager:GetEquippedCharacterName()
   return self.EquippedItems['Character']['Name']
 end
 
-function PlayerManager:SetEquippedCharacterName(charName)
-  self.EquippedItems['Character']['Name'] = charName
-  self:SaveEquippedItems()
-  print("Saving player Character name: ".. self.Player.Name.. " as ".. charName)
-end
-
 function PlayerManager:GetEquippedShoulderPetName()
   return self.EquippedItems['ShoulderPet']['Name']
-end
-
-function PlayerManager:SetEquippedShoulderPetName(shoulderPetName)
-  self.EquippedItems['ShoulderPet']['Name'] = shoulderPetName
-  self:SaveEquippedItems()
-  print("Saving player ShoulderPet name: ".. self.Player.Name.. " as ".. shoulderPetName)
 end
 
 
@@ -246,6 +237,24 @@ function PlayerManager.GetPlayerManagerFromList(playerManagers, playerName)
     if plrMgr:GetPlayerName() == playerName then
       return plrMgr
     end
+  end
+end
+
+function PlayerManager.SetEquippedCharacterName(playerManagers, player, charName)
+  local plrMgr = PlayerManager.GetPlayerManagerFromList(playerManagers, playerName)
+  if plrMgr then
+    plrMgr.EquippedItems['Character']['Name'] = charName
+    plrMgr:SaveEquippedItems()
+    print("Saving player Character name: ".. plrMgr:GetPlayerName().. " as ".. charName)
+  end
+end
+
+function PlayerManager.SetEquippedShoulderPetName(playerManagers, player, shoulderPetName)
+  local plrMgr = PlayerManager.GetPlayerManagerFromList(playerManagers, playerName)
+  if plrMgr then
+    plrMgr.EquippedItems['ShoulderPet']['Name'] = shoulderPetName
+    plrMgr:SaveEquippedItems()
+    print("Saving player ShoulderPet name: ".. plrMgr:GetPlayerName().. " as ".. shoulderPetName)
   end
 end
 

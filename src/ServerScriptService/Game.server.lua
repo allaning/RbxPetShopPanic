@@ -597,9 +597,11 @@ local function onGameStart(winningLevel)
         if plr then
           -- Show score, MVP and Most Assists
           SessionResultsEvent:FireClient(plr, pointsEarned, numTotal, numCompleted, numFailed, mapLevel, playerWithBestScoreCharacter, playerWithBestAssistsCharacter)
+          print("SessionResultsEvent:FireClient(plr ".. plr.Name.. ", pointsEarned ".. pointsEarned.. ", numTotal, numCompleted, numFailed, mapLevel, playerWithBestScoreCharacter, playerWithBestAssistsCharacter)")
         end
-        pointsEarned = pointsEarned * (mapLevel * MapManager.MAP_LEVEL_MULTIPLIER)
-        plrMgr:IncrementPoints(pointsEarned)
+        local adjustedPointsEarned = pointsEarned * (mapLevel * MapManager.MAP_LEVEL_MULTIPLIER)
+        print("adjustedPointsEarned ".. adjustedPointsEarned.. "= pointsEarned * (mapLevel ".. mapLevel.. " * MapManager.MAP_LEVEL_MULTIPLIER)")
+        plrMgr:IncrementPoints(adjustedPointsEarned)
       end
     end
 
@@ -703,6 +705,10 @@ local function onSelectLevelRequestEvent(player, levelRequest, isTimedOut)
       -- If no levelRequest provided (e.g. on Player Removing event), then remove vote
       if levelRequest == Globals.UNINIT_STRING then
         removePlayerVote(player.Name)
+
+        if #playerLevelVotes == 0 then
+          MapVotingTimerCancelBindableEvent:Fire()  -- Abort voting timeout
+        end
       else
         -- Process player vote
 
@@ -840,6 +846,14 @@ end
 InsertProductIdBindableEvent.Event:Connect(onInsertProductIdBindableEvent)
 
 
+-- Register for player updates
+CharacterUpdatedBindableEvent.Event:Connect(function(player, newCharacterName)
+  PlayerManager.SetEquippedCharacterName(playerManagers, player, newCharacterName)
+end)
+ShoulderPetUpdatedBindableEvent.Event:Connect(function(player, newShoulderPetName)
+  PlayerManager.SetEquippedShoulderPetName(playerManagers, player, newShoulderPetName)
+end)
+
 Players.PlayerAdded:Connect(function(Player)
   -- Add player to list of PlayerManager instances
   local playerManager = PlayerManager.new(Player)
@@ -861,14 +875,6 @@ Players.PlayerAdded:Connect(function(Player)
     print("Load ShoulderPet: ".. shoulderPetName)
     LoadShoulderPetBindableEvent:Fire(Player, shoulderPetName)
   end
-
-  -- Register for player updates
-  CharacterUpdatedBindableEvent.Event:Connect(function(player, newCharacterName)
-    playerManager:SetEquippedCharacterName(newCharacterName)
-  end)
-  ShoulderPetUpdatedBindableEvent.Event:Connect(function(player, newShoulderPetName)
-    playerManager:SetEquippedShoulderPetName(newShoulderPetName)
-  end)
 end)
 
 
@@ -892,10 +898,6 @@ Players.PlayerRemoving:Connect(function(Player)
       table.remove(sessionPlayerList, idx)
       break
     end
-  end
-
-  if #playerLevelVotes == 0 then
-    MapVotingTimerCancelBindableEvent:Fire()  -- Abort voting timeout
   end
 
   -- Check if all players in session left

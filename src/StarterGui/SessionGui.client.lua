@@ -2,6 +2,7 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenGuiFactory = require(ReplicatedStorage.Gui.TweenGuiFactory)
+local Globals = require(ReplicatedStorage.Globals)
 local Util = require(ReplicatedStorage.Util)
 local Promise = require(ReplicatedStorage.Vendor.Promise)
 local Assets = require(ReplicatedStorage.Assets)
@@ -27,6 +28,11 @@ local Character = Player.Character or Player.CharacterAdded:wait()
 
 local FONT_COLOR_DEFAULT = Color3.fromRGB(255, 255, 0)
 local FONT_BORDER_COLOR_DEFAULT = Color3.fromRGB(170, 170, 0)
+
+
+local function isLocalPlayerInGameSession()
+  return Player:GetAttribute(Globals.PLAYER_IS_IN_GAME_SESSION_ATTRIBUTE_NAME)
+end
 
 
 -- Score
@@ -116,7 +122,7 @@ local function hideScoreGui()
 end
 
 local function updateScore(increment)
-  if scoreTextLabel then
+  if scoreTextLabel and isLocalPlayerInGameSession() then
     -- Show announcement
     local announcementMsg = "+".. tostring(increment)
     ShowAnnouncementBindableEvent:Fire(announcementMsg, true, 1.0)
