@@ -241,7 +241,7 @@ function PlayerManager.GetPlayerManagerFromList(playerManagers, playerName)
 end
 
 function PlayerManager.SetEquippedCharacterName(playerManagers, player, charName)
-  local plrMgr = PlayerManager.GetPlayerManagerFromList(playerManagers, playerName)
+  local plrMgr = PlayerManager.GetPlayerManagerFromList(playerManagers, player.Name)
   if plrMgr then
     plrMgr.EquippedItems['Character']['Name'] = charName
     plrMgr:SaveEquippedItems()
@@ -250,7 +250,7 @@ function PlayerManager.SetEquippedCharacterName(playerManagers, player, charName
 end
 
 function PlayerManager.SetEquippedShoulderPetName(playerManagers, player, shoulderPetName)
-  local plrMgr = PlayerManager.GetPlayerManagerFromList(playerManagers, playerName)
+  local plrMgr = PlayerManager.GetPlayerManagerFromList(playerManagers, player.Name)
   if plrMgr then
     plrMgr.EquippedItems['ShoulderPet']['Name'] = shoulderPetName
     plrMgr:SaveEquippedItems()

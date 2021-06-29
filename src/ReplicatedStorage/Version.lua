@@ -2,11 +2,13 @@
 
 local Version = {
 
-  ['VERSION_NUMBER'] = "A.A.D",
+  ['VERSION_NUMBER'] = "A.A.E",
 
   ['VERSION_HISTORY'] = [[
+    A.A.E
+      - Fix issue saving avatar
     A.A.D
-      - Fix points awards when multiple players, players stuck together
+      - Fix point awards when multiple players, players stuck together
     A.A.C
       - Fix bug when player leaves; Add voting timeout; Many other updates
     A.A.B
@@ -25,12 +27,15 @@ Version History:
 ----------------
 
 
+19	6/29/2021 4:08:24 AM
+    A.A.E
+      - Fix issue saving avatar
 18	6/29/2021 2:32:03 AM
     A.A.D
       - Fix save avatar to wrong player; Players stuck together
 17	6/29/2021 2:13:30 AM
     A.A.D
-      - Fix points awards when multiple players
+      - Fix point awards when multiple players
 16	6/29/2021 12:42:43 AM
     A.A.C
       - Lower map level requirements; reduce session time; Fix bug when player leaves; Add player name to ScoreGui;
