@@ -52,6 +52,24 @@ local function IsAdmin(Player)
 	return false
 end
 
+local function IsAssistant(Player)
+	for _,Assistant in pairs (Assistants) do
+		--print(Assistant, Player)
+		if type(Assistant) == "string" and string.lower(Assistant) == string.lower(Player.Name) then
+			return true
+		elseif type(Assistant) == "number" and Assistant == Player.UserId then
+			return true
+		--[[elseif type(Assistant) == "table" then
+			local Rank = Player:GetRankInGroup(Assistant.GroupId)
+			if Rank >= (Assistant.RankId or 1) then
+				return true
+			end]]
+		end
+	end
+	return false
+end
+
+
 -- Parses message and execute command if valid
 local function ParseMessage(Player, Message, Rank)
 	--Message = string.lower(Message)

@@ -1,5 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Promise = require(ReplicatedStorage.Vendor.Promise)
+local Globals = require(ReplicatedStorage.Globals)
 local Util = require(ReplicatedStorage.Util)
 local ProgressBarFactory = require(ReplicatedStorage.Gui.ProgressBarFactory)
 local DecalFactory = require(ReplicatedStorage.Gui.DecalFactory)
@@ -36,6 +37,10 @@ if Settings.IsJumpDisabled then
   Humanoid.Changed:Connect(function()
     Humanoid.Jump = false
   end)
+end
+
+local function isLocalPlayerInGameSession()
+  return Player:GetAttribute(Globals.PLAYER_IS_IN_GAME_SESSION_ATTRIBUTE_NAME)
 end
 
 -- Create place for SurfaceGuis
@@ -286,7 +291,9 @@ end
 SessionBeginEvent.OnClientEvent:Connect(onSessionBeginEvent)
 
 local function onSessionEndedEvent()
-  setPlayerAnchored(true)
+  if isLocalPlayerInGameSession() then
+    setPlayerAnchored(true)
+  end
   Util:RealWait(Session.POST_GAME_COOLDOWN_PERIOD_SEC)
   setPlayerAnchored(false)
   cleanupSurfaceGuis()

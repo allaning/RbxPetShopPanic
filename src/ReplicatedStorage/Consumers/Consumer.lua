@@ -417,7 +417,7 @@ function Consumer:OnReceiveInput(instance)
 end
 
 function Consumer:OnInputConsumed(instance)
-  print("Consumer:OnInputConsumed(instance): ".. self:GetName())
+  --print("Consumer:OnInputConsumed(instance): ".. self:GetName())
   -- Repeat after delay
   local model = self:GetModel()
   if model then

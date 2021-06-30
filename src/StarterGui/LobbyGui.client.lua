@@ -1,6 +1,7 @@
 -- Show main lobby gui, e.g. avatar icon
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Themes = require(ReplicatedStorage.Themes)
 local SoundModule = require(ReplicatedStorage.SoundModule)
 local Util = require(ReplicatedStorage.Util)
 local Promise = require(ReplicatedStorage.Vendor.Promise)
@@ -63,7 +64,8 @@ local spectateTargetTextLabel = nil  -- TextLabel showing spectate target
 
 -- For late joiners, show countdown for an existing game in session
 local alreadyInSessionCountdownFrame = nil
-local alreadyInSessionCountdownTitle = "Game in session -- Time remaining:"
+local alreadyInSessionCountdownTitle1 = "Game is in session..."
+local alreadyInSessionCountdownTitle2 = "Time remaining:"
 local alreadyInSessionCountdownValue = nil
 
 -- List of players already in game session
@@ -140,18 +142,29 @@ local function initializeLobbyGui()
         Name = "AlreadyInSessionCountdownFrame",
         AnchorPoint = Vector2.new(0.5, 0.5),
         Position = UDim2.new(0.5, 0, 0.85, 0),
-        Size = UDim2.new(1.0, 0, 0.3, 0),
+        Size = UDim2.new(0.5, 0, 0.3, 0),
         BackgroundTransparency = 1.0,
         BorderSizePixel = 0,
         Active = false,
         Visible = false,
       }, lobbyScreenGui)
-    local titleTextLabel = Util:CreateInstance("TextLabel", {
-        Name = "AlreadyInSessionCountdown",
-        Text = alreadyInSessionCountdownTitle,
+    local titleTextLabel1 = Util:CreateInstance("TextLabel", {
+        Name = "AlreadyInSessionCountdown1",
+        Text = alreadyInSessionCountdownTitle1,
         Font = Enum.Font.SourceSansSemibold,
         AnchorPoint = Vector2.new(0.5, 0.5),
-        Position = UDim2.new(0.5, 0, 0.25, 0),
+        Position = UDim2.new(0.5, 0, 0.15, 0),
+        Size = UDim2.new(1.0, 0, 0.4, 0),
+        BackgroundTransparency = 1.0,
+        TextColor3 = Color3.new(1, 1, 1),
+        TextScaled = true,
+      }, alreadyInSessionCountdownFrame)
+    local titleTextLabel2 = Util:CreateInstance("TextLabel", {
+        Name = "AlreadyInSessionCountdown2",
+        Text = alreadyInSessionCountdownTitle2,
+        Font = Enum.Font.SourceSansSemibold,
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Position = UDim2.new(0.5, 0, 0.36, 0),
         Size = UDim2.new(1.0, 0, 0.4, 0),
         BackgroundTransparency = 1.0,
         TextColor3 = Color3.new(1, 1, 1),
@@ -162,8 +175,8 @@ local function initializeLobbyGui()
         Text = "",
         Font = Enum.Font.SourceSansSemibold,
         AnchorPoint = Vector2.new(0.5, 0.5),
-        Position = UDim2.new(0.5, 0, 0.5, 0),
-        Size = UDim2.new(1.0, 0, 0.4, 0),
+        Position = UDim2.new(0.5, 0, 0.6, 0),
+        Size = UDim2.new(1.0, 0, 0.3, 0),
         BackgroundTransparency = 1.0,
         TextColor3 = Color3.new(1, 1, 1),
         TextScaled = true,
@@ -423,7 +436,7 @@ local function onLevelRequestVotesEvent(playerLevelVotes, playerName)
   table.sort(playerNames)
 
   -- Show user vote thumbnails
-  local POS_Y = 0.78
+  local POS_Y = 0.76
   local currentPosX = 1
   for idx = 1, #playerNames do
     Promise.try(function()
@@ -493,6 +506,21 @@ local function onLevelRequestVotesEvent(playerLevelVotes, playerName)
       currentPosX += 1
     end)
   end
+
+  local noteGui = Util:CreateInstance("ScreenGui", {
+      Name = "NoteScreenGui",
+    }, UserThumbsFolder)
+  local note = Util:CreateInstance("TextLabel", {
+      Name = "VoteNote",
+      AnchorPoint = Vector2.new(0.5, 0.5),
+      Position = UDim2.new(0.5, 0, 0.96, 0),
+      Size = UDim2.new(0.5, 0, 0.03, 0),
+      BackgroundTransparency = 1.0,
+      TextScaled = true,
+      Text = "Players must vote to join game session",
+      TextColor3 = Color3.fromRGB(183, 210, 226),
+      Font = Enum.Font.LuckiestGuy,
+    }, noteGui)
 
 end
 LevelRequestVotesEvent.OnClientEvent:Connect(onLevelRequestVotesEvent)
@@ -576,7 +604,7 @@ playerNamesInSession = GetNamesOfPlayersInSessionFn:InvokeServer()
 
 
 -- Check if should show new player message
-Util:RealWait(Globals.LOADING_SCREEN_LENGTH + 3)
+Util:RealWait(Globals.LOADING_SCREEN_LENGTH + 2)
 local playerPoints = GetPlayerPointsFn:InvokeServer() or 0
 if playerPoints < 10 then
   local introScreenGui = Util:CreateInstance("ScreenGui", {
@@ -584,8 +612,8 @@ if playerPoints < 10 then
     }, nil)
   local thumb = UserThumbnailGui.GetImageThumbnail(Assets.CHARACTER_SMILING_MOUTH_OPEN, UDim2.new(0.3, 0, 0.3, 0), nil, 3)
   local introText = [[Welcome! Choose your <font color="rgb(19,153,255)">Avatar</font> and click the <font color="rgb(19,153,255)">Play</font> button when ready.]]
-  local msg = FrameFactory.GetTypedMessageFrame(introText, UDim2.new(0.5, 0, 0.2, 0), nil, 2, false)
-  if thumb and msg then
+  local msg = FrameFactory.GetTypedMessageFrame(introText, UDim2.new(0.5, 0, 0.2, 0), nil, 9, false)
+  if thumb and msg and not isLocalPlayerInGameSession() then
     introScreenGui.Parent = PlayerGui
     thumb.Position = UDim2.new(0.2, 0, 0.5, 0)
     thumb.Parent = introScreenGui
@@ -598,44 +626,65 @@ if playerPoints < 10 then
         Size = UDim2.new(1.0, 0, 1.0, 0),
         BackgroundTransparency = 1.0,
       }, msg)
-    exitButton.Activated:Connect(function()
-      if thumb then
-        thumb:Destroy()
-      end
-      msg:Destroy()
-    end)
-    Promise.delay(8):andThen(function()
+
+    local destroy1Connection
+    local function destroy1()
       if thumb then
         thumb:Destroy()
       end
       if msg then
         msg:Destroy()
       end
+      introScreenGui:Destroy()
+      destroy1Connection:Disconnect()
+    end
+    exitButton.Activated:Connect(destroy1)
+    destroy1Connection = SessionCountdownBeginEvent.OnClientEvent:Connect(destroy1)
 
-      local thumb2 = UserThumbnailGui.GetImageThumbnail(Assets.CHARACTER_SMILING_EYES_CLOSED, UDim2.new(0.3, 0, 0.3, 0), nil, 3)
-      local introText2 = [[Pressing <font color="rgb(19,153,255)">Jump</font> will simply change the camera <font color="rgb(19,153,255)">Zoom</font>.]]
-      local msg2 = FrameFactory.GetTypedMessageFrame(introText2, UDim2.new(0.5, 0, 0.2, 0), nil, 2, false)
-      if thumb2 and msg2 then
-        thumb2.Position = UDim2.new(0.2, 0, 0.5, 0)
-        thumb2.Parent = introScreenGui
-        msg2.Position = UDim2.new(0.3, 0, 0.55, 0)
-        msg2.Parent = introScreenGui
-
-        local exitButton2 = Util:CreateInstance("TextButton", {
-            Name = "ExitButton",
-            Position = UDim2.new(0.0, 0, 0.0, 0),
-            Size = UDim2.new(1.0, 0, 1.0, 0),
-            BackgroundTransparency = 1.0,
-          }, msg2)
-        exitButton2.Activated:Connect(function()
-          introScreenGui:Destroy()
-        end)
-        Promise.delay(8):andThen(function()
-          if introScreenGui then
-            introScreenGui:Destroy()
-          end
-        end)
+    Promise.delay(6):andThen(function()
+      if thumb then
+        thumb:Destroy()
       end
+      if msg then
+        msg:Destroy()
+      end
+      destroy1Connection:Disconnect()
+
+      if introScreenGui and not isLocalPlayerInGameSession() then
+        local thumb2 = UserThumbnailGui.GetImageThumbnail(Assets.CHARACTER_SMILING_EYES_CLOSED, UDim2.new(0.3, 0, 0.3, 0), nil, 3)
+        local introText2 = [[Pressing <font color="rgb(19,153,255)">Jump</font> will simply change the camera <font color="rgb(19,153,255)">Zoom</font>.]]
+        local msg2 = FrameFactory.GetTypedMessageFrame(introText2, UDim2.new(0.5, 0, 0.2, 0), nil, 9, false)
+        if thumb2 and msg2 then
+          thumb2.Position = UDim2.new(0.2, 0, 0.5, 0)
+          thumb2.Parent = introScreenGui
+          msg2.Position = UDim2.new(0.3, 0, 0.55, 0)
+          msg2.Parent = introScreenGui
+
+          local exitButton2 = Util:CreateInstance("TextButton", {
+              Name = "ExitButton",
+              Position = UDim2.new(0.0, 0, 0.0, 0),
+              Size = UDim2.new(1.0, 0, 1.0, 0),
+              BackgroundTransparency = 1.0,
+            }, msg2)
+
+          local destroy2Connection
+          local function destroy2()
+            if introScreenGui then
+              introScreenGui:Destroy()
+            end
+          end
+          exitButton2.Activated:Connect(destroy2)
+          destroy2Connection = SessionCountdownBeginEvent.OnClientEvent:Connect(destroy2)
+
+          Promise.delay(6):andThen(function()
+            if introScreenGui then
+              introScreenGui:Destroy()
+            end
+            destroy2Connection:Disconnect()
+          end)
+        end
+      end
+
     end)
   end
 end

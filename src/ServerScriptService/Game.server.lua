@@ -445,7 +445,7 @@ local function onPromptHoldBegan(promptObject, player)
         if targetPart then
           local targetPos = Vector3.new(targetPart.Position.X, humanoidRootPart.Position.Y, targetPart.Position.Z)
           humanoidRootPart.CFrame = CFrame.new(humanoidRootPart.Position, targetPos)
-          humanoidRootPart.Anchored = true
+          --humanoidRootPart.Anchored = true
         end
       end
 
@@ -472,10 +472,10 @@ local function onPromptHoldEnded(promptObject, player)
       if human then
         AnimationModule.Stop(human)
       end
-      local humanoidRootPart = Util:GetHumanoidRootPart(player)
-      if humanoidRootPart then
-        humanoidRootPart.Anchored = false
-      end
+      --local humanoidRootPart = Util:GetHumanoidRootPart(player)
+      --if humanoidRootPart then
+      --  humanoidRootPart.Anchored = false
+      --end
     end
   end
 end
@@ -900,12 +900,19 @@ Players.PlayerRemoving:Connect(function(Player)
     end
   end
 
+  Util:RealWait(2) -- Give time for cleanup
+
   -- Check if all players in session left
   if #sessionPlayerList == 0 then
     -- End the session
     if session then
       session:SetDuration(1)
     end
+  end
+
+  -- Check if voting countdown should be cancelled
+  if #playerLevelVotes == 0 then
+    MapVotingTimerCancelBindableEvent:Fire()  -- Abort voting timeout
   end
 end)
 

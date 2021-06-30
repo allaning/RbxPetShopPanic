@@ -2,17 +2,12 @@
 
 local Version = {
 
-  ['VERSION_NUMBER'] = "A.A.E",
+  ['VERSION_NUMBER'] = "A.A.G",
 
   ['VERSION_HISTORY'] = [[
-    A.A.E
-      - Fix issue saving avatar
-    A.A.D
-      - Fix point awards when multiple players, players stuck together
-    A.A.C
-      - Fix bug when player leaves; Add voting timeout; Many other updates
-    A.A.B
-      - Add Chat tags
+    A.A.G
+      - Mostly bug fixes
+    ...
     A.A.A
       - Initial Beta release
   ]],
@@ -27,6 +22,11 @@ Version History:
 ----------------
 
 
+25	6/30/2021 3:31:30 AM
+    A.A.G
+20	6/30/2021 1:49:04 AM
+    A.A.F
+      - Bug fixes
 19	6/29/2021 4:08:24 AM
     A.A.E
       - Fix issue saving avatar

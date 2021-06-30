@@ -320,9 +320,9 @@ function ScoreGui.Show(scoreScreenGui, pointsEarned, numTotal, numCompleted, num
           Size = UDim2.new(0.5, 0, 0.5, 0),
           BackgroundTransparency = 1.0,
           TextScaled = true,
-          Text = ";-;",
-          TextColor3 = Themes[Themes.CurrentTheme].TextColor,
-          Font = Enum.Font.FredokaOne,
+          Text = "None",
+          TextColor3 = Themes[Themes.CurrentTheme].TextColor2,
+          Font = Enum.Font.Bangers,
           ZIndex = zIndex,
         }, mvpFrame)
     end
@@ -393,9 +393,9 @@ function ScoreGui.Show(scoreScreenGui, pointsEarned, numTotal, numCompleted, num
           Size = UDim2.new(0.5, 0, 0.5, 0),
           BackgroundTransparency = 1.0,
           TextScaled = true,
-          Text = ";-;",
-          TextColor3 = Themes[Themes.CurrentTheme].TextColor,
-          Font = Enum.Font.FredokaOne,
+          Text = "None",
+          TextColor3 = Themes[Themes.CurrentTheme].TextColor2,
+          Font = Enum.Font.Bangers,
           ZIndex = zIndex,
         }, assistsFrame)
     end

@@ -8,8 +8,8 @@ local Players = game:GetService("Players")
 local thumbType = Enum.ThumbnailType.HeadShot
 local thumbSize = Enum.ThumbnailSize.Size420x420
 
-local THUMB_SIZE_SCALE_X = 0.15
-local THUMB_SIZE_SCALE_Y = 0.15
+local THUMB_SIZE_SCALE_X = 0.12
+local THUMB_SIZE_SCALE_Y = 0.12
 
 local UserThumbnailGui = {}
 

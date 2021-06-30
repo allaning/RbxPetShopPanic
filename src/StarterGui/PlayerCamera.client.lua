@@ -10,6 +10,8 @@ local Settings = require(ReplicatedStorage.Settings)
 local ContextActionService = game:GetService("ContextActionService")
 
 local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
 
 
 -- Variables for the camera and player
@@ -64,18 +66,24 @@ end
 
 -- Bind the action to the handler
 
+-- PC
 -- Ref: https://developer.roblox.com/en-us/api-reference/function/ContextActionService/BindAction
 ContextActionService:BindAction("BoundAction", handleAction, false, Enum.KeyCode.Space)
 
+-- Mobile
 -- Ref: https://devforum.roblox.com/t/bind-function-to-mobile-jump-button/767565
-local touchGui = Player:WaitForChild("PlayerGui"):WaitForChild("TouchGui", 30)
+local touchGui = PlayerGui:WaitForChild("TouchGui", 8)
 if touchGui then
-  local jumpButton = touchGui:WaitForChild("TouchControlFrame"):WaitForChild("JumpButton")
-  local function startedToHold()
-    handleAction(nil, Enum.UserInputState.Begin, nil)
+  local touchControl = touchGui:WaitForChild("TouchControlFrame", 8)
+  if touchControl then
+    local jumpButton = touchControl:WaitForChild("JumpButton", 8)
+    if jumpButton then
+      local function startedToHold()
+        handleAction(nil, Enum.UserInputState.Begin, nil)
+      end
+      print("jumpButton.MouseButton1Down:Connect(startedToHold)")
+      jumpButton.MouseButton1Down:Connect(startedToHold)
+    end
   end
-  jumpButton.MouseButton1Down:Connect(startedToHold)
 end
-
--- WILL NOT REACH HERE IF NOT MOBILE DEVICE
 

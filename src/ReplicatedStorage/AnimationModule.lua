@@ -68,6 +68,7 @@ local function playAnimation(humanoid, animationId, isLooped, uid)
         animation.AnimationId = animationId
         -- Load animation onto the animator
         local animationTrack = animator:LoadAnimation(animation)
+        animationTrack.Priority = Enum.AnimationPriority.Action
         animationTrack.Looped = isLooped
 
         -- Ensure track is playing before trying to access its Length else it will be 0

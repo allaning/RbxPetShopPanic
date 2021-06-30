@@ -234,7 +234,7 @@ local function showGuis(duration)
       }, nil)
     local thumb = UserThumbnailGui.GetImageThumbnail(Assets.CHARACTER_SMILING, UDim2.new(0.3, 0, 0.3, 0), nil, 3)
     local introText = "Give the customer and animals the items they need. Good luck!"
-    local msg = FrameFactory.GetTypedMessageFrame(introText, UDim2.new(0.5, 0, 0.2, 0), nil, 2, false)
+    local msg = FrameFactory.GetTypedMessageFrame(introText, UDim2.new(0.5, 0, 0.2, 0), nil, 9, false)
     if thumb and msg then
       screenGui.Parent = PlayerGui
       thumb.Position = UDim2.new(0.2, 0, 0.6, 0)
