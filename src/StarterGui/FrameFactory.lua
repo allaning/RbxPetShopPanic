@@ -70,8 +70,9 @@ function FrameFactory.GetTypedMessageFrame(message, sizeDim, color, zIndex, clic
       Name = "InnerMessageFrame",
       BackgroundColor3 = color,
       BorderSizePixel = 0,
-      Position = UDim2.new(0.12, 0, 0.05, 0),
+      Position = UDim2.new(0.14, 0, 0.05, 0),
       Size = UDim2.new(0.85, 0, 0.9, 0),
+      BackgroundTransparency = 1.0,
       ZIndex = zIndex,
     }, frameOuter)
   local uiCorner = Util:CreateInstance("UICorner", {
@@ -103,6 +104,7 @@ function FrameFactory.GetTypedMessageFrame(message, sizeDim, color, zIndex, clic
         Position = UDim2.new(0.0, 0, 0.0, 0),
         Size = UDim2.new(1.0, 0, 1.0, 0),
         BackgroundTransparency = 1.0,
+        Text = "",
       }, frameInner)
     exitButton.Activated:Connect(function()
       frameOuter:Destroy()

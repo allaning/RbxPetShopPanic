@@ -1,5 +1,6 @@
 -- Show main lobby gui, e.g. avatar icon
 
+local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Themes = require(ReplicatedStorage.Themes)
 local SoundModule = require(ReplicatedStorage.SoundModule)
@@ -11,6 +12,8 @@ local Assets = require(ReplicatedStorage.Assets)
 local StarterGui = game:GetService("StarterGui")
 local AvatarGui = require(StarterGui.AvatarGui)
 local PlayGui = require(StarterGui.PlayGui)
+local ArrowGui = require(StarterGui.ArrowGui)
+local LoadingGui = require(StarterGui.LoadingGui)
 local UserThumbnailGui = require(StarterGui.UserThumbnailGui)
 local ScoreGui = require(StarterGui.ScoreGui)
 local TweenGuiFactory = require(ReplicatedStorage.Gui.TweenGuiFactory)
@@ -22,7 +25,10 @@ local GetNamesOfPlayersInSessionFn = ReplicatedStorage:WaitForChild("RemoteFunct
 local GetLevelRequestVotesFn = ReplicatedStorage:WaitForChild("RemoteFunctions"):WaitForChild("GetLevelRequestVotes")
 local SelectLevelRequestSentEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SelectLevelRequestSent")
 local LevelRequestVotesEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("LevelRequestVotes")
+local ShowLevelVotesEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ShowLevelVotes")
 local SessionMapLevelSelectedEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionMapLevelSelected")
+local MapLoadingBeginEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("MapLoadingBegin")
+local MapLoadingClientCompleteEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("MapLoadingClientComplete")
 local SessionCountdownBeginEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionCountdownBegin")
 local SessionBeingSkippedEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionBeingSkipped")
 local SessionUpdateTimerCountdownEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("SessionUpdateTimerCountdown")
@@ -32,9 +38,22 @@ local UpdateCharacterEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChi
 local ShowMessagePopupBindableEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ShowMessagePopupBindable")
 local ShowAnnouncementBindableEvent = ReplicatedStorage:WaitForChild("Events"):WaitForChild("ShowAnnouncement")
 
+local wsMapsFolder = Workspace:WaitForChild("Maps")
+
 local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
+
+
+local function getModelPartsCount(model)
+  local partCount = 0
+  for _, obj in pairs(model:GetDescendants()) do
+    if obj:IsA("BasePart") or obj:IsA("MeshPart") then
+      partCount += 1
+    end
+  end
+  return partCount
+end
 
 
 -- Keep track of player status
@@ -57,6 +76,7 @@ local lobbyFrame = nil
 local avatarIcon = nil
 local avatarIconId = "rbxassetid://6847150302"  -- https://icon-icons.com/icon/avatar-default-user/92824
 local playIcon = nil
+local playArrowFrame = nil
 local playIconId = "rbxassetid://6855026893"  -- https://graphiccave.com/project/play-icon-vector-and-png-free-download/
 local spectateIcon = nil
 local spectateIconId = "rbxassetid://6999948582"  -- https://www.flaticon.com/free-icon/eye-close-up_63568
@@ -128,6 +148,18 @@ local function initializeLobbyGui()
         Scale = 1.0,
       }, playIcon)
 
+    -- Blinking arrow
+    playArrowFrame = ArrowGui.GetRetroArrowFrame()
+    playArrowFrame.Position = UDim2.new(-0.22, 0, 0.5, 0)
+    playArrowFrame.Size = UDim2.new(0.6, 0, 0.6, 0)
+    playArrowFrame.Parent = playIcon
+    Promise.try(function()
+      while playArrowFrame do
+        playArrowFrame.Visible = not playArrowFrame.Visible
+        Util:RealWait(1)
+      end
+    end)
+
     addEnlargeOnMouseHover(avatarIcon, avatarIconScale)
     addEnlargeOnMouseHover(playIcon, playIconScale)
 
@@ -154,7 +186,7 @@ local function initializeLobbyGui()
         Font = Enum.Font.SourceSansSemibold,
         AnchorPoint = Vector2.new(0.5, 0.5),
         Position = UDim2.new(0.5, 0, 0.15, 0),
-        Size = UDim2.new(1.0, 0, 0.4, 0),
+        Size = UDim2.new(1.0, 0, 0.35, 0),
         BackgroundTransparency = 1.0,
         TextColor3 = Color3.new(1, 1, 1),
         TextScaled = true,
@@ -165,7 +197,7 @@ local function initializeLobbyGui()
         Font = Enum.Font.SourceSansSemibold,
         AnchorPoint = Vector2.new(0.5, 0.5),
         Position = UDim2.new(0.5, 0, 0.36, 0),
-        Size = UDim2.new(1.0, 0, 0.4, 0),
+        Size = UDim2.new(1.0, 0, 0.32, 0),
         BackgroundTransparency = 1.0,
         TextColor3 = Color3.new(1, 1, 1),
         TextScaled = true,
@@ -275,6 +307,35 @@ local function showSessionResults(pointsEarned, numTotal, numCompleted, numFaile
 end
 SessionResultsEvent.OnClientEvent:Connect(showSessionResults)
 
+local function showLoadingGui()
+  local frame = LoadingGui.GetLoadingFrame()
+  frame.Parent = PlayerGui
+end
+
+local function onMapLoadingBegin(mapPartCount)
+  --aing showLoadingGui()
+
+  Promise.try(function()
+    local isLoading = true
+    while isLoading do
+      local map = wsMapsFolder:FindFirstChildWhichIsA("Model")
+      if map then
+        local loadedPartCount = getModelPartsCount(map)
+        if mapPartCount then
+          print("mapPartCount=".. mapPartCount.. "; loadedPartCount=".. loadedPartCount)
+          if loadedPartCount >= mapPartCount then
+            isLoading = false
+          end
+        end
+      end
+      Util:RealWait(1)
+    end
+    print("Loading complete")
+    MapLoadingClientCompleteEvent:FireServer()
+  end)
+end
+MapLoadingBeginEvent.OnClientEvent:Connect(onMapLoadingBegin)
+
 local function hideLobbyGui()
   lobbyScreenGui.Enabled = false
   AvatarGui.Close()
@@ -324,6 +385,11 @@ local function onPlayIconClick()
     AvatarGui.Close()
     PlayGui.Toggle()
     SoundModule.PlayMouseClick(PlayerGui)
+  end
+
+  -- Remove blinking arrow
+  if playArrowFrame then
+    playArrowFrame:Destroy()
   end
 end
 playIcon.Activated:Connect(onPlayIconClick)
@@ -378,37 +444,10 @@ local posOrderedListScaleX = {
 }
 
 -- See Game.server.lua for playerLevelVotes format
-local function onLevelRequestVotesEvent(playerLevelVotes, playerName)
-  print("Received LevelRequestVotesEvent")
-
+local function showLevelVoteThumbnails(playerLevelVotes, playerName)
   -- If player is in game session, then do nothing
   if isLocalPlayerInGameSession() then
     return
-  end
-
-  -- Check if this was triggered by a player adding or removing from game
-  if playerLevelVotes == nil then
-    local isSessionActive = GetSessionStatusFn:InvokeServer()
-    if isSessionActive then
-      print("Session is active")
-      -- Show 'in session' countdown
-      showAlreadyInSessionCountdownFrame()
-
-      -- Don't show user vote thumbnails
-      return
-    end
-
-    -- Request vote info
-    playerLevelVotes = GetLevelRequestVotesFn:InvokeServer()
-    --print("playerLevelVotes = GetLevelRequestVotesFn:InvokeServer()")
-  else
-    if #playerLevelVotes > 0 then
-      -- Someone actually voted
-      -- Only show if I'm not the one who voted
-      if Player.Name ~= playerName and playerName ~= Globals.UNINIT_STRING then
-        ShowAnnouncementBindableEvent:Fire("Player Voted!", true, 1.0)
-      end
-    end
   end
 
   if true then -- Debug
@@ -523,7 +562,45 @@ local function onLevelRequestVotesEvent(playerLevelVotes, playerName)
     }, noteGui)
 
 end
+
+local function onLevelRequestVotesEvent(playerLevelVotes, playerName)
+  print("Received LevelRequestVotesEvent")
+
+  -- If I'm not the one who voted, announce that someone voted
+  if Player.Name ~= playerName and playerName ~= Globals.UNINIT_STRING then
+    ShowAnnouncementBindableEvent:Fire("Player Voted!", 1.0, 1.0)
+  end
+
+  -- Remove old thumbnails
+  for _, oldThumb in pairs(UserThumbsFolder:GetChildren()) do
+    oldThumb:Destroy()
+  end
+
+  showLevelVoteThumbnails(playerLevelVotes, playerName)
+end
 LevelRequestVotesEvent.OnClientEvent:Connect(onLevelRequestVotesEvent)
+
+local function updateThumbnailVoteDisplay()
+  if not isLocalPlayerInGameSession() then
+    local isSessionActive = GetSessionStatusFn:InvokeServer()
+    if isSessionActive then
+      -- Show 'in session' countdown
+      showAlreadyInSessionCountdownFrame()
+    else
+      -- Remove old thumbnails
+      for _, oldThumb in pairs(UserThumbsFolder:GetChildren()) do
+        oldThumb:Destroy()
+      end
+
+      -- Request vote info
+      local playerLevelVotes = GetLevelRequestVotesFn:InvokeServer()
+      --print("playerLevelVotes = GetLevelRequestVotesFn:InvokeServer()")
+
+      showLevelVoteThumbnails(playerLevelVotes, playerName)
+    end
+  end
+end
+ShowLevelVotesEvent.OnClientEvent:Connect(updateThumbnailVoteDisplay)
 
 
 -- Make random map level voting frames visible
@@ -606,13 +683,13 @@ playerNamesInSession = GetNamesOfPlayersInSessionFn:InvokeServer()
 -- Check if should show new player message
 Util:RealWait(Globals.LOADING_SCREEN_LENGTH + 2)
 local playerPoints = GetPlayerPointsFn:InvokeServer() or 0
-if playerPoints < 10 then
+if playerPoints < 20 then
   local introScreenGui = Util:CreateInstance("ScreenGui", {
       Name = "Intro",
     }, nil)
   local thumb = UserThumbnailGui.GetImageThumbnail(Assets.CHARACTER_SMILING_MOUTH_OPEN, UDim2.new(0.3, 0, 0.3, 0), nil, 3)
   local introText = [[Welcome! Choose your <font color="rgb(19,153,255)">Avatar</font> and click the <font color="rgb(19,153,255)">Play</font> button when ready.]]
-  local msg = FrameFactory.GetTypedMessageFrame(introText, UDim2.new(0.5, 0, 0.2, 0), nil, 9, false)
+  local msg = FrameFactory.GetTypedMessageFrame(introText, UDim2.new(0.5, 0, 0.2, 0), nil, 2, false)
   if thumb and msg and not isLocalPlayerInGameSession() then
     introScreenGui.Parent = PlayerGui
     thumb.Position = UDim2.new(0.2, 0, 0.5, 0)
@@ -625,6 +702,7 @@ if playerPoints < 10 then
         Position = UDim2.new(0.0, 0, 0.0, 0),
         Size = UDim2.new(1.0, 0, 1.0, 0),
         BackgroundTransparency = 1.0,
+        Text = "",
       }, msg)
 
     local destroy1Connection
@@ -635,7 +713,7 @@ if playerPoints < 10 then
       if msg then
         msg:Destroy()
       end
-      introScreenGui:Destroy()
+      --introScreenGui:Destroy()
       destroy1Connection:Disconnect()
     end
     exitButton.Activated:Connect(destroy1)
@@ -653,7 +731,7 @@ if playerPoints < 10 then
       if introScreenGui and not isLocalPlayerInGameSession() then
         local thumb2 = UserThumbnailGui.GetImageThumbnail(Assets.CHARACTER_SMILING_EYES_CLOSED, UDim2.new(0.3, 0, 0.3, 0), nil, 3)
         local introText2 = [[Pressing <font color="rgb(19,153,255)">Jump</font> will simply change the camera <font color="rgb(19,153,255)">Zoom</font>.]]
-        local msg2 = FrameFactory.GetTypedMessageFrame(introText2, UDim2.new(0.5, 0, 0.2, 0), nil, 9, false)
+        local msg2 = FrameFactory.GetTypedMessageFrame(introText2, UDim2.new(0.5, 0, 0.2, 0), nil, 2, false)
         if thumb2 and msg2 then
           thumb2.Position = UDim2.new(0.2, 0, 0.5, 0)
           thumb2.Parent = introScreenGui
@@ -665,6 +743,7 @@ if playerPoints < 10 then
               Position = UDim2.new(0.0, 0, 0.0, 0),
               Size = UDim2.new(1.0, 0, 1.0, 0),
               BackgroundTransparency = 1.0,
+              Text = "",
             }, msg2)
 
           local destroy2Connection

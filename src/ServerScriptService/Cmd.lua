@@ -45,6 +45,7 @@ end
 -- View latest data
 -- Usage: Cmd.ShowLatestData(500841057) -- WhoooDattt
 -- Usage: Cmd.ShowLatestData(559009867) -- pinksheep20212
+-- Usage: Cmd.ShowLatestData(183849653) -- GleamingLily18
 function Cmd.ShowLatestData(userId)
   local orderedDataStore = DataStoreService:GetOrderedDataStore(DATA_STORE_NAME .. "/" .. userId)
   local playerData = DataStoreService:GetDataStore(DATA_STORE_NAME.."/"..userId)
@@ -69,6 +70,8 @@ end
 -- View previous ordered data
 -- Usage: Cmd.ShowHistory(500841057) -- WhoooDattt
 -- Usage: Cmd.ShowHistory(602483247, 12) -- CuteFaceAlert
+-- Usage: Cmd.ShowHistory(183849653, 12) -- GleamingLily18
+-- Usage: Cmd.ShowHistory(491387320, 12) -- cuteAshleyi1234
 function Cmd.ShowHistory(userId, numRecords)
   local MAX_HISTORY_INSTANCES = 5
   if not numRecords then
@@ -106,6 +109,8 @@ end
 
 -- Add item
 -- Usage: Cmd.AddItem(500841057, "ProductIdsOwned", 1184683292) -- WhoooDattt, Green Arctic Fox Shoulder Pet
+-- Usage: Cmd.AddItem(183849653, "ProductIdsOwned", 1185961454) -- GleamingLily18, Evira avatar
+-- Usage: Cmd.AddItem(491387320, "ProductIdsOwned", 1185961454) -- cuteAshleyi1234, Evira avatar
 function Cmd.AddItem(userId, collectionType, itemId)
   if not userId or not collectionType or not itemId then
     warn("ERROR: Missing arg")

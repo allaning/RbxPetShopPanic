@@ -4,8 +4,6 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local BadgeUtil = require(ServerScriptService.BadgeUtil)
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local LevelRequestVotesEvent = ReplicatedStorage.Events.LevelRequestVotes
-local PlayerRemovingEvent = ReplicatedStorage.Events.PlayerRemoving
 
 local Players = game:GetService("Players")
 
@@ -14,9 +12,6 @@ Players.RespawnTime = 0.0
 
 Players.PlayerAdded:Connect(function(Player)
   print("PlayerAdded: ".. Player.Name)
-
-  -- Show user vote thumbnails; Send to all so they can adjust count
-  LevelRequestVotesEvent:FireAllClients()
 
   BadgeUtil.AwardWelcomeBadge(Player)
 
@@ -38,11 +33,5 @@ Players.PlayerAdded:Connect(function(Player)
     humanoid.WalkSpeed = 18
 
   end)
-end)
-
-Players.PlayerRemoving:Connect(function(Player)
-  print("PlayerRemoving: ".. Player.Name)
-  LevelRequestVotesEvent:FireAllClients()
-  PlayerRemovingEvent:Fire(Player)
 end)
 

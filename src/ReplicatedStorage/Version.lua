@@ -2,10 +2,10 @@
 
 local Version = {
 
-  ['VERSION_NUMBER'] = "A.A.G",
+  ['VERSION_NUMBER'] = "A.A.I",
 
   ['VERSION_HISTORY'] = [[
-    A.A.G
+    A.A.I
       - Mostly bug fixes
     ...
     A.A.A
@@ -22,6 +22,8 @@ Version History:
 ----------------
 
 
+30	7/1/2021 5:05:57 AM
+    A.A.H
 25	6/30/2021 3:31:30 AM
     A.A.G
 20	6/30/2021 1:49:04 AM

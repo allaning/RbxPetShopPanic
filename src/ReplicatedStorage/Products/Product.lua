@@ -45,6 +45,9 @@ end
 
 function Product:SetModel(model)
   self.itsModel = model
+  if self.itsModel == nil then
+    error("Product:SetModel() received nil")
+  end
 end
 
 local PROXIMITY_PROMPT_DISTANCE = 7.5
@@ -72,9 +75,14 @@ end
 
 function Product:GetModelClone()
   if self:GetModel() then
-    local clone = self:GetModel():Clone()
-    self:SetProximityPrompt(clone)
-    return clone
+    local model = self:GetModel()
+    if model then
+      local clone = model:Clone()
+      self:SetProximityPrompt(clone)
+      return clone
+    else
+      error("Product:GetModelClone() self.itsModel is nil")
+    end
   end
 end
 

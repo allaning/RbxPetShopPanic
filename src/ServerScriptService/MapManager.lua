@@ -75,6 +75,15 @@ MapManager.tableModels = {}
 MapManager.spawnPlotParts = {}
 
 
+local function wipeWsMapModel()
+  -- Double check
+  for _, obj in pairs(wsMapsFolder:GetChildren()) do
+    if obj:IsA("Model") then
+      obj:Destroy()
+    end
+  end
+end
+
 -- Iterate over table and return true if it contains an object with object:GetName() matching name
 local function containsInstanceNamed(tab, name)
   if Util:TableLength(tab) > 0 then
@@ -297,7 +306,9 @@ function MapManager.Cleanup(map)
   destroyObjectList(MapManager.spawnPlotParts)
   MapManager.spawnPlotParts = {}
 
-  map:Destroy()
+  if map then
+    map:Destroy()
+  end
 
   -- Destroy other objects in Workspace
   destroyObjectList(wsConsumersFolder:GetChildren())
@@ -310,6 +321,9 @@ end
 function MapManager.InitializeMap(level, playerCount)
   local playerCount = playerCount or 1
 
+  MapManager.Cleanup()
+  wipeWsMapModel()
+
   -- Choose random map of specified level
   local rand = Random.new()
   local levelMapFolder = serverMapsFolder:WaitForChild(level)
@@ -320,11 +334,17 @@ function MapManager.InitializeMap(level, playerCount)
   -- Create map
   local map = randomMap:Clone()
   -- Make plots transparent
+  local partCount = 0
   for _, obj in pairs(map:GetDescendants()) do
     if string.find(obj.Name, CONSUMER_PLOT_STR) or string.find(obj.Name, PRODUCER_PLOT_STR) or string.find(obj.Name, TRASH_BIN_PLOT_STR) or string.find(obj.Name, TABLE_PLOT_STR) or string.find(obj.Name, SPAWN_PLOT_STR) then
       obj.Transparency = 1
     end
+    if obj:IsA("BasePart") or obj:IsA("MeshPart") then
+      partCount += 1
+    end
   end
+
+  -- Reparent to Workspace
   map.Parent = wsMapsFolder
 
   -- Get map level
@@ -472,7 +492,7 @@ function MapManager.InitializeMap(level, playerCount)
       CanCollide = true,
     }, map)
 
-  return map
+  return map, partCount
 
 end
 

@@ -1,7 +1,7 @@
 local Globals = {
 
   -- If true, then use real database (can use false for offline testing)
-  ['USE_REAL_DATABASE'] = true,
+  USE_REAL_DATABASE = true,
 
   -- Place ID for real game
   ['MAIN_PLACE_ID'] = 7012541131,

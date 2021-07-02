@@ -114,7 +114,6 @@ local function showTitle(message, durationSec)
   local textLabel = Util:CreateInstance("TextLabel", {
       Text = message,
       Font = Enum.Font.Bangers,
-      --Font = Enum.Font.LuckiestGuy,
       AnchorPoint = Vector2.new(0.5, 0.5),
       Position = UDim2.new(0.5, 0, 0.4, 0),
       Size = UDim2.new(0.4, 0, 0.2, 0),
@@ -141,7 +140,6 @@ local function getAnnouncementTextLabel(screenGui, message, backgroundTransparen
   local textLabel = Util:CreateInstance("TextLabel", {
       Text = message,
       Font = Enum.Font.Bangers,
-      --Font = Enum.Font.LuckiestGuy,
       AnchorPoint = Vector2.new(0.5, 0.5),
       Position = UDim2.new(0.5, 0, 0.6, 0),
       Size = UDim2.new(0.4, 0, 0.1, 0),
@@ -157,15 +155,15 @@ local function getAnnouncementTextLabel(screenGui, message, backgroundTransparen
   return textLabel, scale
 end
 
-local function showAnnouncement(message, isBackgroundTransparent, durationSec)
-  isBackgroundTransparent = isBackgroundTransparent or true
+local function showAnnouncement(message, backgroundTransparency, durationSec)
+  backgroundTransparency = backgroundTransparency or 1.0
   local duration = durationSec or 2.0
 
   local announceGui = Util:CreateInstance("ScreenGui", {
       Name = "AnnouncementGui",
     }, PlayerGui)
 
-  local textLabel, scale = getAnnouncementTextLabel(announceGui, message, 1.0, 0.0)
+  local textLabel, scale = getAnnouncementTextLabel(announceGui, message, backgroundTransparency, 0.0)
   TweenGuiFactory.ScaleIn(scale, 0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.In, false)
 
   Promise.delay(duration):andThen(function()
@@ -179,22 +177,22 @@ ShowAnnouncementBindableEvent.Event:Connect(showAnnouncement)
 -- Show "ready, set, go" countdown
 local function showSessionCountdownBeginAnnouncement()
   if isLocalPlayerInGameSession() then
-    showAnnouncement("Ready", true, 0.9)
+    showAnnouncement("Ready", 1.0, 0.9)
     Util:RealWait(Globals.READY_SET_GO_COUNTDOWN_SEC / 4)
-    showAnnouncement("3", true, 0.9)
+    showAnnouncement("3", 1.0, 0.9)
     Util:RealWait(Globals.READY_SET_GO_COUNTDOWN_SEC / 4)
-    showAnnouncement("2", true, 0.9)
+    showAnnouncement("2", 1.0, 0.9)
     Util:RealWait(Globals.READY_SET_GO_COUNTDOWN_SEC / 4)
-    showAnnouncement("1", true, 0.9)
+    showAnnouncement("1", 1.0, 0.9)
     Util:RealWait(Globals.READY_SET_GO_COUNTDOWN_SEC / 4)
-    showAnnouncement("Go!", true, 0.9)
+    showAnnouncement("Go!", 1.0, 0.9)
   end
 end
 SessionCountdownBeginEvent.OnClientEvent:Connect(showSessionCountdownBeginAnnouncement)
 
 local function showSessionEndedAnnouncement()
   if isLocalPlayerInGameSession() then
-    showAnnouncement("Time's Up", true, 1.5)
+    showAnnouncement("Time's Up", 1.0, 1.5)
   end
 end
 SessionEndedEvent.OnClientEvent:Connect(showSessionEndedAnnouncement)

@@ -15,6 +15,8 @@ local Util = require(ReplicatedStorage.Util)
 local SoundModule = require(ReplicatedStorage.SoundModule)
 local Promise = require(ReplicatedStorage.Vendor.Promise)
 
+local wsMapsFolder = Workspace:WaitForChild("Maps")
+
 local MapManager = require(ServerScriptService.MapManager)
 local ProductClass = require(ReplicatedStorage.Products.Product)
 local ConsumerClass = require(ReplicatedStorage.Consumers.Consumer)
@@ -23,6 +25,7 @@ local Session = require(ReplicatedStorage.Session)
 
 local GetLevelRequestVotesFn = ReplicatedStorage.RemoteFunctions.GetLevelRequestVotes
 local LevelRequestVotesEvent = ReplicatedStorage.Events.LevelRequestVotes
+local ShowLevelVotesEvent = ReplicatedStorage.Events.ShowLevelVotes
 local MapVotingBeginBindableEvent = ServerScriptService.Bindable.MapVotingBeginBindable
 local MapVotingTimeoutBindableEvent = ServerScriptService.Bindable.MapVotingTimeoutBindable
 local GetSessionStatusFn = ReplicatedStorage.RemoteFunctions.GetSessionStatus
@@ -30,6 +33,8 @@ local GetCurrentMapLevelFn = ReplicatedStorage.RemoteFunctions.GetCurrentMapLeve
 local SelectLevelRequestEvent = ReplicatedStorage.Events.SelectLevelRequest
 local SessionMapLevelSelectedEvent = ReplicatedStorage.Events.SessionMapLevelSelected
 local SessionBeingSkippedEvent = ReplicatedStorage.Events.SessionBeingSkipped
+local MapLoadingBeginEvent = ReplicatedStorage.Events.MapLoadingBegin
+local MapLoadingClientCompleteEvent = ReplicatedStorage.Events.MapLoadingClientComplete
 local SessionCountdownBeginEvent = ReplicatedStorage.Events.SessionCountdownBegin
 local MapVotingTimerCancelBindableEvent = ServerScriptService.Bindable.MapVotingTimerCancelBindable
 local SessionUpdateTimerCountdownEvent = ReplicatedStorage.Events.SessionUpdateTimerCountdown
@@ -45,7 +50,6 @@ local ConsumerNewRequestEvent = ReplicatedStorage.Events.ConsumerNewRequest
 local ConsumerTimerExpiredEvent = ReplicatedStorage.Events.ConsumerTimerExpired
 local ShowTitleMessageEvent = ReplicatedStorage.Events.ShowTitleMessage
 local ShowMessagePopupEvent = ReplicatedStorage.Events.ShowMessagePopup
-local PlayerRemovingEvent = ReplicatedStorage.Events.PlayerRemoving
 local GetPlayerManagerInstanceBindableFn = ServerScriptService.Bindable.GetPlayerManagerInstanceBindable
 local InsertProductIdBindableEvent = ServerScriptService.Bindable.InsertProductIdBindable
 local GetOwnedProductIdsBindableFn = ServerScriptService.Bindable.GetOwnedProductIdsBindable
@@ -58,6 +62,7 @@ local ShoulderPetUpdatedBindableEvent = ServerScriptService.Bindable.ShoulderPet
 local Players = game:GetService("Players")
 
 
+local PRODUCT_FOLDER_NAME = "Products"
 local PRODUCT_PLAYER_WELD_NAME = "ProductPlayerWeld"
 
 
@@ -103,34 +108,19 @@ local lobbySpawn = nil
 local sessionCount = 0  -- Number of sessions played
 
 
--- Remove Player ForceField
-Promise.try(function()
-  for _, obj in ipairs(Workspace:GetDescendants()) do
-    if obj.Name == "SpawnLocation" then
-      lobbySpawn = obj
-      obj.Duration = 0
-
-      -- Add ceiling barrier to block cheaters
-      local ceilingBarrier = Util:CreateInstance("Part", {
-          Name = "ceilingBarrier",
-          Position = Vector3.new(obj.Position.X, 16, obj.Position.Z),
-          Size = Vector3.new(200, 1, 120),
-          Anchored = true,
-          CastShadow = false,
-          Transparency = 1.0,
-          CanCollide = true,
-        }, Workspace)
-
-      break
+local function wipeWsMapModel()
+  -- Double check
+  for _, obj in pairs(wsMapsFolder:GetChildren()) do
+    if obj:IsA("Model") then
+      obj:Destroy()
     end
   end
-end)
-
+end
 
 local function getCharacterProduct(character)
   if character then
     --print("getPlayerProduct for ".. character.Name)
-    local characterProductsFolder = character:WaitForChild("Products", 2)
+    local characterProductsFolder = character:WaitForChild(PRODUCT_FOLDER_NAME, 2)
     if characterProductsFolder then
       for _, currentProduct in pairs(characterProductsFolder:GetChildren()) do
         -- Return the first product
@@ -138,6 +128,31 @@ local function getCharacterProduct(character)
       end
     else
       error("Could not find player Products folder for ".. character.Parent.Name)
+    end
+  end
+end
+
+local function wipeCharacterProducts(character)
+  if character then
+    local folderCount = 0
+    local children = character:GetChildren()
+    for _, child in pairs(children) do
+      if child.Name == PRODUCT_FOLDER_NAME and child:IsA("Folder") then
+        for __, currentProduct in pairs(child:GetChildren()) do
+          currentProduct:Destroy()
+        end
+        folderCount += 1
+      end
+    end
+
+    -- Remove any extra product folders
+    if folderCount > 1 then
+      for iter = 1, folderCount-1 do
+        local characterProductsFolder = character:FindFirstChild(PRODUCT_FOLDER_NAME)
+        if characterProductsFolder then
+          characterProductsFolder:Destroy()
+        end
+      end
     end
   end
 end
@@ -204,12 +219,15 @@ local function handleConsumerPrompt(consumerModel, player)
         end
 
         -- Reparent product to consumer
-        local consumerProductsFolder = consumerModel:WaitForChild("Products", 2)
+        local consumerProductsFolder = consumerModel:WaitForChild(PRODUCT_FOLDER_NAME, 2)
         if not consumerProductsFolder then
           consumerProductsFolder = Instance.new("Folder", consumerModel)
-          consumerProductsFolder.Name = "Products"
+          consumerProductsFolder.Name = PRODUCT_FOLDER_NAME
         end
         currentProduct.Parent = consumerProductsFolder
+
+        -- Redundancy
+        wipeCharacterProducts(character)
 
         -- Remove product after delay (non-blocking)
         Promise.delay(ConsumerClass.DEFAULT_CONSUME_TIME_SEC):andThen(function()
@@ -245,10 +263,10 @@ end
 local function handleProductPrompt(productModel, player)
   if productModel and productModel:IsA("Model") then
     local character = Util:GetCharacterFromPlayer(player)
-    local productsFolder = character:WaitForChild("Products", 2)
+    local productsFolder = character:WaitForChild(PRODUCT_FOLDER_NAME, 2)
     if not productsFolder then
       productsFolder = Instance.new("Folder", character)
-      productsFolder.Name = "Products"
+      productsFolder.Name = PRODUCT_FOLDER_NAME
     end
 
     -- If player already holding product, then do nothing
@@ -318,12 +336,15 @@ local function handleTransformerPrompt(transformerModel, player)
         end
 
         -- Reparent product to transformer
-        local transformerProductsFolder = transformerModel:WaitForChild("Products", 2)
+        local transformerProductsFolder = transformerModel:WaitForChild(PRODUCT_FOLDER_NAME, 2)
         if not transformerProductsFolder then
           transformerProductsFolder = Instance.new("Folder", transformerModel)
-          transformerProductsFolder.Name = "Products"
+          transformerProductsFolder.Name = PRODUCT_FOLDER_NAME
         end
         currentProduct.Parent = transformerProductsFolder
+
+        -- Redundancy
+        wipeCharacterProducts(character)
 
         -- Keep track of player assists
         local plrMgr = getPlayerManagerFromList(player.Name)
@@ -363,12 +384,15 @@ local function handleTrashBinPrompt(trashBinModel, player)
       end
 
       -- Reparent product to trashBin
-      local trashBinProductsFolder = trashBinModel:WaitForChild("Products", 2)
+      local trashBinProductsFolder = trashBinModel:WaitForChild(PRODUCT_FOLDER_NAME, 2)
       if not trashBinProductsFolder then
         trashBinProductsFolder = Instance.new("Folder", trashBinModel)
-        trashBinProductsFolder.Name = "Products"
+        trashBinProductsFolder.Name = PRODUCT_FOLDER_NAME
       end
       currentProduct.Parent = trashBinProductsFolder
+
+      -- Redundancy
+      wipeCharacterProducts(character)
 
       -- Make product "fall" straight down then destroy
       Promise.try(function()
@@ -500,12 +524,16 @@ ConsumerTimerExpiredEvent.Event:Connect(onConsumerTimerExpired)
 
 local function onGameStart(winningLevel)
   print("In onGameStart")
+  MapManager.Cleanup()
+  wipeWsMapModel()
+
   session = Session.new()
   session:SetIsActive(true)
   sessionCount += 1
 
   -- Select a map
-  local map = MapManager.InitializeMap(winningLevel, #sessionPlayerList)
+  local map, mapPartCount = MapManager.InitializeMap(winningLevel, #sessionPlayerList)
+  Util:RealWait(1)
 
   -- Set players 'in game' status
   for _, plr in pairs(sessionPlayerList) do
@@ -548,12 +576,33 @@ local function onGameStart(winningLevel)
     end
     GetCurrentMapLevelFn.OnServerInvoke = onGetCurrentMapLevelFn
 
+    MapVotingTimerCancelBindableEvent:Fire()  -- Abort voting timeout
+
+    if false then --aing
+      -- Wait for clients to load
+      for _, plr in pairs(sessionPlayerList) do
+        MapLoadingBeginEvent:FireClient(plr, mapPartCount)
+      end
+
+      -- Wait for completion events from clients
+      local playersDoneLoading = {}
+      MapLoadingClientCompleteEvent.OnServerEvent:Connect(function(player)
+        print("MapLoadingClientCompleteEvent from ".. player.Name)
+        if not Util:Contains(playersDoneLoading, player.Name) then
+          table.insert(playersDoneLoading, player.Name)
+        end
+      end)
+      while #playersDoneLoading < #sessionPlayerList do
+        Util:RealWait(0.1)
+      end
+      print("Received Loading Complete events from all clients")
+    end
+
     -- Start
     for _, plr in pairs(sessionPlayerList) do
       ShowTitleMessageEvent:FireClient(plr, "Map ".. map.Name, 4)
       SessionCountdownBeginEvent:FireClient(plr, session:GetDuration(), winningLevel, sessionCount)
     end
-    MapVotingTimerCancelBindableEvent:Fire()  -- Abort voting timeout
 
     Util:RealWait(Globals.READY_SET_GO_COUNTDOWN_SEC)  -- Wait for "Ready" countdown
     for _, plr in pairs(sessionPlayerList) do
@@ -637,11 +686,13 @@ local function onGameStart(winningLevel)
       end
     end
 
-    LevelRequestVotesEvent:FireAllClients({})  -- Make client show user thumbnails
+    -- Tell client to show user thumbnails
+    ShowLevelVotesEvent:FireAllClients()
 
     -- Cleanup
     sessionPlayerList = {}
     MapManager.Cleanup(map)
+    wipeWsMapModel()
 
     -- Remove map before allowing players to click the Play icon
     session:SetIsActive(false)
@@ -659,6 +710,16 @@ local function getPlayerVote(playerName)
       local id = playerVote['PlayerId']
       local vote = playerVote['LevelVote']
       return name, id, vote
+    end
+  end
+end
+
+-- Set player vote info
+local function setPlayerVote(playerName, plrId, levelRequest)
+  for idx, playerVote in pairs(playerLevelVotes) do
+    if playerName == playerVote['PlayerName'] then
+      playerVote['PlayerId'] = plrId
+      playerVote['LevelVote'] = levelRequest
     end
   end
 end
@@ -703,18 +764,14 @@ local function onSelectLevelRequestEvent(player, levelRequest, isTimedOut)
       playerName = player.Name
 
       -- If no levelRequest provided (e.g. on Player Removing event), then remove vote
-      if levelRequest == Globals.UNINIT_STRING then
-        removePlayerVote(player.Name)
-
-        if #playerLevelVotes == 0 then
-          MapVotingTimerCancelBindableEvent:Fire()  -- Abort voting timeout
-        end
-      else
+      if levelRequest ~= Globals.UNINIT_STRING then
         -- Process player vote
 
         -- Find player vote, if any
         local plrName, plrId, plrVote = getPlayerVote(player.Name)
-        if not plrVote then
+        if plrVote then
+          setPlayerVote(player.Name, player.UserId, levelRequest)
+        else
           -- Add player's vote
           table.insert(playerLevelVotes, { ['PlayerName'] = player.Name, ['PlayerId'] = player.UserId, ['LevelVote'] = levelRequest })
           --table.insert(playerLevelVotes, { ['PlayerName'] = player.Name.."2", ['PlayerId'] = player.UserId, ['LevelVote'] = levelRequest }) -- testing
@@ -798,7 +855,6 @@ local function onSelectLevelRequestEvent(player, levelRequest, isTimedOut)
   end
 end
 SelectLevelRequestEvent.OnServerEvent:Connect(onSelectLevelRequestEvent)
-PlayerRemovingEvent.Event:Connect(onSelectLevelRequestEvent)
 MapVotingTimeoutBindableEvent.Event:Connect(onSelectLevelRequestEvent)
 
 
@@ -860,6 +916,10 @@ Players.PlayerAdded:Connect(function(Player)
   playerManager:Initialize()
   table.insert(playerManagers, playerManager)
 
+  if session == nil then
+    ShowLevelVotesEvent:FireAllClients()
+  end
+
   -- Check for equipped items
   local charName = playerManager:GetEquippedCharacterName()
   if charName ~= "" then
@@ -888,10 +948,12 @@ Players.PlayerRemoving:Connect(function(Player)
     end
   end
 
-  -- Remove from session player lists
-  if session then
+  if session ~= nil then
     session:RemoveFromPlayerList(Player.Name)
+  else
+    ShowLevelVotesEvent:FireAllClients()
   end
+
   for idx, plr in pairs(sessionPlayerList) do
     if plr.Name == Player.Name then
       print("Removing from sessionPlayerList: ".. plr.Name)
@@ -910,9 +972,17 @@ Players.PlayerRemoving:Connect(function(Player)
     end
   end
 
+  removePlayerVote(Player.Name)
+
   -- Check if voting countdown should be cancelled
   if #playerLevelVotes == 0 then
     MapVotingTimerCancelBindableEvent:Fire()  -- Abort voting timeout
+  end
+
+  -- Check if remaining players all voted
+  local playerList = Players:GetPlayers()
+  if #playerLevelVotes == #playerList then
+    onSelectLevelRequestEvent()
   end
 end)
 
