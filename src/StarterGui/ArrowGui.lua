@@ -26,7 +26,7 @@ function ArrowGui.GetRetroArrowFrame()
       BackgroundTransparency = 1.0,
     }, arrowFrame)
 
-  return arrowFrame
+  return arrowFrame, textLabel
 end
 
 return ArrowGui

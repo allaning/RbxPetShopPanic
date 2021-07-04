@@ -546,30 +546,6 @@ local function onGameStart(winningLevel)
   end
 
   Promise.try(function()
-    -- Spawn players into map
-    local spawns = MapManager.GetSpawns()
-    if spawns and #spawns > 0 then
-      session:SetPlayerList(sessionPlayerList)
-      for idx, spawn in pairs(spawns) do
-        if sessionPlayerList[idx] then
-          print("Spawning into game map: ".. sessionPlayerList[idx].Name)
-          local torso = Util:GetTorsoFromPlayer(sessionPlayerList[idx])
-          if torso then
-            local yOffset = 6
-            local humanoid = Util:GetHumanoid(sessionPlayerList[idx])
-            if humanoid then
-              yOffset = humanoid.HipHeight + 4
-            end
-            torso.CFrame = CFrame.new(spawn.Position + Vector3.new(0, yOffset, 0))
-          else
-            error("Unable to find torso for ".. sessionPlayerList[idx].Name)
-          end
-        end
-      end
-    else
-      error("Unable to get spawn plots from MapManager")
-    end
-
     -- Setup remote function
     local function onGetCurrentMapLevelFn()
       return map:GetAttribute(Globals.MAP_LEVEL_ATTRIBUTE_NAME) or 0
@@ -596,6 +572,30 @@ local function onGameStart(winningLevel)
         Util:RealWait(0.1)
       end
       print("Received Loading Complete events from all clients")
+    end
+
+    -- Spawn players into map
+    local spawns = MapManager.GetSpawns()
+    if spawns and #spawns > 0 then
+      session:SetPlayerList(sessionPlayerList)
+      for idx, spawn in pairs(spawns) do
+        if sessionPlayerList[idx] then
+          print("Spawning into game map: ".. sessionPlayerList[idx].Name)
+          local torso = Util:GetTorsoFromPlayer(sessionPlayerList[idx])
+          if torso then
+            local yOffset = 6
+            local humanoid = Util:GetHumanoid(sessionPlayerList[idx])
+            if humanoid then
+              yOffset = humanoid.HipHeight + 4
+            end
+            torso.CFrame = CFrame.new(spawn.Position + Vector3.new(0, yOffset, 0))
+          else
+            error("Unable to find torso for ".. sessionPlayerList[idx].Name)
+          end
+        end
+      end
+    else
+      error("Unable to get spawn plots from MapManager")
     end
 
     -- Start

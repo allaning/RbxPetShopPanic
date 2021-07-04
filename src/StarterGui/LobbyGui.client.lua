@@ -149,14 +149,27 @@ local function initializeLobbyGui()
       }, playIcon)
 
     -- Blinking arrow
-    playArrowFrame = ArrowGui.GetRetroArrowFrame()
+    playArrowFrame, arrowTextObject = ArrowGui.GetRetroArrowFrame()
     playArrowFrame.Position = UDim2.new(-0.22, 0, 0.5, 0)
     playArrowFrame.Size = UDim2.new(0.6, 0, 0.6, 0)
     playArrowFrame.Parent = playIcon
     Promise.try(function()
+      if arrowTextObject then
+        arrowTextObject.TextXAlignment = Enum.TextXAlignment.Left
+      end
+      local arrowTextList = { "   ", "-  ", "-- ", "-->" }
+      local arrowIter = 1
       while playArrowFrame do
-        playArrowFrame.Visible = not playArrowFrame.Visible
-        Util:RealWait(1)
+        if arrowTextObject then
+          arrowTextObject.Text = arrowTextList[arrowIter]
+          arrowIter += 1
+          if arrowIter > #arrowTextList then
+            arrowIter = 1
+          end
+        else
+          playArrowFrame.Visible = not playArrowFrame.Visible
+        end
+        Util:RealWait(0.7)
       end
     end)
 

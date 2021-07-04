@@ -2,9 +2,11 @@
 
 local Version = {
 
-  ['VERSION_NUMBER'] = "A.A.I",
+  ['VERSION_NUMBER'] = "A.A.K",
 
   ['VERSION_HISTORY'] = [[
+    A.A.K
+      - Minor enhancements
     A.A.I
       - Mostly bug fixes
     ...
@@ -22,6 +24,12 @@ Version History:
 ----------------
 
 
+35	7/3/2021 6:38:24 AM
+    A.A.K
+      - Minor enhancements
+34	7/3/2021 4:22:37 AM
+    A.A.J
+      - Minor enhancements
 30	7/1/2021 5:05:57 AM
     A.A.H
 25	6/30/2021 3:31:30 AM

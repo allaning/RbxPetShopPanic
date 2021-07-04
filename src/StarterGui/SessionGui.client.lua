@@ -125,7 +125,7 @@ local function updateScore(increment)
   if scoreTextLabel and isLocalPlayerInGameSession() then
     -- Show announcement
     local announcementMsg = "+".. tostring(increment)
-    ShowAnnouncementBindableEvent:Fire(announcementMsg, true, 1.0)
+    ShowAnnouncementBindableEvent:Fire(announcementMsg, 1.0, 1.0)
 
     -- Update score gui
     local scoreNumber = tonumber(scoreTextLabel.Text)

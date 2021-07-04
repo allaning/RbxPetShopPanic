@@ -329,10 +329,14 @@ function MapManager.InitializeMap(level, playerCount)
   local levelMapFolder = serverMapsFolder:WaitForChild(level)
   local levelMaps = levelMapFolder:GetChildren()
   local randomMap = levelMaps[ rand:NextInteger(1, #levelMaps) ]
-  --aing randomMap = serverMapsFolder["4"]:FindFirstChild("4-1") -- testing specific map
+  --randomMap = serverMapsFolder["4"]:FindFirstChild("4-2") -- testing specific map
 
   -- Create map
   local map = randomMap:Clone()
+  if not map.PrimaryPart then
+    error("Map does not have PrimaryPart set: ".. map.Name)
+  end
+
   -- Make plots transparent
   local partCount = 0
   for _, obj in pairs(map:GetDescendants()) do
