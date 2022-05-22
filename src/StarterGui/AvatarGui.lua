@@ -156,9 +156,13 @@ local function initializeTabButton(buttonObject, title, yPositionScale, dependen
 end
 
 local function initializeTabButtons()
-  initializeTabButton(AvatarGui.CharacterTabButton, "Character", 0.30, {AvatarGui.CharacterScrollingFrame})
+  -- 05/22/2022 Removing option
+  -- initializeTabButton(AvatarGui.CharacterTabButton, "Character", 0.30, {AvatarGui.CharacterScrollingFrame})
+
   initializeTabButton(AvatarGui.ShoulderPetTabButton, "Shoulder Pet", 0.45, {AvatarGui.ShoulderPetScrollingFrame})
-  initializeTabButton(AvatarGui.BoostsTabButton, "Boosts", 0.60, {AvatarGui.BoostsScrollingFrame})
+
+  -- Maybe one day...
+  -- initializeTabButton(AvatarGui.BoostsTabButton, "Boosts", 0.60, {AvatarGui.BoostsScrollingFrame})
 end
 
 local function initializeCharacterFrame()
@@ -337,7 +341,8 @@ local function initializeCharacterFrame()
 
           charEquipBtn.Activated:Connect(function()
             SoundModule.PlayMouseClick(PlayerGui)
-            SelectCharacterRequestEvent:FireServer(subdirNameList[subdirIdx], charTitle.Text)
+            -- 05/22/2022 Remove due to SelectCharacter.server.lua:transform() problem
+            -- SelectCharacterRequestEvent:FireServer(subdirNameList[subdirIdx], charTitle.Text)
             --print(string.format("SelectCharacterRequestEvent:FireServer(subdirNameList[subdirIdx] %s, charTitle.Text %s)", subdirNameList[subdirIdx], charTitle.Text))
           end)
 
@@ -371,8 +376,8 @@ local function initializeShoulderPetFrame()
       BorderSizePixel = 2,
       BorderColor3 = Themes[Themes.CurrentTheme].BorderColor,
       ScrollBarImageColor3 = Themes[Themes.CurrentTheme].BorderColor,
-      Active = false,
-      Visible = false,
+      --Active = false,
+      --Visible = false,
     }, AvatarGui.Frame)
   local uiGridLayout = Util:CreateInstance("UIGridLayout", {
       CellSize = UDim2.new(SHOULDER_PET_THUMB_SIZE_SCALE_X, 0, SHOULDER_PET_THUMB_SIZE_SCALE_Y, 0),
@@ -596,7 +601,9 @@ function AvatarGui.Initialize()
         Font = Enum.Font.FredokaOne,
       }, AvatarGui.Frame)
 
-    initializeCharacterFrame()
+    -- 05/22/2022 Disabling character morph option
+    -- initializeCharacterFrame()
+
     initializeShoulderPetFrame()
 
     initializeTabButtons()

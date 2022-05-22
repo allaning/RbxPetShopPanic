@@ -472,9 +472,12 @@ function Consumer:Run()
 
       -- Adjust for difficulty
       local adjustedDifficultyLevel = self.difficultyLevel - 1
-      if 0 < adjustedDifficultyLevel and adjustedDifficultyLevel < 99 then
+      if 0 < adjustedDifficultyLevel and adjustedDifficultyLevel < 6 then
         local difficultyAdjustment = adjustedDifficultyLevel * Consumer.EXPIRE_TIME_ADJUSTMENT_PER_DIFFICULTY_LEVEL
         self.expireTimeSec -= difficultyAdjustment
+      end
+      if self.expireTimeSec < Consumer.YELLOW_WARNING_TIME_SEC_BEFORE_EXPIRING + 5 then -- set minimum
+        self.expireTimeSec = Consumer.YELLOW_WARNING_TIME_SEC_BEFORE_EXPIRING + 5
       end
       print(self:GetName().. ": Difficulty level = ".. self.difficultyLevel.. "; Expire time = ".. self.expireTimeSec)
 

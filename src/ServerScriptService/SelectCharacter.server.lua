@@ -29,6 +29,7 @@ local ShoulderPetTemplateFolder = ReplicatedStorage.Avatar.ShoulderPetTemplates
 local Players = game:GetService("Players")
 
 
+-- 05/22/2022 The tranform() function is not working correctly
 local function transform(playerCharacter, characterModel)
   if playerCharacter.PrimaryPart then
     local modelClone = characterModel:Clone()

@@ -108,6 +108,30 @@ local lobbySpawn = nil
 local sessionCount = 0  -- Number of sessions played
 
 
+-- Remove Player ForceField and add ceiling barrier
+Promise.try(function()
+  for _, obj in ipairs(Workspace:GetDescendants()) do
+    if obj.Name == "SpawnLocation" then
+      lobbySpawn = obj
+      obj.Duration = 0
+
+      -- Add ceiling barrier to block cheaters
+      local ceilingBarrier = Util:CreateInstance("Part", {
+          Name = "ceilingBarrier",
+          Position = Vector3.new(obj.Position.X, 16, obj.Position.Z),
+          Size = Vector3.new(200, 1, 120),
+          Anchored = true,
+          CastShadow = false,
+          Transparency = 1.0,
+          CanCollide = true,
+        }, Workspace)
+
+      break
+    end
+  end
+end)
+
+
 local function wipeWsMapModel()
   -- Double check
   for _, obj in pairs(wsMapsFolder:GetChildren()) do
@@ -924,7 +948,7 @@ Players.PlayerAdded:Connect(function(Player)
   local charName = playerManager:GetEquippedCharacterName()
   if charName ~= "" then
     print("Load Character: ".. charName)
-    LoadCharacterBindableEvent:Fire(Player, charName)
+    --aing LoadCharacterBindableEvent:Fire(Player, charName)
   else
     -- Load default character
     -- This makes character walk up for some reason...

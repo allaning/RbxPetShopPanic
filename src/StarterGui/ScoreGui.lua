@@ -21,7 +21,8 @@ local PlayerGui = Player:WaitForChild("PlayerGui")
 local STAR_IMAGE_ID = "rbxassetid://6865524956"  -- https://iconarchive.com/show/small-n-flat-icons-by-paomedia/star-icon.html
 local BLANK_STAR_IMAGE_ID = "rbxassetid://6865980124"
 
-local SCORE_GUI_MUSIC = "rbxassetid://1836797203"  -- https://www.roblox.com/library/1836797203/Golden-Swagger
+-- Moderated by Roblox: local SCORE_GUI_MUSIC = "rbxassetid://1836797203"  -- https://www.roblox.com/library/1836797203/Golden-Swagger
+local SCORE_GUI_MUSIC = "rbxassetid://9048378262"  -- https://www.roblox.com/library/9048378262/On-the-8-bit-Vibe
 
 
 local ScoreGui = {}

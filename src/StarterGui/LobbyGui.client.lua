@@ -701,7 +701,7 @@ if playerPoints < 20 then
       Name = "Intro",
     }, nil)
   local thumb = UserThumbnailGui.GetImageThumbnail(Assets.CHARACTER_SMILING_MOUTH_OPEN, UDim2.new(0.3, 0, 0.3, 0), nil, 3)
-  local introText = [[Welcome! Choose your <font color="rgb(19,153,255)">Avatar</font> and click the <font color="rgb(19,153,255)">Play</font> button when ready.]]
+  local introText = [[Welcome! Update your <font color="rgb(19,153,255)">Avatar</font> or click the <font color="rgb(19,153,255)">Play</font> button when ready.]]
   local msg = FrameFactory.GetTypedMessageFrame(introText, UDim2.new(0.5, 0, 0.2, 0), nil, 2, false)
   if thumb and msg and not isLocalPlayerInGameSession() then
     introScreenGui.Parent = PlayerGui
@@ -741,40 +741,8 @@ if playerPoints < 20 then
       end
       destroy1Connection:Disconnect()
 
-      if introScreenGui and not isLocalPlayerInGameSession() then
-        local thumb2 = UserThumbnailGui.GetImageThumbnail(Assets.CHARACTER_SMILING_EYES_CLOSED, UDim2.new(0.3, 0, 0.3, 0), nil, 3)
-        local introText2 = [[Pressing <font color="rgb(19,153,255)">Jump</font> will simply change the camera <font color="rgb(19,153,255)">Zoom</font>.]]
-        local msg2 = FrameFactory.GetTypedMessageFrame(introText2, UDim2.new(0.5, 0, 0.2, 0), nil, 2, false)
-        if thumb2 and msg2 then
-          thumb2.Position = UDim2.new(0.2, 0, 0.5, 0)
-          thumb2.Parent = introScreenGui
-          msg2.Position = UDim2.new(0.3, 0, 0.55, 0)
-          msg2.Parent = introScreenGui
-
-          local exitButton2 = Util:CreateInstance("TextButton", {
-              Name = "ExitButton",
-              Position = UDim2.new(0.0, 0, 0.0, 0),
-              Size = UDim2.new(1.0, 0, 1.0, 0),
-              BackgroundTransparency = 1.0,
-              Text = "",
-            }, msg2)
-
-          local destroy2Connection
-          local function destroy2()
-            if introScreenGui then
-              introScreenGui:Destroy()
-            end
-          end
-          exitButton2.Activated:Connect(destroy2)
-          destroy2Connection = SessionCountdownBeginEvent.OnClientEvent:Connect(destroy2)
-
-          Promise.delay(6):andThen(function()
-            if introScreenGui then
-              introScreenGui:Destroy()
-            end
-            destroy2Connection:Disconnect()
-          end)
-        end
+      if introScreenGui then
+        introScreenGui:Destroy()
       end
 
     end)

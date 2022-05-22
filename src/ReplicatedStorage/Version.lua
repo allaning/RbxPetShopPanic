@@ -2,9 +2,13 @@
 
 local Version = {
 
-  ['VERSION_NUMBER'] = "A.A.K",
+  ['VERSION_NUMBER'] = "A.A.M",
 
   ['VERSION_HISTORY'] = [[
+    A.A.M
+      - Remove fixed camera position; Remove set avatars due to critical problem after morphing
+    A.A.L
+      - Fix problem respawning to lobby
     A.A.K
       - Minor enhancements
     A.A.I
@@ -24,6 +28,11 @@ Version History:
 ----------------
 
 
+37	7/6/2021 1:52:47 AM
+      - Add lower bound to Consumer time expire
+36	7/5/2021 2:02:58 AM
+    A.A.L
+      - Fix problem respawning to lobby
 35	7/3/2021 6:38:24 AM
     A.A.K
       - Minor enhancements
