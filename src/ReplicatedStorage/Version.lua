@@ -28,6 +28,9 @@ Version History:
 ----------------
 
 
+38	5/22/2022 4:32:43 PM
+      - Remove fixed camera position; Remove set avatars due to critical problem after morphing
+
 37	7/6/2021 1:52:47 AM
       - Add lower bound to Consumer time expire
 36	7/5/2021 2:02:58 AM
