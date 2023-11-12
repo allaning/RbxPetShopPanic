@@ -300,3 +300,14 @@ local function onSessionEndedEvent()
 end
 SessionEndedEvent.OnClientEvent:Connect(onSessionEndedEvent)
 
+
+-- Remove Character accessories
+for _, obj in pairs(Character:GetChildren()) do
+  if obj:IsA("Accessory") then
+    if obj.AccessoryType.Name == "Shoulder" then
+      print("   Deleting shoulder accessory: " .. obj.Name)
+      obj:Destroy()
+    end
+  end
+end
+
